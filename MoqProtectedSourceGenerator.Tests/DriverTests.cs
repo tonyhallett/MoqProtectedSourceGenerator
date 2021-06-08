@@ -7,14 +7,14 @@
 //using Microsoft.CodeAnalysis;
 //using Microsoft.CodeAnalysis.CSharp;
 //using Moq;
-//using NUnit.Framework;
+//using Xunit;
 
 //namespace MoqProtectedSourceGenerator.Tests
 //{
-//    class DriverTest
+//    public class DriverTest
 //    {
-//        [Test]
-//        public void DriverTest()
+//        [Fact]
+//        public void DriverTestExample()
 //        {
 //            // Create the 'input' compilation that the generator will act on
 //            Compilation inputCompilation = CreateCompilation(@"

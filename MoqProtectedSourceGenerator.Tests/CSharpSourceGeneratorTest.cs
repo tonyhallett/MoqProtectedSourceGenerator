@@ -9,16 +9,16 @@
 //using Microsoft.CodeAnalysis.Text;
 //using Moq;
 //using MoqProtectedSourceGenerator;
-//using NUnit.Framework;
+//using Xunit;
 
 //namespace MoqProtectedSourceGenerator.Tests
 //{
 //    public class Tests
 //    {
-//        [Test]
+//        [Fact]
 //        public Task ToDo()
 //        {
-//            return new CSharpSourceGeneratorTest<MoqProtectedSourceGenerator, NUnitVerifier>
+//            return new CSharpSourceGeneratorTest<MoqProtectedSourceGenerator, XUnitVerifier>
 //            {
 //                TestState =
 //                {
