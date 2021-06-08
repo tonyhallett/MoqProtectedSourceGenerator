@@ -1,71 +1,192 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Diagnostics;
-//using System.Linq;
-//using System.Reflection;
-//using System.Text;
-//using Microsoft.CodeAnalysis;
-//using Microsoft.CodeAnalysis.CSharp;
-//using Moq;
-//using Xunit;
+﻿using System.IO;
+using System.Linq;
+using System.Reflection;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Moq;
+using Xunit;
 
-//namespace MoqProtectedSourceGenerator.Tests
-//{
-//    public class DriverTest
-//    {
-//        [Fact]
-//        public void DriverTestExample()
-//        {
-//            // Create the 'input' compilation that the generator will act on
-//            Compilation inputCompilation = CreateCompilation(@"
+namespace MoqProtectedSourceGenerator.Tests
+{
+    public class Given_Mock_Of_Protected_Class_From_Source
+    {
+        private readonly MoqProtectedSourceGenerator moqProtectedSourceGenerator;
+        
+        public Given_Mock_Of_Protected_Class_From_Source()
+        {
+            moqProtectedSourceGenerator = new MoqProtectedSourceGenerator();
+        }
+        
+        [Fact]
+        public void Should_Generate_Protected_Like_Interface_In_MoqProtectedGenerated_Namespace()
+        {
+            var source = @"
+using Moq;
+namespace ClassLibrary1
+{
+    public abstract class MyProtected
+    {
+        protected abstract void AbstractMethod();
+        public void InvokeAbstractMethod()
+        {
+            AbstractMethod();
+        }
+        protected abstract void AbstractMethodArgs(int value);
+        public void InvokeAbstractMethodArgs(int value)
+        {
+            AbstractMethodArgs(value);
+        }
+        protected abstract int SomeProperty { get; }
+    }
 
-//");
-//            var inputDiagnostics = inputCompilation.GetDiagnostics();
-//            foreach (var d in inputDiagnostics)
-//            {
-//                Debug.WriteLine(d.GetMessage());
-//            }
-//            var generator = new MoqProtectedSourceGenerator();
+    public class Test
+    {
+        public void Generate()
+        {
+            var mock = new Mock<MyProtected>();
+        }
 
-//            // Create the driver that will control the generation, passing in our generator
-//            GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
+    }
+}
+";
 
-//            // Run the generation pass
-//            // (Note: the generator driver itself is immutable, and all calls return an updated version of the driver that you should use for subsequent calls)
-//            driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var outputCompilation, out var diagnostics);
+            var expectedSource = @"
+using System;
 
-//            // We can now assert things about the resulting compilation:
-//            Debug.Assert(diagnostics.IsEmpty); // there were no diagnostics created by the generators
-//            Debug.Assert(outputCompilation.SyntaxTrees.Count() == 2); // we have two syntax trees, the original 'user' provided one, and the one added by the generator
+namespace MoqProtectedGenerated
+{
 
-//            Debug.Assert(outputCompilation.GetDiagnostics().IsEmpty); // verify the compilation with the added source has no diagnostics
+    internal interface MyProtectedLike{
+		int SomeProperty { get; }
+		void AbstractMethod();
+		void AbstractMethodArgs(int value);
 
-//            // Or we can look at the results directly:
-//            GeneratorDriverRunResult runResult = driver.GetRunResult();
+    }
 
-//            // The runResult contains the combined results of all generators passed to the driver
-//            Debug.Assert(runResult.GeneratedTrees.Length == 1);
-//            Debug.Assert(runResult.Diagnostics.IsEmpty);
+}";
 
-//            // Or you can access the individual results on a by-generator basis
-//            GeneratorRunResult generatorResult = runResult.Results[0];
-//            Debug.Assert(generatorResult.Generator == generator);
-//            Debug.Assert(generatorResult.Diagnostics.IsEmpty);
-//            Debug.Assert(generatorResult.GeneratedSources.Length == 1);
-//            Debug.Assert(generatorResult.Exception is null);
-//        }
+            AssertEqualGeneratedSource(source, "MyProtectedLike.cs", expectedSource);
+        }
 
-//        /*
-//            If doing test of protected type from dll then add
-//            MetadataReference.CreateFromFile(protectedDllPath)
-//        */
-//        private static Compilation CreateCompilation(string source)
-//            => CSharpCompilation.Create("compilation",
-//                new[] { CSharpSyntaxTree.ParseText(source) },
-//                new[] { MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location),
-//                    MetadataReference.CreateFromFile(typeof(Mock).GetTypeInfo().Assembly.Location),
-//                    MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location)
-//                },
-//                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-//    }
-//}
+        /*
+            this is by default - note that there is no way to provide - AnalyzerConfigFiles
+            of course this can be achieved with CSharpSourceGeneratorTest but this is all or nothing
+            from first observations. Hence the use of the driver.
+            Can add static property to AnalyzerConfigOptionsExtensions, for instance MockConfigOptions
+        */
+        [Fact]  
+        public void Should_Generate_Fake_Extension_Method_Class_With_Same_Name_As_Protected_Method_In_Global_Namespace()
+        {
+            var source = @"
+using Moq;
+namespace ClassLibrary1
+{
+    public abstract class MyProtected
+    {
+        protected abstract void AbstractMethod();
+        public void InvokeAbstractMethod()
+        {
+            AbstractMethod();
+        }
+        protected abstract void AbstractMethodArgs(int value);
+        public void InvokeAbstractMethodArgs(int value)
+        {
+            AbstractMethodArgs(value);
+        }
+        protected abstract int SomeProperty { get; }
+    }
+
+    public class Test
+    {
+        public void Generate()
+        {
+            var mock = new Mock<MyProtected>();
+        }
+
+    }
+}
+";
+
+            var expectedSource = @"
+using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using Moq;
+using Moq.Protected;
+using ClassLibrary1;
+using System;
+using MoqProtectedGenerated;
+
+public static class MyProtected_AbstractMethodArgs
+	{
+		private static readonly Dictionary<string, Expression<Action<MyProtectedLike>>> Setups =
+			new Dictionary<string, Expression<Action<MyProtectedLike>>>
+		{
+
+        };
+        private static readonly Dictionary<string, Expression<Action<MyProtectedLike>>> Verifications =
+            new Dictionary<string, Expression<Action<MyProtectedLike>>>
+            {
+            };
+
+        private static string GetKey(string sourceFileInfo, int sourceLineNumber)
+        {
+            return sourceFileInfo + ""_"" + sourceLineNumber;
+        }
+        public static IVoidMethodBuilder<MyProtected> AbstractMethodArgs(this Mock<MyProtected> mock, int value)
+        {
+            return new VoidMethodBuilder<MyProtected>(
+                (sourceFileInfo, sourceLineNumber) => mock.Protected().As<MyProtectedLike>().Setup(Setups[GetKey(sourceFileInfo, sourceLineNumber)]),
+                (sourceFileInfo, sourceLineNumber, times, failMessage) => mock.Protected().As<MyProtectedLike>().Verify(Verifications[GetKey(sourceFileInfo, sourceLineNumber)], times, failMessage)
+            );
+        }
+    }
+";
+
+            var hintName = "MyProtected_AbstractMethodArgs.cs";
+            var options = new AssertEqualGeneratedSourceOptions
+            {
+                WriteToFileIfFails = GetGeneratedFilePath(hintName)
+            };
+            AssertEqualGeneratedSource(source, hintName, expectedSource, options);
+        }
+
+        private Compilation CreateCompilation(string source)
+        {
+            var assemblyNames = new string[]
+            {
+                "netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51",
+                "System.Runtime, Version=4.2.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+                "System.Private.CoreLib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
+                "netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51",
+                "System.Linq.Expressions, Version=4.2.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+            };
+            var metadataReferences = new MetadataReference[] {
+                MetadataReference.CreateFromFile(typeof(Mock).GetTypeInfo().Assembly.Location),
+            }.Concat(assemblyNames.Select(n => MetadataReferenceHelper.CreateFromAssemblyLoad(n)));
+            return CSharpCompilation.Create("compilation",
+                new[] { CSharpSyntaxTree.ParseText(source) },
+                metadataReferences,
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        }
+
+        private void AssertEqualGeneratedSource(string source, string hintName, string expectedSource, AssertEqualGeneratedSourceOptions options = null)
+        {
+            SingleSourceDriverTest.AssertEqualGeneratedSource(CreateCompilation(source), moqProtectedSourceGenerator, hintName, expectedSource, options);
+        }
+
+        private string GetGeneratedFilePath(string fileName)
+        {
+            fileName = Path.GetFileNameWithoutExtension(fileName) + ".gcs";
+            var projectDirectory = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory.Parent.Parent.Parent;
+            var generatedFails = Path.Combine(projectDirectory.FullName, "GeneratedFails");
+            if (!Directory.Exists(generatedFails))
+            {
+                Directory.CreateDirectory(generatedFails);
+            }
+            return Path.Combine(generatedFails, fileName);
+        }
+
+    }
+
+}

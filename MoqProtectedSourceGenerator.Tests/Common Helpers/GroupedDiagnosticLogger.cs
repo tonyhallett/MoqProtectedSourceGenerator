@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
-namespace EndToEndTests
+namespace MoqProtectedSourceGenerator.Tests
 {
     public static class GroupedDiagnosticLogger
     {
