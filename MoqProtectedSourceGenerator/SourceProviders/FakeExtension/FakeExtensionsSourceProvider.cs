@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -66,13 +65,13 @@ namespace MoqProtectedSourceGenerator
 
         private void AddCommon(GeneratorExecutionContext context)
         {
-            AddVoidMethodTypes(context);
+            AddBuilderTypes(context);
         }
 
-        private void AddVoidMethodTypes(GeneratorExecutionContext context)
+        private void AddBuilderTypes(GeneratorExecutionContext context)
         {
             Dictionary<string, string> builderTypes = ManifestResourceStringReader.Read("BuilderTypes");
-            foreach(var kvp in builderTypes)
+            foreach (var kvp in builderTypes)
             {
                 context.AddSource($"{kvp.Key}.cs", kvp.Value);
             }

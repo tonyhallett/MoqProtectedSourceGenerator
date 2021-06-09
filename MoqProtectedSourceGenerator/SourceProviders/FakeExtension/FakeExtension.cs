@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MoqProtectedSourceGenerator
 {
@@ -20,19 +18,14 @@ namespace MoqProtectedSourceGenerator
             {
                 var methodDeclaration = methodDetails.Declaration;
                 var methodName = methodDeclaration.Identifier.ToString();
-                if (methodDeclaration.ReturnType is PredefinedTypeSyntax predefinedTypeSyntax && predefinedTypeSyntax.Keyword.IsKind(SyntaxKind.VoidKeyword))
+
+                if (!fakeExtensionMethodClassesByMethod.TryGetValue(methodName, out var overrideExtensionMethodClasses))
                 {
-                    if (!fakeExtensionMethodClassesByMethod.TryGetValue(methodName, out var overrideExtensionMethodClasses))
-                    {
-                        overrideExtensionMethodClasses = new List<IFakeExtensionMethodClass>();
-                        fakeExtensionMethodClassesByMethod.Add(methodName, overrideExtensionMethodClasses);
-                    }
-                    overrideExtensionMethodClasses.Add(new VoidMethodFakeExtensionClass(protectedLike.LikeTypeName, protectedLike.MockedTypeName, protectedLike.MockedTypeNamespace, methodDetails));
+                    overrideExtensionMethodClasses = new List<IFakeExtensionMethodClass>();
+                    fakeExtensionMethodClassesByMethod.Add(methodName, overrideExtensionMethodClasses);
                 }
-                else
-                {
-                    //todo
-                }
+                overrideExtensionMethodClasses.Add(new MethodFakeExtensionClass(protectedLike.LikeTypeName, protectedLike.MockedTypeName, protectedLike.MockedTypeNamespace, methodDetails));
+
             }
         }
 

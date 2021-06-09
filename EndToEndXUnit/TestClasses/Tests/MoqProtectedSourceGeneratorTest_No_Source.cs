@@ -6,7 +6,6 @@ using Xunit;
 
 namespace EndToEndTests
 {
-    [Collection("Prevent locking")]
     public class MoqProtectedSourceGeneratorTest_No_Source : MoqProtectedSourceGeneratorTestBase
     {
         private readonly string projectDllDll;

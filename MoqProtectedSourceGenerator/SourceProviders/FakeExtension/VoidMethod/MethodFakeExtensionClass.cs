@@ -8,7 +8,8 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace MoqProtectedSourceGenerator
 {
-    public class VoidMethodFakeExtensionClass : IFakeExtensionMethodClass
+
+    public class MethodFakeExtensionClass : IFakeExtensionMethodClass
     {
         private static readonly List<string> defaultNamespaces = new()
         {
@@ -18,7 +19,7 @@ namespace MoqProtectedSourceGenerator
             "Moq",
             "Moq.Protected",
         };
-        
+
         private readonly List<(ArgumentListSyntax arguments, FileLocation fileLocation)> setups = new();
         private readonly List<(ArgumentListSyntax arguments, FileLocation fileLocation)> verifications = new();
         private readonly string extensionMethodSignature;
@@ -28,14 +29,29 @@ namespace MoqProtectedSourceGenerator
         private readonly string uniqueMethodName;
         private readonly string className;
         private readonly List<string> namespaces;
-        
-        private bool isGlobal;
 
-        public VoidMethodFakeExtensionClass(string likeTypeName, string mockedTypeName, INamespaceSymbol mockedTypeNamespace, MethodDetails methodDetails)
+        private bool isGlobal;
+        private readonly Dictionary<bool, IReturnTypeDetails> returnTypeDetailsLookup = new()
         {
+            { true, new VoidReturnTypeDetails() },
+            { false, new ReturningReturnTypeDetails() },
+        };
+
+        private readonly string methodBuilderType;
+        private readonly string dictionaryExpressionOf;
+
+        public MethodFakeExtensionClass(string likeTypeName, string mockedTypeName, INamespaceSymbol mockedTypeNamespace, MethodDetails methodDetails)
+        {
+
             this.likeTypeName = likeTypeName;
             this.mockedTypeName = mockedTypeName;
             var methodDeclaration = methodDetails.Declaration;
+
+            var isVoid = methodDeclaration.ReturnType is PredefinedTypeSyntax predefinedTypeSyntax && predefinedTypeSyntax.Keyword.IsKind(SyntaxKind.VoidKeyword);
+            var returnTypeDetails = returnTypeDetailsLookup[isVoid];
+            methodBuilderType = returnTypeDetails.MethodBuilderType(mockedTypeName, methodDeclaration.ReturnType.ToString());
+            dictionaryExpressionOf = returnTypeDetails.DictionaryExpressionOf(likeTypeName, methodDeclaration.ReturnType.ToString());
+
             methodName = methodDeclaration.Identifier.Text;
             //for now
             uniqueMethodName = methodName;
@@ -46,7 +62,8 @@ namespace MoqProtectedSourceGenerator
             namespaces.Add(mockedTypeNamespace.FullNamespace());
 
             var extensionMethod = methodDeclaration.MakeExtension($"Mock<{mockedTypeName}>", "mock")
-                .WithReturnType(SyntaxFactory.ParseTypeName($"IVoidMethodBuilder<{mockedTypeName}>"))
+
+                .WithReturnType(SyntaxFactory.ParseTypeName($"I{methodBuilderType}"))
                 .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.None))
                 .WithModifiers(
                     new SyntaxTokenList(
@@ -69,18 +86,9 @@ namespace MoqProtectedSourceGenerator
             return $"like => like.{methodName}{arguments.ToFullString()}";
         }
 
-        private string GetSetupsInitializer()
+        private string GetSetupsOrVerificationsInitializer(bool isSetups)
         {
-            return GetSetupsOrVerificationsInitializer(setups);
-        }
-
-        private string GetVerificationsInitializer()
-        {
-            return GetSetupsOrVerificationsInitializer(verifications);
-        }
-
-        private string GetSetupsOrVerificationsInitializer(List<(ArgumentListSyntax arguments, FileLocation fileLocation)> setupsOrVerifications)
-        {
+            List<(ArgumentListSyntax arguments, FileLocation fileLocation)> setupsOrVerifications = isSetups ? setups : verifications;
             var numSetupsOrVerifications = setupsOrVerifications.Count;
             if (numSetupsOrVerifications == 0)
             {
@@ -95,7 +103,7 @@ namespace MoqProtectedSourceGenerator
                 {LambdaExpression(setUpOrVerification.arguments)}
             }}{comma}");
              });
-            
+
             return @$"
         {{
 {dictionaryEntryStringBuilder}
@@ -116,16 +124,21 @@ namespace MoqProtectedSourceGenerator
                 return extensionClass;
             }
         }
-        
+
+        private string GetDictionary(bool isSetups)
+        {
+            var fieldName = isSetups ? "Setups" : "Verifications";
+            return @$"    private static readonly Dictionary<string, Expression<{dictionaryExpressionOf}>> {fieldName} =
+        new Dictionary<string, Expression<{dictionaryExpressionOf}>>{GetSetupsOrVerificationsInitializer(isSetups)};";
+        }
+
         private string GetExtensionClass()
         {
-            var extensionClass = 
+            var extensionClass =
 $@"public static class {className}
 {{
-    private static readonly Dictionary<string, Expression<Action<{likeTypeName}>>> Setups =
-        new Dictionary<string, Expression<Action<{likeTypeName}>>>{GetSetupsInitializer()};
-    private static readonly Dictionary<string, Expression<Action<{likeTypeName}>>> Verifications =
-        new Dictionary<string, Expression<Action<{likeTypeName}>>>{GetVerificationsInitializer()};
+{GetDictionary(true)}
+{GetDictionary(false)}
 
     private static string GetKey(string sourceFileInfo, int sourceLineNumber)
     {{
@@ -134,7 +147,7 @@ $@"public static class {className}
 
     {extensionMethodSignature}
     {{
-        return new VoidMethodBuilder<{mockedTypeName}>(
+        return new {methodBuilderType}(
             (sourceFileInfo, sourceLineNumber) => mock.Protected().As<{likeTypeName}>().Setup(Setups[GetKey(sourceFileInfo, sourceLineNumber)]),
             (sourceFileInfo, sourceLineNumber, times, failMessage) => mock.Protected().As<{likeTypeName}>().Verify(Verifications[GetKey(sourceFileInfo, sourceLineNumber)], times, failMessage)
         );
@@ -161,7 +174,7 @@ $@"public static class {className}
         {
             string usings = GetUsings();
             string extensionClassAndNamespace = WithNamespace(GetExtensionClass());
-            return 
+            return
 @$"{usings}
 {extensionClassAndNamespace}
 ";
@@ -173,7 +186,7 @@ $@"public static class {className}
             var source = GetSource();
             context.AddSource($"{className}.cs", source);
         }
-        
+
         private bool IsGlobalExtensionClass(AnalyzerConfigOptionsProvider configOptionProvider)
         {
             var globalExtensionsOption = new Option<bool> { Key = $"{nameof(MoqProtectedSourceGenerator)}_GlobalExtensions", Value = true };
@@ -186,6 +199,6 @@ $@"public static class {className}
             var setupsOrVerifications = isSetup ? setups : verifications;
             setupsOrVerifications.Add((arguments, fileLocation));
         }
-    
+
     }
 }

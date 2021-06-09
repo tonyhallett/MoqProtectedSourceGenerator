@@ -2,6 +2,7 @@
 {
     public abstract class MyProtected
     {
+        protected abstract int AbstractMethodWithReturn();
         protected abstract void AbstractMethod();
         public void InvokeAbstractMethod()
         {
@@ -12,6 +13,5 @@
         {
             AbstractMethodArgs(value);
         }
-        protected abstract int SomeProperty { get; }
     }
 }

@@ -6,7 +6,7 @@ namespace MoqProtectedSourceGenerator
 {
     public static class StringBuilderExtensions
     {
-        public static void AggregateAppendIfLast<TSource>(this StringBuilder stringBuilder,List<TSource> source, Action<TSource, Func<string, StringBuilder>, bool> appendWithLast)
+        public static void AggregateAppendIfLast<TSource>(this StringBuilder stringBuilder, List<TSource> source, Action<TSource, Func<string, StringBuilder>, bool> appendWithLast)
         {
             source.AggregateWithLast(stringBuilder, (sb, entry, isLast) =>
              {

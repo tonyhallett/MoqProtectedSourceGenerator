@@ -25,24 +25,24 @@ namespace MoqProtectedSourceGenerator
             return usingsStringBuilder.ToString();
         }
 
-        public static string CreateInternalInterface(string name, string members,string prepend = "    ")
+        public static string CreateInternalInterface(string name, string members, string prepend = "    ")
         {
-            return 
+            return
 @$"{prepend}internal interface {name}{{
 {members}
     }}";
         }
 
-        public static string CreateMembers(IEnumerable<BasePropertyDeclarationSyntax> properties, IEnumerable<MethodDeclarationSyntax> methods,string prepend = "        ")
+        public static string CreateMembers(IEnumerable<BasePropertyDeclarationSyntax> properties, IEnumerable<MethodDeclarationSyntax> methods, string prepend = "        ")
         {
             var memberDeclarations = ((IEnumerable<MemberDeclarationSyntax>)properties).Concat(methods).ToList();
-            
+
             var memberBuilder = new StringBuilder();
             memberBuilder.AggregateAppendIfLast(memberDeclarations, (memberDecaration, append, _) =>
              {
                  append(prepend + memberDecaration.NormalizeWhitespace().ToFullString());
              });
-            
+
             return memberBuilder.ToString();
         }
 
@@ -58,7 +58,7 @@ namespace MoqProtectedSourceGenerator
 
         public static string Create(string usings, string types)
         {
-            return 
+            return
 $@"{usings}
 namespace {MoqProtectedGenerated.NamespaceName}
 {{

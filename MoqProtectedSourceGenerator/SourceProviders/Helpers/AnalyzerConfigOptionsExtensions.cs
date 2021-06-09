@@ -35,7 +35,7 @@ namespace MoqProtectedSourceGenerator
 
         public static void GetOption<T>(this AnalyzerConfigOptions analyzerConfigOptions, Option<T> option, OptionSearch optionSearch = OptionSearch.Both)
         {
-            if(MockAnalyzerConfigOptions != null)
+            if (MockAnalyzerConfigOptions != null)
             {
                 analyzerConfigOptions = MockAnalyzerConfigOptions;
             }

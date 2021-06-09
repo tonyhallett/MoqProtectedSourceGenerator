@@ -2,7 +2,7 @@
 {
     internal interface MyProtectedLike
     {
-        int SomeProperty { get; }
+        int AbstractMethodWithReturn();
         void AbstractMethod();
         void AbstractMethodArgs(int value);
 
