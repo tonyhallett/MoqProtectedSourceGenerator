@@ -8,7 +8,6 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace MoqProtectedSourceGenerator
 {
-
     public class MethodFakeExtensionClass : IFakeExtensionMethodClass
     {
         private static readonly List<string> defaultNamespaces = new()
@@ -47,8 +46,7 @@ namespace MoqProtectedSourceGenerator
             this.mockedTypeName = mockedTypeName;
             var methodDeclaration = methodDetails.Declaration;
 
-            var isVoid = methodDeclaration.ReturnType is PredefinedTypeSyntax predefinedTypeSyntax && predefinedTypeSyntax.Keyword.IsKind(SyntaxKind.VoidKeyword);
-            var returnTypeDetails = returnTypeDetailsLookup[isVoid];
+            var returnTypeDetails = returnTypeDetailsLookup[methodDeclaration.ReturnTypeIsVoid()];
             methodBuilderType = returnTypeDetails.MethodBuilderType(mockedTypeName, methodDeclaration.ReturnType.ToString());
             dictionaryExpressionOf = returnTypeDetails.DictionaryExpressionOf(likeTypeName, methodDeclaration.ReturnType.ToString());
 
