@@ -23,6 +23,8 @@
     </Reference>
   </ItemGroup>
 
-  
-
+  <Import Project="..\..\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator\options.props"/>
+  <PropertyGroup>
+    <MoqProtectedSourceGenerator_GlobalExtensions>false</MoqProtectedSourceGenerator_GlobalExtensions>
+  </PropertyGroup>
 </Project>
