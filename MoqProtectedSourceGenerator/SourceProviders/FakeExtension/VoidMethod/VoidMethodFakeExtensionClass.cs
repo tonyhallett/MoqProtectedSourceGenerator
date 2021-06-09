@@ -95,21 +95,7 @@ namespace MoqProtectedSourceGenerator
                 {LambdaExpression(setUpOrVerification.arguments)}
             }}{comma}");
              });
-            //var count = 1;
-            //setupsOrVerifications.Aggregate(dictionaryEntryStringBuilder, (sb, setUpOrVerification) =>
-            // {
-            //     var isLast = count == numSetupsOrVerifications;
-            //     var comma = isLast ? "" : ",";
-            //     Func<string, StringBuilder> append = isLast ? sb.Append: sb.AppendLine;
-            //     append(@$"            {{
-            //    {FilePathAndLine(setUpOrVerification.fileLocation)},
-            //    {LambdaExpression(setUpOrVerification.arguments)}
-            //}}{comma}");
-            //     count++;
-            //     return sb;
-            // });
             
-            //var initializer = dictionaryEntryStringBuilder.ToString();
             return @$"
         {{
 {dictionaryEntryStringBuilder}

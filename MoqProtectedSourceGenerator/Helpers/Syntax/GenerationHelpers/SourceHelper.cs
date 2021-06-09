@@ -25,28 +25,25 @@ namespace MoqProtectedSourceGenerator
             return usingsStringBuilder.ToString();
         }
 
-        public static string CreateInternalInterface(string name, string members)
+        public static string CreateInternalInterface(string name, string members,string prepend = "    ")
         {
             return 
-@$"    internal interface {name}{{
+@$"{prepend}internal interface {name}{{
 {members}
-    }}
-";
+    }}";
         }
 
-        public static string CreateMembers(IEnumerable<BasePropertyDeclarationSyntax> properties, IEnumerable<MethodDeclarationSyntax> methods)
+        public static string CreateMembers(IEnumerable<BasePropertyDeclarationSyntax> properties, IEnumerable<MethodDeclarationSyntax> methods,string prepend = "        ")
         {
+            var memberDeclarations = ((IEnumerable<MemberDeclarationSyntax>)properties).Concat(methods).ToList();
+            
             var memberBuilder = new StringBuilder();
-            foreach (var property in properties)
-            {
-                memberBuilder.AppendLine("\t\t" + property.NormalizeWhitespace().ToFullString());
-            }
-            foreach (var method in methods)
-            {
-                memberBuilder.AppendLine("\t\t" + method.NormalizeWhitespace().ToFullString());
-            }
-            var members = memberBuilder.ToString();
-            return members;
+            memberBuilder.AggregateAppendIfLast(memberDeclarations, (memberDecaration, append, _) =>
+             {
+                 append(prepend + memberDecaration.NormalizeWhitespace().ToFullString());
+             });
+            
+            return memberBuilder.ToString();
         }
 
         public static string Create(IEnumerable<string> usings, string types)

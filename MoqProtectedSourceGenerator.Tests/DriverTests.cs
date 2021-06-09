@@ -59,12 +59,10 @@ namespace ClassLibrary1
 namespace MoqProtectedGenerated
 {
     internal interface MyProtectedLike{
-		int SomeProperty { get; }
-		void AbstractMethod();
-		void AbstractMethodArgs(int value);
-
+        int SomeProperty { get; }
+        void AbstractMethod();
+        void AbstractMethodArgs(int value);
     }
-
 }";
 
             AssertEqualGeneratedSource(source, "MyProtectedLike.cs", expectedSource);

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -70,9 +71,12 @@ namespace MoqProtectedSourceGenerator
 
         private void AddVoidMethodTypes(GeneratorExecutionContext context)
         {
-            context.AddSource("VoidMethodTypes.cs", SourceHelper.Create(new List<string> { MoqUsings.Moq, MoqUsings.MoqLanguageFlow, "using System;" }, VoidMethodTypes.Get()));
+            Dictionary<string, string> builderTypes = ManifestResourceStringReader.Read("BuilderTypes");
+            foreach(var kvp in builderTypes)
+            {
+                context.AddSource($"{kvp.Key}.cs", kvp.Value);
+            }
         }
-
 
     }
 }

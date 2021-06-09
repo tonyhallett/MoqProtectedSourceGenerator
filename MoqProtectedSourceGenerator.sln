@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.31105.61
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoqProtectedSourceGenerator", "MoqProtectedSourceGenerator\MoqProtectedSourceGenerator.csproj", "{AFADFD37-C6C9-4A0B-9BA6-A751E2187C0F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{85AC39D2-77B1-481C-9C73-88D53F8512F1} = {85AC39D2-77B1-481C-9C73-88D53F8512F1}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProtectedDll", "ProtectedDll\ProtectedDll.csproj", "{573315F9-F656-4CD6-A0D5-7BFDE7860EED}"
 EndProject
@@ -14,7 +17,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EndToEndXUnit", "EndToEndXU
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestWithGenerator", "TestWithGenerator\TestWithGenerator.csproj", "{718DD5AF-423F-45DA-B1F5-DF324A110E0F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoqProtectedSourceGenerator.Tests", "MoqProtectedSourceGenerator.Tests\MoqProtectedSourceGenerator.Tests.csproj", "{CEEC627B-D29B-46D1-9B78-DF4E7B730886}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoqProtectedSourceGenerator.Tests", "MoqProtectedSourceGenerator.Tests\MoqProtectedSourceGenerator.Tests.csproj", "{CEEC627B-D29B-46D1-9B78-DF4E7B730886}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuilderTypes", "BuilderTypes\BuilderTypes.csproj", "{4284FC61-ED0A-4047-9E36-E50CBC786711}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuilderTypesResourceTask", "BuilderTypesResourceTask\BuilderTypesResourceTask.csproj", "{85AC39D2-77B1-481C-9C73-88D53F8512F1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4284FC61-ED0A-4047-9E36-E50CBC786711} = {4284FC61-ED0A-4047-9E36-E50CBC786711}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,6 +52,14 @@ Global
 		{CEEC627B-D29B-46D1-9B78-DF4E7B730886}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CEEC627B-D29B-46D1-9B78-DF4E7B730886}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CEEC627B-D29B-46D1-9B78-DF4E7B730886}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4284FC61-ED0A-4047-9E36-E50CBC786711}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4284FC61-ED0A-4047-9E36-E50CBC786711}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4284FC61-ED0A-4047-9E36-E50CBC786711}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4284FC61-ED0A-4047-9E36-E50CBC786711}.Release|Any CPU.Build.0 = Release|Any CPU
+		{85AC39D2-77B1-481C-9C73-88D53F8512F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{85AC39D2-77B1-481C-9C73-88D53F8512F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{85AC39D2-77B1-481C-9C73-88D53F8512F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{85AC39D2-77B1-481C-9C73-88D53F8512F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

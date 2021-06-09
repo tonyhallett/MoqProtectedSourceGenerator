@@ -26,7 +26,6 @@ namespace ClassLibrary1
 
     public class Test
     {
-        [Test]
         public void Generate()
         {
             var mock = new Mock<MyProtected>();
