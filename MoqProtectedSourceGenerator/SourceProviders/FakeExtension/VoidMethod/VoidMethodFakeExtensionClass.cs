@@ -1,41 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using MoqProtectedSourceGenerator.Helpers.GenerationHelpers;
 
 namespace MoqProtectedSourceGenerator
 {
-    public class VoidMethodFakeExtensionClass : CSharpSyntaxRewriter, IFakeExtensionMethodClass
+    public class VoidMethodFakeExtensionClass : IFakeExtensionMethodClass
     {
-        private CompilationUnitSyntax compilationUnitSyntax;
+        private static readonly List<string> defaultNamespaces = new()
+        {
+            "System",
+            "System.Collections.Generic",
+            "System.Linq.Expressions",
+            "Moq",
+            "Moq.Protected",
+        };
+        
+        private readonly List<(ArgumentListSyntax arguments, FileLocation fileLocation)> setups = new();
+        private readonly List<(ArgumentListSyntax arguments, FileLocation fileLocation)> verifications = new();
         private readonly string extensionMethodSignature;
-        private bool visitingCorrectDictionary = false;
-        private bool isSetup;
-        private ArgumentListSyntax arguments;
-        private FileLocation fileLocation;
-        private string LikeTypeName { get; }
-        private string MockedTypeName { get; }
-        private INamespaceSymbol MockedTypeNamespace { get; }
-        private MethodDeclarationSyntax Method { get; }
-        private List<string> MethodNamespaces { get; set; }
+        private readonly string likeTypeName;
+        private readonly string mockedTypeName;
+        private readonly string methodName;
+        private readonly string uniqueMethodName;
+        private readonly string className;
+        private readonly List<string> namespaces;
+        
+        private bool isGlobal;
 
         public VoidMethodFakeExtensionClass(string likeTypeName, string mockedTypeName, INamespaceSymbol mockedTypeNamespace, MethodDetails methodDetails)
         {
-            LikeTypeName = likeTypeName;
-            MockedTypeName = mockedTypeName;
-            MockedTypeNamespace = mockedTypeNamespace;
-            Method = methodDetails.Declaration;
+            this.likeTypeName = likeTypeName;
+            this.mockedTypeName = mockedTypeName;
+            var methodDeclaration = methodDetails.Declaration;
+            methodName = methodDeclaration.Identifier.Text;
+            //for now
+            uniqueMethodName = methodName;
+            className = $"{mockedTypeName}_{uniqueMethodName}";
 
+            var MethodNamespaces = methodDetails.UniqueNamespaces.Select(ns => ns.FullNamespace()).ToList();
+            namespaces = defaultNamespaces.Concat(MethodNamespaces).ToList();
+            namespaces.Add(mockedTypeNamespace.FullNamespace());
 
-            MethodNamespaces = methodDetails.UniqueNamespaces.Select(ns => ns.FullNamespace()).ToList();
-
-            var extensionMethod = Method.MakeExtension($"Mock<{MockedTypeName}>", "mock")
-                .WithReturnType(SyntaxFactory.ParseTypeName($"IVoidMethodBuilder<{MockedTypeName}>"))
+            var extensionMethod = methodDeclaration.MakeExtension($"Mock<{mockedTypeName}>", "mock")
+                .WithReturnType(SyntaxFactory.ParseTypeName($"IVoidMethodBuilder<{mockedTypeName}>"))
                 .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.None))
                 .WithModifiers(
                     new SyntaxTokenList(
@@ -46,127 +57,137 @@ namespace MoqProtectedSourceGenerator
                     )
                 ).NormalizeWhitespace();
             extensionMethodSignature = extensionMethod.ToFullString();
-            GenerateSyntax();
         }
 
-        private string FilePathAndLine()
+        private string FilePathAndLine(FileLocation fileLocation)
         {
             return "@\"" + $"{fileLocation.FilePath}_{fileLocation.Line + 1}" + "\"";
         }
 
-        private string LambdaExpression()
+        private string LambdaExpression(ArgumentListSyntax arguments)
         {
-            return $"like => like.{Method.Identifier.Text}{arguments.ToFullString()}";
+            return $"like => like.{methodName}{arguments.ToFullString()}";
         }
 
-        private ExpressionSyntax SetupOrVerifyInitializerEntry(bool isFirst)
+        private string GetSetupsInitializer()
         {
-            var complexInitializerExpression = CSharpSyntaxFactory.ComplexInitializer(FilePathAndLine(), LambdaExpression());
-            if (!isFirst)
+            return GetSetupsOrVerificationsInitializer(setups);
+        }
+
+        private string GetVerificationsInitializer()
+        {
+            return GetSetupsOrVerificationsInitializer(verifications);
+        }
+
+        private string GetSetupsOrVerificationsInitializer(List<(ArgumentListSyntax arguments, FileLocation fileLocation)> setupsOrVerifications)
+        {
+            var numSetupsOrVerifications = setupsOrVerifications.Count;
+            if (numSetupsOrVerifications == 0)
             {
-                complexInitializerExpression = complexInitializerExpression.WithLeadingNewline();
+                return "{}";
             }
-
-            return complexInitializerExpression;
-        }
-
-        public override SyntaxNode VisitInitializerExpression(InitializerExpressionSyntax node)
-        {
-            return node.AddExpressions(SetupOrVerifyInitializerEntry(node.Expressions.Count == 0));
-        }
-
-        public override SyntaxNode VisitVariableDeclarator(VariableDeclaratorSyntax node)
-        {
-            var dictionaryName = node.Identifier.Text;
-            var requiredDictionaryName = isSetup ? "Setups" : "Verifications";
-            visitingCorrectDictionary = dictionaryName == requiredDictionaryName;
-            if (visitingCorrectDictionary)
-            {
-                return base.VisitVariableDeclarator(node);
-            }
-            return node;
-
-        }
-
-        private string GetUniqueMethodName()
-        {
-            //for now
-            return Method.Identifier.ToString();
-        }
-
-        private string GetClassName()
-        {
-            return $"{MockedTypeName}_{GetUniqueMethodName()}";
-        }
-
-        private void GenerateSyntax()
-        {
-            List<string> requiredUsings = new()
-            {
-                "System",
-                "System.Collections.Generic",
-                "System.Linq.Expressions",
-                "Moq",
-                "Moq.Protected",
-                MockedTypeNamespace.FullNamespace()
-            };
-            var namespaces = requiredUsings.Concat(MethodNamespaces);
-
-            var namespaceBuilder = new StringBuilder();
-            foreach (var ns in namespaces)
-            {
-                namespaceBuilder.AppendLine($"using {ns};");
-            }
-
-            compilationUnitSyntax = SyntaxFactory.ParseSyntaxTree(@$"
-{namespaceBuilder}
-namespace {MoqProtectedGenerated.NamespaceName}{{
-	public static class {GetClassName()}
-	{{
-		private static readonly Dictionary<string, Expression<Action<{LikeTypeName}>>> Setups =
-			new Dictionary<string, Expression<Action<{LikeTypeName}>>>
-		{{
-
-        }};
-        private static readonly Dictionary<string, Expression<Action<{LikeTypeName}>>> Verifications =
-            new Dictionary<string, Expression<Action<{LikeTypeName}>>>
-            {{
-            }};
-
-        private static string GetKey(string sourceFileInfo, int sourceLineNumber)
+            var dictionaryEntryStringBuilder = new StringBuilder();
+            dictionaryEntryStringBuilder.AggregateAppendIfLast(setupsOrVerifications, (setUpOrVerification, append, isLast) =>
+             {
+                 var comma = isLast ? "" : ",";
+                 append(@$"            {{
+                {FilePathAndLine(setUpOrVerification.fileLocation)},
+                {LambdaExpression(setUpOrVerification.arguments)}
+            }}{comma}");
+             });
+            //var count = 1;
+            //setupsOrVerifications.Aggregate(dictionaryEntryStringBuilder, (sb, setUpOrVerification) =>
+            // {
+            //     var isLast = count == numSetupsOrVerifications;
+            //     var comma = isLast ? "" : ",";
+            //     Func<string, StringBuilder> append = isLast ? sb.Append: sb.AppendLine;
+            //     append(@$"            {{
+            //    {FilePathAndLine(setUpOrVerification.fileLocation)},
+            //    {LambdaExpression(setUpOrVerification.arguments)}
+            //}}{comma}");
+            //     count++;
+            //     return sb;
+            // });
+            
+            //var initializer = dictionaryEntryStringBuilder.ToString();
+            return @$"
         {{
-            return sourceFileInfo + ""_"" + sourceLineNumber;
-        }}
-        {extensionMethodSignature}
-        {{
-            return new VoidMethodBuilder<{MockedTypeName}>(
-                (sourceFileInfo, sourceLineNumber) => mock.Protected().As<{LikeTypeName}>().Setup(Setups[GetKey(sourceFileInfo, sourceLineNumber)]),
-                (sourceFileInfo, sourceLineNumber, times, failMessage) => mock.Protected().As<{LikeTypeName}>().Verify(Verifications[GetKey(sourceFileInfo, sourceLineNumber)], times, failMessage)
-            );
-        }}
+{dictionaryEntryStringBuilder}
+        }}";
+        }
+
+        private string WithNamespace(string extensionClass)
+        {
+            if (!isGlobal)
+            {
+                return $@"namespace {MoqProtectedGenerated.NamespaceName}
+{{
+{extensionClass}
+}}";
+            }
+            else
+            {
+                return extensionClass;
+            }
+        }
+        
+        private string GetExtensionClass()
+        {
+            var extensionClass = 
+$@"public static class {className}
+{{
+    private static readonly Dictionary<string, Expression<Action<{likeTypeName}>>> Setups =
+        new Dictionary<string, Expression<Action<{likeTypeName}>>>{GetSetupsInitializer()};
+    private static readonly Dictionary<string, Expression<Action<{likeTypeName}>>> Verifications =
+        new Dictionary<string, Expression<Action<{likeTypeName}>>>{GetVerificationsInitializer()};
+
+    private static string GetKey(string sourceFileInfo, int sourceLineNumber)
+    {{
+        return sourceFileInfo + ""_"" + sourceLineNumber;
     }}
-}}
-").GetRoot() as CompilationUnitSyntax;
+
+    {extensionMethodSignature}
+    {{
+        return new VoidMethodBuilder<{mockedTypeName}>(
+            (sourceFileInfo, sourceLineNumber) => mock.Protected().As<{likeTypeName}>().Setup(Setups[GetKey(sourceFileInfo, sourceLineNumber)]),
+            (sourceFileInfo, sourceLineNumber, times, failMessage) => mock.Protected().As<{likeTypeName}>().Verify(Verifications[GetKey(sourceFileInfo, sourceLineNumber)], times, failMessage)
+        );
+    }}
+}}";
+            if (isGlobal)
+            {
+                return extensionClass;
+            }
+
+            return extensionClass.PrefixEachLine("    ");
+        }
+
+        private string GetUsings()
+        {
+            if (isGlobal)
+            {
+                namespaces.Add(MoqProtectedGenerated.NamespaceName);
+            }
+            return SourceHelper.CreateUsings(namespaces);
+        }
+
+        private string GetSource()
+        {
+            string usings = GetUsings();
+            string extensionClassAndNamespace = WithNamespace(GetExtensionClass());
+            return 
+@$"{usings}
+{extensionClassAndNamespace}
+";
         }
 
         public void AddSource(GeneratorExecutionContext context)
         {
-            PossiblyMakeGlobal(context.AnalyzerConfigOptions);
-            var source = compilationUnitSyntax.ToFullString();
-            context.AddSource($"{GetClassName()}.cs", source);
+            isGlobal = IsGlobalExtensionClass(context.AnalyzerConfigOptions);
+            var source = GetSource();
+            context.AddSource($"{className}.cs", source);
         }
-        private void PossiblyMakeGlobal(AnalyzerConfigOptionsProvider configOptionProvider)
-        {
-            if (IsGlobalExtensionClass(configOptionProvider))
-            {
-                var namespaceDeclaration = compilationUnitSyntax.Members.OfType<NamespaceDeclarationSyntax>().First();
-                var extensionClass = namespaceDeclaration.Members.First().WithLeadingTrivia(SyntaxFactory.ParseLeadingTrivia(Environment.NewLine + Environment.NewLine));
-                var generatedUsing = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(MoqProtectedGenerated.NamespaceName)).NormalizeWhitespace();
-                compilationUnitSyntax = compilationUnitSyntax.AddUsings(generatedUsing)
-                    .WithMembers(SyntaxFactory.SingletonList(extensionClass));
-
-            }
-        }
+        
         private bool IsGlobalExtensionClass(AnalyzerConfigOptionsProvider configOptionProvider)
         {
             var globalExtensionsOption = new Option<bool> { Key = $"{nameof(MoqProtectedSourceGenerator)}_GlobalExtensions", Value = true };
@@ -176,10 +197,9 @@ namespace {MoqProtectedGenerated.NamespaceName}{{
 
         public void AddSetupOrVerify(bool isSetup, ArgumentListSyntax arguments, FileLocation fileLocation)
         {
-            this.isSetup = isSetup;
-            this.arguments = arguments;
-            this.fileLocation = fileLocation;
-            compilationUnitSyntax = this.VisitCompilationUnit(compilationUnitSyntax) as CompilationUnitSyntax;
+            var setupsOrVerifications = isSetup ? setups : verifications;
+            setupsOrVerifications.Add((arguments, fileLocation));
         }
+    
     }
 }

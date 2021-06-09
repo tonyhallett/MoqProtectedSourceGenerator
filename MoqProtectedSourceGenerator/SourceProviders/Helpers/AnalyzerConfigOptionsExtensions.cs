@@ -8,6 +8,7 @@ namespace MoqProtectedSourceGenerator
 
     public static class AnalyzerConfigOptionsExtensions
     {
+        public static AnalyzerConfigOptions MockAnalyzerConfigOptions { get; set; }
         private static (bool converted, object value) ConvertValue(string value, Type toType)
         {
             if (toType == typeof(string))
@@ -34,6 +35,10 @@ namespace MoqProtectedSourceGenerator
 
         public static void GetOption<T>(this AnalyzerConfigOptions analyzerConfigOptions, Option<T> option, OptionSearch optionSearch = OptionSearch.Both)
         {
+            if(MockAnalyzerConfigOptions != null)
+            {
+                analyzerConfigOptions = MockAnalyzerConfigOptions;
+            }
             if (option.IsObject)
             {
                 T instance = Activator.CreateInstance<T>();

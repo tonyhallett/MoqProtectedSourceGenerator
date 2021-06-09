@@ -10,8 +10,6 @@ namespace MoqProtectedSourceGenerator.Tests
     {
         public static ImmutableArray<GeneratedSourceResult> RunTest(Compilation inputCompilation, ISourceGenerator generator)
         {
-            Assert.Empty(inputCompilation.GetDiagnostics());
-
             // Create the driver that will control the generation, passing in our generator
             GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
 

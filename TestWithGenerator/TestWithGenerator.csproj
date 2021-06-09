@@ -25,6 +25,6 @@
 
   <Import Project="..\..\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator\options.props"/>
   <PropertyGroup>
-    <MoqProtectedSourceGenerator_GlobalExtensions>false</MoqProtectedSourceGenerator_GlobalExtensions>
+    <MoqProtectedSourceGenerator_GlobalExtensions>true</MoqProtectedSourceGenerator_GlobalExtensions>
   </PropertyGroup>
 </Project>

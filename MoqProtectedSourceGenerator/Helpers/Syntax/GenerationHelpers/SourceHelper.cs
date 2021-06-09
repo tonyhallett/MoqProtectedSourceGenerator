@@ -10,7 +10,13 @@ namespace MoqProtectedSourceGenerator
     {
         public static string CreateUsings(IEnumerable<INamespaceSymbol> namespaceSymbols)
         {
-            var namespaces = namespaceSymbols.Select(ns => ns.FullNamespace()).OrderBy(s => s);
+            var namespaces = namespaceSymbols.Select(ns => ns.FullNamespace()).OrderBy(s => s).Distinct();
+            return CreateUsings(namespaces);
+        }
+
+        public static string CreateUsings(IEnumerable<string> namespaces)
+        {
+            namespaces = namespaces.OrderBy(s => s).Distinct();
             var usingsStringBuilder = new StringBuilder();
             foreach (var ns in namespaces)
             {
@@ -21,8 +27,8 @@ namespace MoqProtectedSourceGenerator
 
         public static string CreateInternalInterface(string name, string members)
         {
-            return @$"
-    internal interface {name}{{
+            return 
+@$"    internal interface {name}{{
 {members}
     }}
 ";
@@ -55,8 +61,8 @@ namespace MoqProtectedSourceGenerator
 
         public static string Create(string usings, string types)
         {
-            return $@"
-{usings}
+            return 
+$@"{usings}
 namespace {MoqProtectedGenerated.NamespaceName}
 {{
 {types}
