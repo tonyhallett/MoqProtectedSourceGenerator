@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.Composition;
-using Microsoft.CodeAnalysis;
 
 namespace MoqProtectedSourceGenerator
 {
@@ -35,22 +34,18 @@ namespace MoqProtectedSourceGenerator
             this.builderTypesSource = builderTypesSource;
         }
         public IFakeExtensionMethod Create(
-            string likeTypeName,
-            string mockedTypeName,
-            INamespaceSymbol mockedTypeNamespace,
+            IProtectedLike protectedLike,
             ProtectedLikeMethodDetails methodDetails
         )
         {
-            var typeAndMethodDetails = new TypeAndMethodDetails
+            var likeAndMethodDetails = new LikeAndMethodDetails
             {
-                LikeTypeName = likeTypeName,
-                MockedTypeName = mockedTypeName,
-                MockedTypeNamespace = mockedTypeNamespace,
+                ProtectedLike = protectedLike,
                 MethodDetails = methodDetails
             };
 
             return new MethodFakeExtensionClass(
-                typeAndMethodDetails,
+                likeAndMethodDetails,
                 methodInvocationExtractor,
                 parameterTypeExtractor,
                 protectedMock,

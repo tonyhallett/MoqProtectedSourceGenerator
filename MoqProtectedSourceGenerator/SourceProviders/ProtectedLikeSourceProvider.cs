@@ -26,14 +26,15 @@ namespace MoqProtectedSourceGenerator
             foreach (var kvp in protectedLikeSources)
             {
                 var protectedLike = kvp.Value;
+                var likeTypeName = protectedLike.MinimallyUniqueLikeTypeName();
                 var source = SourceHelper.Create(
                         SourceHelper.CreateUsings(GetUniqueNamespaces(protectedLike)),
                         SourceHelper.CreateInternalInterface(
-                            protectedLike.LikeTypeName,
+                            likeTypeName,
                             SourceHelper.CreateMembers(protectedLike.Properties.Select(p => p.Declaration), protectedLike.Methods.Select(m => m.Declaration))
                         )
                     );
-                context.AddSource($"{protectedLike.LikeTypeName}.cs", source);
+                context.AddSource($"{likeTypeName}.cs", source);
             }
         }
 
@@ -62,8 +63,6 @@ namespace MoqProtectedSourceGenerator
                 var protectedLike = protectedLikes.GetProtectedLikeIfApplicable(mockedTypeSymbol);
                 if (protectedLike != null)
                 {
-                    
-                    
                     protectedLikeSources.Add(mockedTypeSymbol.FullyQualifiedTypeName(), protectedLike);
                 }
             }

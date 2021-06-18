@@ -27,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator.csproj" />
     <ProjectReference Include="..\MoqProtectedTyped\MoqProtectedTyped.csproj" />
+    <ProjectReference Include="..\ProtectedDll\ProtectedDll.csproj" />
   </ItemGroup>
 
   <ItemGroup>

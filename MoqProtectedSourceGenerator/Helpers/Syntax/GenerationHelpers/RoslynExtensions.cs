@@ -61,6 +61,11 @@ namespace MoqProtectedSourceGenerator
         }
         public static string FullNamespace(this INamespaceSymbol namespaceSymbol)
         {
+            return namespaceSymbol.JoinNamespaces(".");
+        }
+
+        public static string JoinNamespaces(this INamespaceSymbol namespaceSymbol, string join)
+        {
             var stringBuilder = new StringBuilder();
             var stack = new Stack<string>();
             while (!namespaceSymbol.IsGlobalNamespace)
@@ -74,7 +79,7 @@ namespace MoqProtectedSourceGenerator
                 stringBuilder.Append(ns);
                 if (stack.Count > 0)
                 {
-                    stringBuilder.Append(".");
+                    stringBuilder.Append(join);
                 }
             }
             return stringBuilder.ToString();

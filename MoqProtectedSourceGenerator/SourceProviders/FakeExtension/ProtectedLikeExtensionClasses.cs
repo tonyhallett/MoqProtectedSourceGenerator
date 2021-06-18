@@ -13,7 +13,7 @@ namespace MoqProtectedSourceGenerator
             //{
             //    //todo
             //}
-            fakeExtensionMethods = protectedLike.Methods.Select(m => methodFakeExtensionFactory.Create(protectedLike.LikeTypeName, protectedLike.MockedTypeName, protectedLike.MockedTypeNamespace, m)).ToList();
+            fakeExtensionMethods = protectedLike.Methods.Select(m => methodFakeExtensionFactory.Create(protectedLike, m)).ToList();
         }
 
         public void AddSource(GeneratorExecutionContext context)

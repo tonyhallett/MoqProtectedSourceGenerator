@@ -73,6 +73,15 @@ namespace ClassLibrary1
     public abstract class SubType2 { }
     public class Derivation2 : SubType2 { }
 
+    public abstract class Duplicate
+    {
+        protected abstract string Dupe(int value);
+        public string Invoke(int value)
+        {
+            return Dupe(value);
+        }
+    }
+
     [TypeMatcher]
     public sealed class GenericParameterIsIntOrString : ITypeMatcher
     {
@@ -189,6 +198,13 @@ namespace ClassLibrary1
             mockDll.ProtectedMethod(It.IsAny<Other>(), "match").Build().Setup().Throws(new ExpectedException());
             mockDll.Object.CallProtectedMethod(new Other(), "not a match");
             Assert.Throws<ExpectedException>(() => mockDll.Object.CallProtectedMethod(new Other(), "match"));
+
+            var mockDuplicate = new ProtectedMock<Duplicate>();
+            mockDuplicate.Dupe(0).Build().Setup().Returns("First");
+            var mockDuplicateDll = new ProtectedMock<ProtectedDll.Duplicate>();
+            mockDuplicateDll.Dupe(0).Build().Setup().Returns("Second");
+            Assert.AreEqual("First", mockDuplicate.Object.Invoke(0));
+            Assert.AreEqual("Second", mockDuplicateDll.Object.Invoke(0));
 
         }
 

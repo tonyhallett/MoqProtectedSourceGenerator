@@ -9,7 +9,6 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace MoqProtectedSourceGenerator
 {
-
     public class MethodFakeExtensionClass : IFakeExtensionMethod
     {
         private static readonly List<string> defaultUsings = new()
@@ -20,19 +19,18 @@ namespace MoqProtectedSourceGenerator
             "Moq.Protected",
             "MoqProtectedTyped"
         };
-        private readonly List<string> usings;
+        private readonly Dictionary<string, SyntaxList<UsingDirectiveSyntax>> extensionsUsingsByFilePath = new();
+        private List<string> usings;
+
         private readonly List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> setups = new();
         private readonly List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> verifications = new();
-        private readonly string extensionMethodSignature;
-        private readonly string likeTypeName;
-        private readonly string mockedTypeName;
+        private readonly IProtectedLike protectedLike;
+        private readonly ProtectedLikeMethodDetails methodDetails;
         private readonly string methodName;
-        private readonly string genericTypeParameters = "";
-        private readonly List<IParameterSymbol> parameters;
-        private readonly string uniqueMethodName;
-        private readonly string className;
-        private readonly Dictionary<string, SyntaxList<UsingDirectiveSyntax>> extensionsUsingsByFilePath = new();
-        private readonly bool containsRefParameters;
+
+        private string genericTypeParameters = "";
+        private List<IParameterSymbol> parameters;
+        private bool containsRefParameters;
 
         private bool isGlobal;
         private readonly Dictionary<bool, IReturnTypeDetails> returnTypeDetailsLookup = new()
@@ -41,8 +39,6 @@ namespace MoqProtectedSourceGenerator
             { false, new ReturningReturnTypeDetails() },
         };
 
-        private readonly string methodBuilderType;
-        private readonly string expressionDelegate;
         private readonly IMethodInvocationExtractor methodInvocationExtractor;
         private readonly IParameterInfoExtractor parameterInfoExtractor;
         private readonly IProtectedMock protectedMock;
@@ -51,9 +47,11 @@ namespace MoqProtectedSourceGenerator
         private readonly IParameterInfoSource parameterInfoSource;
         private readonly IBuilderTypesSource builderTypesSource;
         private readonly List<Diagnostic> diagnostics = new();
+        
+
 
         public MethodFakeExtensionClass(
-            TypeAndMethodDetails typeAndMethodDetails,
+            LikeAndMethodDetails likeAndMethodDetails,
             IMethodInvocationExtractor methodInvocationExtractor,
             IParameterInfoExtractor parameterInfoExtractor,
             IProtectedMock protectedMock,
@@ -71,14 +69,23 @@ namespace MoqProtectedSourceGenerator
             this.parameterInfoSource = parameterInfoSource;
             this.builderTypesSource = builderTypesSource;
 
-            this.likeTypeName = typeAndMethodDetails.LikeTypeName;
-            this.mockedTypeName = typeAndMethodDetails.MockedTypeName;
-            var methodDetails = typeAndMethodDetails.MethodDetails;
-            var methodDeclaration = methodDetails.Declaration;
+            protectedLike = likeAndMethodDetails.ProtectedLike;
+            methodDetails = likeAndMethodDetails.MethodDetails;
 
-            var returnTypeDetails = returnTypeDetailsLookup[methodDeclaration.ReturnTypeIsVoid()];
-            methodBuilderType = returnTypeDetails.MethodBuilderType(mockedTypeName, methodDeclaration.ReturnType.ToString());
-            expressionDelegate = returnTypeDetails.ExpressionDelegate(likeTypeName, methodDeclaration.ReturnType.ToString());
+            InitializeParameters();
+            InitializeUsings();
+
+            methodName = methodDetails.Declaration.Identifier.Text;
+        }
+
+        private void InitializeUsings()
+        {
+            var methodNamespaces = methodDetails.UniqueNamespaces.Select(ns => ns.FullNamespace()).ToList();
+            usings = defaultUsings.Concat(methodNamespaces).ToList();
+        }
+
+        private void InitializeParameters()
+        {
             parameters = methodDetails.Symbol.Parameters.ToList();
             containsRefParameters = parameters.Any(p => p.RefKind == RefKind.Ref);
             if (methodDetails.Symbol.IsGenericMethod)
@@ -99,32 +106,8 @@ namespace MoqProtectedSourceGenerator
                     count++;
                 }
             }
-
-            methodName = methodDeclaration.Identifier.Text;
-            //todo single class for all extension methods - single dictionary
-            uniqueMethodName = methodName;
-            className = $"{mockedTypeName}_{uniqueMethodName}";
-
-            var MethodNamespaces = methodDetails.UniqueNamespaces.Select(ns => ns.FullNamespace()).ToList();
-            usings = defaultUsings.Concat(MethodNamespaces).ToList();
-            usings.Add(typeAndMethodDetails.MockedTypeNamespace.FullNamespace());
-
-            var extensionMethod = methodDeclaration.MakeExtension(protectedMock.GetClosedTypeName(mockedTypeName), "protectedMock")
-                .WithReturnType(SyntaxFactory.ParseTypeName($"I{methodBuilderType}"))
-                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.None))
-                .WithModifiers(
-                    new SyntaxTokenList(
-                        new SyntaxToken[]{
-                            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
-                            SyntaxFactory.Token(SyntaxKind.StaticKeyword)
-                        }
-                    )
-                );
-            extensionMethod = SwapOutsForOutType(extensionMethod);
-
-            extensionMethodSignature = extensionMethod.NormalizeWhitespace().ToFullString();
         }
-
+        
         // will create a helper for this...
         private MethodDeclarationSyntax SwapOutsForOutType(MethodDeclarationSyntax methodDeclarationSyntax)
         {
@@ -155,7 +138,6 @@ namespace MoqProtectedSourceGenerator
 
         private string GetSetupsOrVerificationsInitializer(bool isSetups)
         {
-
             List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> setupsOrVerifications = isSetups ? setups : verifications;
             var numSetupsOrVerifications = setupsOrVerifications.Count;
             if (numSetupsOrVerifications == 0)
@@ -254,8 +236,10 @@ namespace MoqProtectedSourceGenerator
             return (stringBuilder.ToString(), "expressionArgs");
         }
 
-        private string GetExtensionClass()
+        private string GetExtensionClass(string className,string mockedTypeName,string likeTypeName)
         {
+            var expressionDelegate = ExpressionDelegate(likeTypeName);
+            var methodBuilderType = MethodBuilderType(mockedTypeName);
             var (statements, expressionArrayVariable) = GetExpressionConstants();
             var extensionClass =
 $@"public static class {className}
@@ -269,11 +253,11 @@ $@"public static class {className}
         return sourceFileInfo + ""_"" + sourceLineNumber;
     }}
 
-    {extensionMethodSignature}
+    {ExtensionMethodSignature(mockedTypeName)}
     {{
         var mock = protectedMock.Mock;
         var protectedLike = mock.Protected().As<{likeTypeName}>();
-        
+
 	    var likeParameter = Expression.Parameter(typeof({likeTypeName}));
             
         var matches = MatcherObserver.GetMatches();
@@ -345,26 +329,65 @@ $@"public static class {className}
             return result;
         }
 
-        private string GetSource()
+        private (string source, string className) GetSource()
         {
+            var likeTypeName = protectedLike.MinimallyUniqueLikeTypeName();
+            var mockedTypeName = protectedLike.MockedType.FullyQualifiedTypeName();
+            //todo single class for all extension methods - single dictionary
+            var uniqueMethodName = methodName;
+            var className = $"{likeTypeName}_{uniqueMethodName}";
             string usings = GetUsings();
-            string extensionClassAndNamespace = WithNamespace(GetExtensionClass());
-            return
+            string extensionClassAndNamespace = WithNamespace(GetExtensionClass(className, mockedTypeName, likeTypeName));
+            var source =
 @$"{usings}
 {extensionClassAndNamespace}
 ";
+            return (source, className);
         }
 
         public void AddSource(GeneratorExecutionContext context)
         {
             ReportDiagnostics(context);
             isGlobal = IsGlobalExtensionClass(context.AnalyzerConfigOptions);
-            var source = GetSource();
+            var (source, className) = GetSource();
             context.AddSource($"{className}.cs", source);
             matcherWrapperSource.AddSource(context);
             setupExpressionArgumentSource.AddSource(context);
             parameterInfoSource.AddSource(context);
             builderTypesSource.AddSource(context);
+        }
+
+        private string ExpressionDelegate(string likeTypeName)
+        {
+            var methodDeclaration = methodDetails.Declaration;
+            var returnTypeDetails = returnTypeDetailsLookup[methodDeclaration.ReturnTypeIsVoid()];
+            return returnTypeDetails.ExpressionDelegate(likeTypeName, methodDeclaration.ReturnType.ToString());
+        }
+
+        private string MethodBuilderType(string mockedTypeName)
+        {
+            var methodDeclaration = methodDetails.Declaration;
+            var returnTypeDetails = returnTypeDetailsLookup[methodDeclaration.ReturnTypeIsVoid()];
+            return returnTypeDetails.MethodBuilderType(mockedTypeName, methodDeclaration.ReturnType.ToString());
+        }
+
+        private string ExtensionMethodSignature(string mockedTypeName)
+        {
+            var methodDeclaration = methodDetails.Declaration;
+            var extensionMethod = methodDeclaration.MakeExtension(protectedMock.GetClosedTypeName(mockedTypeName), "protectedMock")
+                .WithReturnType(SyntaxFactory.ParseTypeName($"I{MethodBuilderType(mockedTypeName)}"))
+                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.None))
+                .WithModifiers(
+                    new SyntaxTokenList(
+                        new SyntaxToken[]{
+                            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
+                            SyntaxFactory.Token(SyntaxKind.StaticKeyword)
+                        }
+                    )
+                );
+            extensionMethod = SwapOutsForOutType(extensionMethod);
+
+            return extensionMethod.NormalizeWhitespace().ToFullString();
         }
 
         private void ReportDiagnostics(GeneratorExecutionContext context)
@@ -387,8 +410,6 @@ $@"public static class {className}
             var setupsOrVerifications = isSetup ? setups : verifications;
             setupsOrVerifications.Add((parameterTypes, fileLocation));
         }
-
-
 
         public bool ExtensionInvocation(InvocationExpressionSyntax invocationExpression, string extensionName, SemanticModel semanticModel)
         {

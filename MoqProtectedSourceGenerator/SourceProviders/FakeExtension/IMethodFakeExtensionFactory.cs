@@ -4,6 +4,6 @@ namespace MoqProtectedSourceGenerator
 {
     public interface IMethodFakeExtensionFactory
     {
-        IFakeExtensionMethod Create(string likeTypeName, string mockedTypeName, INamespaceSymbol mockedTypeNamespace, ProtectedLikeMethodDetails methodDetails);
+        IFakeExtensionMethod Create(IProtectedLike protectedLike, ProtectedLikeMethodDetails methodDetails);
     }
 }

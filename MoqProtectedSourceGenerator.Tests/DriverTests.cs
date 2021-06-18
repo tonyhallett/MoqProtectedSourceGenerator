@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Moq;
 using MoqProtectedTyped;
+using OtherNamespace;
 using Xunit;
 
 namespace MoqProtectedSourceGenerator.Tests
@@ -31,7 +32,14 @@ using Moq.Protected;
 using MoqProtectedTyped;
 namespace ClassLibrary1
 {
-
+    public abstract class Duplicate
+    {
+        protected abstract string Dupe(int value);
+        public string Invoke(int value)
+        {
+            return Dupe(value);
+        }
+    }
     public abstract class MyProtected
     { 
         //protected abstract void AbstractMethodArgs<T>(T t1, T t2) where T:ConstraintClass;
@@ -47,8 +55,13 @@ namespace ClassLibrary1
     {
         public void Generate()
         {
-            var mock = new ProtectedMock<MyProtected>();
-            mock.OutParameter(     null).Build().Setup();
+            var mockDuplicate = new ProtectedMock<Duplicate>();
+            mockDuplicate.Dupe(0).Build().Setup().Returns(""First"");
+            var mockDuplicateDll = new ProtectedMock<ProtectedDll.Duplicate>();
+            mockDuplicateDll.Dupe(0).Build().Setup().Returns(""Second"");
+
+            //var mock = new ProtectedMock<MyProtected>();
+            //mock.OutParameter(     null).Build().Setup();
             //mock.RefGenericMethod(ref It.Ref<It.IsSubtype<SubType2>>.IsAny).Build().Setup();
             //mock.AbstractMethodArgs(1,It.IsAny<int>()).Build().Setup();
             //mock.AbstractMethodArgs(Out.Param(1)).Build().Setup();
@@ -81,7 +94,8 @@ namespace ClassLibrary1
             };
             var metadataReferences = new MetadataReference[] {
                 MetadataReference.CreateFromFile(typeof(Mock).GetTypeInfo().Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(MatcherObserver).GetTypeInfo().Assembly.Location)
+                MetadataReference.CreateFromFile(typeof(MatcherObserver).GetTypeInfo().Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Other).GetTypeInfo().Assembly.Location)
             }.Concat(assemblyNames.Select(n => MetadataReferenceHelper.CreateFromAssemblyLoad(n)));
             return CSharpCompilation.Create("compilation",
                 new[] { CSharpSyntaxTree.ParseText(source) },
