@@ -22,8 +22,7 @@ namespace MoqProtectedSourceGenerator
             var protectedLike = new ProtectedLike
             {
                 MockedType = mockedType,
-                //MockedTypeName = mockedType.Name,
-                MockedTypeName = GetFullyQualifiedMockedTypeName(mockedType),
+                MockedTypeName = mockedType.Name,
                 MockedTypeNamespace = mockedType.ContainingNamespace,
                 LikeTypeName = mockedType.Name + "Like",
                 Properties = new List<PropertyDetails>()

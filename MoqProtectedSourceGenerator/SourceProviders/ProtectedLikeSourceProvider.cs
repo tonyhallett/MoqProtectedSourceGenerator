@@ -12,7 +12,7 @@ namespace MoqProtectedSourceGenerator
     {
         private readonly IProtectedMock protectedTypeIdentifier;
         private readonly IProtectedLikes protectedLikes;
-        private readonly Dictionary<string, (string Source, string LikeTypeName)> protectedLikeSources = new();
+        private readonly Dictionary<string, IProtectedLike> protectedLikeSources = new();
 
         [ImportingConstructor]
         public ProtectedLikeSourceProvider(IProtectedLikes protectedLikes, IProtectedMock protectedTypeIdentifier)
@@ -25,7 +25,15 @@ namespace MoqProtectedSourceGenerator
         {
             foreach (var kvp in protectedLikeSources)
             {
-                context.AddSource($"{kvp.Value.LikeTypeName}.cs", kvp.Value.Source);
+                var protectedLike = kvp.Value;
+                var source = SourceHelper.Create(
+                        SourceHelper.CreateUsings(GetUniqueNamespaces(protectedLike)),
+                        SourceHelper.CreateInternalInterface(
+                            protectedLike.LikeTypeName,
+                            SourceHelper.CreateMembers(protectedLike.Properties.Select(p => p.Declaration), protectedLike.Methods.Select(m => m.Declaration))
+                        )
+                    );
+                context.AddSource($"{protectedLike.LikeTypeName}.cs", source);
             }
         }
 
@@ -47,22 +55,16 @@ namespace MoqProtectedSourceGenerator
 
         private void GenerateProtectedLikeIfProtected(TypeSyntax mockedType, SemanticModel semanticModel)
         {
-            var symbolInfo = semanticModel.GetSymbolInfo(mockedType);
+            var mockedTypeSymbolInfo = semanticModel.GetSymbolInfo(mockedType);
 
-            if (symbolInfo.Symbol is ITypeSymbol typeSymbol && !protectedLikeSources.ContainsKey(typeSymbol.Name))
+            if (mockedTypeSymbolInfo.Symbol is ITypeSymbol mockedTypeSymbol && !protectedLikeSources.ContainsKey(mockedTypeSymbol.FullyQualifiedTypeName()))
             {
-                var protectedLike = protectedLikes.GetProtectedLikeIfApplicable(typeSymbol);
+                var protectedLike = protectedLikes.GetProtectedLikeIfApplicable(mockedTypeSymbol);
                 if (protectedLike != null)
                 {
-                    var source = SourceHelper.Create(
-                        SourceHelper.CreateUsings(GetUniqueNamespaces(protectedLike)),
-                        SourceHelper.CreateInternalInterface(
-                            protectedLike.LikeTypeName,
-                            SourceHelper.CreateMembers(protectedLike.Properties.Select(p => p.Declaration), protectedLike.Methods.Select(m => m.Declaration))
-                        )
-                    );
-
-                    protectedLikeSources.Add(typeSymbol.Name, (source, protectedLike.LikeTypeName));
+                    
+                    
+                    protectedLikeSources.Add(mockedTypeSymbol.FullyQualifiedTypeName(), protectedLike);
                 }
             }
 

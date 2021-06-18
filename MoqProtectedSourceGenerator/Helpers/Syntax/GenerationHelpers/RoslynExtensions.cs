@@ -49,6 +49,16 @@ namespace MoqProtectedSourceGenerator
                 )
             );
         }
+        
+        public static string FullyQualifiedTypeName(this ITypeSymbol typeSymbol)
+        {
+            var fullNamespace = typeSymbol.ContainingNamespace.FullNamespace();
+            if (fullNamespace != "")
+            {
+                fullNamespace += ".";
+            }
+            return $"{fullNamespace}{typeSymbol.Name}";
+        }
         public static string FullNamespace(this INamespaceSymbol namespaceSymbol)
         {
             var stringBuilder = new StringBuilder();
