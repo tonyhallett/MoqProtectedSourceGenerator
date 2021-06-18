@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace MoqProtectedSourceGenerator
 {
-    public class ProtectedLikes
+
+    [Export(typeof(IProtectedLikes))]
+    public class ProtectedLikes : IProtectedLikes
     {
-        public event Action<ProtectedLike> NewLikeEvent;
-        public readonly List<ProtectedLike> ProtectedLikesList = new();
+        private readonly IProtectedLikeFactory protectedLikeFactory;
+
+        public event Action<IProtectedLike> NewLikeEvent;
 
         private bool IsCandidateType(ITypeSymbol mockedType)
         {
@@ -21,16 +25,20 @@ namespace MoqProtectedSourceGenerator
             return methods.Where(m => m.IsProtected() && (m.IsAbstract || m.IsVirtual)).ToList();
         }
 
-        public ProtectedLike TryGetProtectedLike(ITypeSymbol mockedType)
+        [ImportingConstructor]
+        public ProtectedLikes(IProtectedLikeFactory protectedLikeFactory)
+        {
+            this.protectedLikeFactory = protectedLikeFactory;
+        }
+        public IProtectedLike GetProtectedLikeIfApplicable(ITypeSymbol mockedType)
         {
             if (IsCandidateType(mockedType))
             {
+                //includes accessors
                 var applicableMethods = GetApplicableMethods(mockedType);
                 if (applicableMethods.Count > 0)
                 {
-                    var protectedLike = new ProtectedLike();
-                    protectedLike.Generate(mockedType, applicableMethods);
-                    ProtectedLikesList.Add(protectedLike);
+                    var protectedLike = protectedLikeFactory.Generate(mockedType, applicableMethods);
                     NewLikeEvent?.Invoke(protectedLike);
                     return protectedLike;
                 }

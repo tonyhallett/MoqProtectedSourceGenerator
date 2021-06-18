@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\MoqProtectedTyped\MoqProtectedTyped.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,7 +24,7 @@
     </Reference>
   </ItemGroup>
 
-  <Import Project="..\..\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator\options.props"/>
+  <Import Project="..\..\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator\options.props" />
   <PropertyGroup>
     <MoqProtectedSourceGenerator_GlobalExtensions>true</MoqProtectedSourceGenerator_GlobalExtensions>
   </PropertyGroup>

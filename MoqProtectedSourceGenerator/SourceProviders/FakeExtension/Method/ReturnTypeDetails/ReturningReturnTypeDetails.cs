@@ -2,7 +2,7 @@
 {
     public class ReturningReturnTypeDetails : IReturnTypeDetails
     {
-        public string DictionaryExpressionOf(string likeTypeName, string returnType)
+        public string ExpressionDelegate(string likeTypeName, string returnType)
         {
             return $"Func<{likeTypeName},{returnType}>";
         }

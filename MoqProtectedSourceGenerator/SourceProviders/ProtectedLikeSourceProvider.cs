@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -6,15 +7,18 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MoqProtectedSourceGenerator
 {
+    [Export(typeof(ISyntaxSourceProvider))]
     public class ProtectedLikeSourceProvider : ISyntaxSourceProvider
     {
-        private readonly MoqSyntaxHelper mockSyntaxHelper = new();
-        private readonly ProtectedLikes protectedLikes;
+        private readonly IProtectedMock protectedTypeIdentifier;
+        private readonly IProtectedLikes protectedLikes;
         private readonly Dictionary<string, (string Source, string LikeTypeName)> protectedLikeSources = new();
 
-        public ProtectedLikeSourceProvider(ProtectedLikes protectedLikes)
+        [ImportingConstructor]
+        public ProtectedLikeSourceProvider(IProtectedLikes protectedLikes, IProtectedMock protectedTypeIdentifier)
         {
             this.protectedLikes = protectedLikes;
+            this.protectedTypeIdentifier = protectedTypeIdentifier;
         }
 
         public void AddSource(GeneratorExecutionContext context)
@@ -27,23 +31,27 @@ namespace MoqProtectedSourceGenerator
 
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
         {
-            var typeSyntax = mockSyntaxHelper.GetMockedType(context.Node);
-            if (typeSyntax != null)
+            var mockedType = protectedTypeIdentifier.GetMockedType(context.Node);
+            if (mockedType != null)
             {
-                GenerateProtectedLikeIfProtected(typeSyntax, context.SemanticModel);
+                GenerateProtectedLikeIfProtected(mockedType, context.SemanticModel);
             }
         }
-        private IEnumerable<INamespaceSymbol> GetUniqueNamespaces(ProtectedLike protectedLike)
+
+        private IEnumerable<INamespaceSymbol> GetUniqueNamespaces(IProtectedLike protectedLike)
         {
-            return protectedLike.Methods.SelectMany(m => m.UniqueNamespaces).Concat(protectedLike.Properties.SelectMany(p => p.UniqueNamespaces)).Distinct<INamespaceSymbol>(SymbolEqualityComparer.Default);
+            return protectedLike.Methods.SelectMany(m => m.UniqueNamespaces)
+                .Concat(protectedLike.Properties.SelectMany(p => p.UniqueNamespaces))
+                .Distinct<INamespaceSymbol>(SymbolEqualityComparer.Default);
         }
-        private void GenerateProtectedLikeIfProtected(TypeSyntax type, SemanticModel semanticModel)
+
+        private void GenerateProtectedLikeIfProtected(TypeSyntax mockedType, SemanticModel semanticModel)
         {
-            var symbolInfo = semanticModel.GetSymbolInfo(type);
+            var symbolInfo = semanticModel.GetSymbolInfo(mockedType);
 
             if (symbolInfo.Symbol is ITypeSymbol typeSymbol && !protectedLikeSources.ContainsKey(typeSymbol.Name))
             {
-                var protectedLike = protectedLikes.TryGetProtectedLike(typeSymbol);
+                var protectedLike = protectedLikes.GetProtectedLikeIfApplicable(typeSymbol);
                 if (protectedLike != null)
                 {
                     var source = SourceHelper.Create(

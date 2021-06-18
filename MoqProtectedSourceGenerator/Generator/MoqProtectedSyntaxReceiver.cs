@@ -1,26 +1,23 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
 namespace MoqProtectedSourceGenerator
 {
-    public class SyntaxReceiver : SymbolVisitor, ISyntaxContextReceiver
+    [Export(typeof(ISyntaxContextReceiver))]
+    public class MoqProtectedSyntaxReceiver : SymbolVisitor, ISyntaxContextReceiver
     {
-        private readonly ProtectedLikes protectedLikes = new();
-
-        private readonly MoqBlocker moqBlocker = new();
-
-        private readonly List<ISyntaxSourceProvider> syntaxSourceProviders;
+        private readonly IMoqBlocker moqBlocker;
+        private readonly IEnumerable<ISyntaxSourceProvider> syntaxSourceProviders;
         public IEnumerable<ISourceProvider> SourceProviders =>
             syntaxSourceProviders.Select(sp => sp as ISourceProvider);
 
-        public SyntaxReceiver()
+        [ImportingConstructor]
+        public MoqProtectedSyntaxReceiver(IMoqBlocker moqBlocker, [ImportMany] IEnumerable<ISyntaxSourceProvider> syntaxSourceProviders)
         {
-            syntaxSourceProviders = new List<ISyntaxSourceProvider>
-            {
-                new ProtectedLikeSourceProvider(protectedLikes),
-                new FakeExtensionsSourceProvider(protectedLikes),
-            };
+            this.moqBlocker = moqBlocker;
+            this.syntaxSourceProviders = syntaxSourceProviders;
         }
         private void VisitSourceProviders(GeneratorSyntaxContext context)
         {

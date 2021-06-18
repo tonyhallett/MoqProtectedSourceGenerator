@@ -3,10 +3,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MoqProtectedSourceGenerator
 {
-    public interface IFakeExtensionMethodClass
+    public interface IFakeExtensionMethod
     {
         void AddSource(GeneratorExecutionContext context);
-        void AddSetupOrVerify(bool isSetup, ArgumentListSyntax arguments, FileLocation fileLocation);
 
+        bool ExtensionInvocation(InvocationExpressionSyntax invocationExpression, string extensionName, SemanticModel semanticModel);
     }
 }

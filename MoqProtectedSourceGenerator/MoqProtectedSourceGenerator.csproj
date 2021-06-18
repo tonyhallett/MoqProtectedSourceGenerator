@@ -11,12 +11,13 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis" Version="3.9.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2">
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="3.9.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.9.0" PrivateAssets="all" />
+    <PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
@@ -27,10 +28,10 @@
     <ResourceFile>$(MSBuildProjectDirectory)\builderTypes.resources</ResourceFile>
   </PropertyGroup>
   
-  <UsingTask TaskName="CreateResourceTask" AssemblyFile="C:\Users\tonyh\Source\Repos\MoqProtectedSourceGenerator\BuilderTypesResourceTask\bin\Debug\netstandard2.0\BuilderTypesResourceTask.dll"/>
+  <UsingTask TaskName="CreateResourceTask" AssemblyFile="C:\Users\tonyh\Source\Repos\MoqProtectedSourceGenerator\BuilderTypesResourceTask\bin\Debug\netstandard2.0\BuilderTypesResourceTask.dll" />
   <Target Name="InvokeCustomTask" BeforeTargets="CoreCompile ">
-    <Message Text="Creating resource file"/>
-    <CreateResourceTask ResourceFile="$(ResourceFile)"/>
+    <Message Text="Creating resource file" />
+    <CreateResourceTask ResourceFile="$(ResourceFile)" />
   </Target>
   <ItemGroup>
     <EmbeddedResource Include="$(ResourceFile)">

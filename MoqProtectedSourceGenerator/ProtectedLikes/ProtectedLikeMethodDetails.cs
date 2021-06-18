@@ -6,9 +6,9 @@ using Microsoft.CodeAnalysis.Formatting;
 
 namespace MoqProtectedSourceGenerator
 {
-    public class MethodDetails
+    public class ProtectedLikeMethodDetails
     {
-        public MethodDetails(IMethodSymbol methodSymbol)
+        public ProtectedLikeMethodDetails(IMethodSymbol methodSymbol)
         {
             Declaration = ClassToInterface.TransformMethod(methodSymbol);
 

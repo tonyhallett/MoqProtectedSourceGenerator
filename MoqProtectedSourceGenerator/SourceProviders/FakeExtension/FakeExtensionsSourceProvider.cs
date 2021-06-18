@@ -1,81 +1,69 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MoqProtectedSourceGenerator
 {
+    [Export(typeof(ISyntaxSourceProvider))]
     public class FakeExtensionsSourceProvider : ISyntaxSourceProvider
     {
-        private readonly ProtectedLikes protectedLikes;
+        private readonly IProtectedLikes protectedLikes;
+        private readonly IProtectedMock protectedMock;
+        private readonly IProtectedLikeExtensionsFactory protectedLikeExtensionsFactory;
 #pragma warning disable RS1024 // Compare symbols correctly - false positive waiting for version 3.3 https://github.com/dotnet/roslyn-analyzers/issues/4845
-        private readonly Dictionary<ITypeSymbol, FakeExtension> fakeExtensions = new(SymbolEqualityComparer.Default);
+        private readonly Dictionary<ITypeSymbol, IProtectedLikeExtensions> protectedLikeExtensionsLookup = new(SymbolEqualityComparer.Default);
 #pragma warning restore RS1024 // Compare symbols correctly
-        private readonly FakeExtensionVisitor fakeExtensionVisitor = new();
+        private bool hasProtectedLikes;
 
-        public FakeExtensionsSourceProvider(ProtectedLikes protectedLikes)
+        [ImportingConstructor]
+        public FakeExtensionsSourceProvider(
+            IProtectedLikes protectedLikes,
+            IProtectedMock protectedMock,
+            IProtectedLikeExtensionsFactory protectedLikeExtensionsFactory)
         {
             this.protectedLikes = protectedLikes;
+            this.protectedMock = protectedMock;
+            this.protectedLikeExtensionsFactory = protectedLikeExtensionsFactory;
             this.protectedLikes.NewLikeEvent += ProtectedLikes_NewLikeEvent;
         }
 
-        private void ProtectedLikes_NewLikeEvent(ProtectedLike protectedLike)
+        private void ProtectedLikes_NewLikeEvent(IProtectedLike protectedLike)
         {
-            fakeExtensions.Add(protectedLike.MockedType, new FakeExtension(protectedLike));
-        }
-
-        private void AddSetupOrVerify(FakeExtensionSetupOrVerify fakeExtensionSetupOrVerify)
-        {
-            var fakeExtension = fakeExtensions[fakeExtensionSetupOrVerify.MockedType];
-            fakeExtension.AddSetupOrVerify(fakeExtensionSetupOrVerify.IsSetup, fakeExtensionSetupOrVerify.ExtensionMethod, fakeExtensionSetupOrVerify.FileLocation);
+            hasProtectedLikes = true;
+            protectedLikeExtensionsLookup.Add(
+                protectedLike.MockedType,
+                protectedLikeExtensionsFactory.Create(protectedLike)
+            );
         }
 
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
         {
-            if (protectedLikes.ProtectedLikesList.Count > 0)
+            if (hasProtectedLikes)
             {
                 var node = context.Node;
                 if (node is InvocationExpressionSyntax invocation)
                 {
-                    var result = fakeExtensionVisitor.Visit(invocation, context.SemanticModel);
-                    if (result != null && IsProtectedLikeExtensionMethod(result.ExtensionMethod, result.MockedType))
+                    var protectedMockExtension = protectedMock.ProtectedMockExtensionInvocation(invocation, context.SemanticModel);
+                    if (protectedMockExtension != null)
                     {
-                        AddSetupOrVerify(result);
+                        var protectedLikeExtensions = protectedLikeExtensionsLookup[protectedMockExtension.MockedType];
+                        protectedLikeExtensions.ExtensionInvocation(invocation, protectedMockExtension.ExtensionName, context.SemanticModel);
                     }
                 }
             }
         }
 
-        private bool IsProtectedLikeExtensionMethod(ExtensionMethod extensionMethod, ITypeSymbol mockedType)
-        {
-            return fakeExtensions[mockedType].IsExtensionMethod(extensionMethod);
-        }
-
         public void AddSource(GeneratorExecutionContext context)
         {
-            if (fakeExtensions.Count > 0)
+            if (protectedLikeExtensionsLookup.Count > 0)
             {
-                foreach (var fakeExtension in fakeExtensions.Values)
+                foreach (var protectedLikeExtensions in protectedLikeExtensionsLookup.Values)
                 {
-                    fakeExtension.AddSource(context);
+                    protectedLikeExtensions.AddSource(context);
                 }
-                AddCommon(context);
             }
 
         }
-
-        private void AddCommon(GeneratorExecutionContext context)
-        {
-            AddBuilderTypes(context);
-        }
-
-        private void AddBuilderTypes(GeneratorExecutionContext context)
-        {
-            Dictionary<string, string> builderTypes = ManifestResourceStringReader.Read("BuilderTypes");
-            foreach (var kvp in builderTypes)
-            {
-                context.AddSource($"{kvp.Key}.cs", kvp.Value);
-            }
-        }
-
     }
 }

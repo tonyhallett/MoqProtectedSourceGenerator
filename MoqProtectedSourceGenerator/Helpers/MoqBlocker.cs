@@ -1,10 +1,17 @@
-﻿using System.Linq;
+﻿using System.ComponentModel.Composition;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MoqProtectedSourceGenerator
 {
-    public class MoqBlocker
+    public interface IMoqBlocker
+    {
+        bool Allow(SyntaxNode node);
+    }
+
+    [Export(typeof(IMoqBlocker))]
+    public class MoqBlocker : IMoqBlocker
     {
         private bool allow;
         public bool Allow(SyntaxNode node)

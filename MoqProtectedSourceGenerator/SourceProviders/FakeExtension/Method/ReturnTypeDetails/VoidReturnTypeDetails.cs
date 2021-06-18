@@ -2,7 +2,7 @@
 {
     public class VoidReturnTypeDetails : IReturnTypeDetails
     {
-        public string DictionaryExpressionOf(string likeTypeName, string returnType)
+        public string ExpressionDelegate(string likeTypeName, string returnType)
         {
             return $"Action<{likeTypeName}>";
         }

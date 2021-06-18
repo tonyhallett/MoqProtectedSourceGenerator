@@ -58,12 +58,13 @@ namespace MoqProtectedSourceGenerator
 
         public static string Create(string usings, string types)
         {
-            return
-$@"{usings}
+
+            var source = $@"{usings}
 namespace {MoqProtectedGenerated.NamespaceName}
 {{
 {types}
 }}";
+            return source;
         }
     }
 }
