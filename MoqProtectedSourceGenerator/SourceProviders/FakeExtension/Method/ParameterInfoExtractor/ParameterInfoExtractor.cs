@@ -49,8 +49,8 @@ namespace MoqProtectedSourceGenerator
                    {
                        parameterInfo.Type = ParameterType.Out;
                    }
-                    // later provide means of searching syntax for custom matcher
-                }
+                   // later provide means of searching syntax for custom matcher
+               }
 
                return parameterInfo;
            }).ToList();

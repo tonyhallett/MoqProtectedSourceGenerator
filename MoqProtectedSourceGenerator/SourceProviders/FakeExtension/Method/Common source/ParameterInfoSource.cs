@@ -4,6 +4,7 @@ using System.ComponentModel.Composition;
 namespace MoqProtectedSourceGenerator
 {
     [Export(typeof(IParameterInfoSource))]
+    [Export(typeof(IExecuteAware))]
     public class ParameterInfoSource : CommonSingleSource, IParameterInfoSource
     {
         protected override List<string> Usings => new()

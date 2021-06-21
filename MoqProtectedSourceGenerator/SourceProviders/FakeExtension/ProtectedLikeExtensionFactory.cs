@@ -2,12 +2,11 @@
 
 namespace MoqProtectedSourceGenerator
 {
-
-    [Export(typeof(IMethodFakeExtensionFactory))]
-    public class MethodFakeExtensionFactory : IMethodFakeExtensionFactory
+    [Export(typeof(IProtectedLikeExtensionsFactory))]
+    public class ProtectedLikeExtensionFactory : IProtectedLikeExtensionsFactory
     {
         private readonly IMethodInvocationExtractor methodInvocationExtractor;
-        private readonly IParameterInfoExtractor parameterTypeExtractor;
+        private readonly IParameterInfoExtractor parameterInfoExtractor;
         private readonly IProtectedMock protectedMock;
         private readonly IMatcherWrapperSource matcherWrapperSource;
         private readonly ISetupExpressionArgumentSource setupExpressionArgumentSource;
@@ -15,45 +14,35 @@ namespace MoqProtectedSourceGenerator
         private readonly IBuilderTypesSource builderTypesSource;
 
         [ImportingConstructor]
-        public MethodFakeExtensionFactory(
+        public ProtectedLikeExtensionFactory(
             IMethodInvocationExtractor methodInvocationExtractor,
-            IParameterInfoExtractor parameterTypeExtractor,
+            IParameterInfoExtractor parameterInfoExtractor,
             IProtectedMock protectedMock,
             IMatcherWrapperSource matcherWrapperSource,
             ISetupExpressionArgumentSource setupExpressionArgumentSource,
             IParameterInfoSource parameterInfoSource,
             IBuilderTypesSource builderTypesSource
-            )
+        )
         {
             this.methodInvocationExtractor = methodInvocationExtractor;
-            this.parameterTypeExtractor = parameterTypeExtractor;
+            this.parameterInfoExtractor = parameterInfoExtractor;
             this.protectedMock = protectedMock;
             this.matcherWrapperSource = matcherWrapperSource;
             this.setupExpressionArgumentSource = setupExpressionArgumentSource;
             this.parameterInfoSource = parameterInfoSource;
             this.builderTypesSource = builderTypesSource;
         }
-        public IFakeExtensionMethod Create(
-            IProtectedLike protectedLike,
-            ProtectedLikeMethodDetails methodDetails
-        )
+        public IProtectedLikeExtensions Create(IProtectedLike protectedLike)
         {
-            var likeAndMethodDetails = new LikeAndMethodDetails
-            {
-                ProtectedLike = protectedLike,
-                MethodDetails = methodDetails
-            };
-
-            return new MethodFakeExtensionClass(
-                likeAndMethodDetails,
+            return new ProtectedLikeExtension(
+                protectedLike,
                 methodInvocationExtractor,
-                parameterTypeExtractor,
+                parameterInfoExtractor,
                 protectedMock,
                 matcherWrapperSource,
                 setupExpressionArgumentSource,
                 parameterInfoSource,
-                builderTypesSource
-            );
+                builderTypesSource);
         }
     }
 }

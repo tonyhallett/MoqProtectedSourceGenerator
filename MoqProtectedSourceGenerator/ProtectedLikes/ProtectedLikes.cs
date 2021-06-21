@@ -7,24 +7,25 @@ using Microsoft.CodeAnalysis;
 namespace MoqProtectedSourceGenerator
 {
     [Export(typeof(IProtectedLikes))]
+    [Export(typeof(IExecuteAware))]
     public class ProtectedLikes : IProtectedLikes
     {
         private const string FullyQualifiedSeparator = "_";
         private readonly List<ProtectedLike> protectedLikes = new();
-        private readonly Dictionary<ProtectedLike,string> minimallyUniqueLikeTypeNames = new();
+        private readonly Dictionary<ProtectedLike, string> minimallyUniqueLikeTypeNames = new();
 
         public event Action<IProtectedLike> NewLikeEvent;
 
         public class ProtectedLike : IProtectedLike
         {
             private readonly ProtectedLikes protectedLikes;
-            
+
 
             public ProtectedLike(ProtectedLikes protectedLikes)
             {
                 this.protectedLikes = protectedLikes;
             }
-            public List<ProtectedLikeMethodDetails> Methods { get; set; }
+            public List<ProtectedLikeMethodDetail> Methods { get; set; }
             public List<PropertyDetails> Properties { get; set; } = new();
             public ITypeSymbol MockedType { get; set; }
 
@@ -71,7 +72,7 @@ namespace MoqProtectedSourceGenerator
             {
                 if (group.Key == null)
                 {
-                    protectedLike.Methods = group.Select(m => new ProtectedLikeMethodDetails(m)).ToList();
+                    protectedLike.Methods = group.Select(m => new ProtectedLikeMethodDetail(m)).ToList();
                 }
                 else
                 {
@@ -93,10 +94,12 @@ namespace MoqProtectedSourceGenerator
             }
             return minimallyUniqueLikeTypeNames[protectedLike];
         }
+
         private string GetLikeTypeName(string simpleMockTypeName)
         {
             return simpleMockTypeName + "Like";
         }
+
         private void GenerateMinimallyUniqueLikeTypeNames()
         {
             var groupedByName = protectedLikes.GroupBy(l => l.MockedType.Name);
@@ -112,7 +115,7 @@ namespace MoqProtectedSourceGenerator
                     foreach (var protectedLike in group)
                     {
                         var mockedType = protectedLike.MockedType;
-                        
+
                         var suffix = $"{FullyQualifiedSeparator}{ mockedType.ContainingNamespace.JoinNamespaces(FullyQualifiedSeparator)}";
                         var likeTypeName = $"{GetLikeTypeName(mockedType.Name)}{suffix}";
 
@@ -127,6 +130,11 @@ namespace MoqProtectedSourceGenerator
             return mockedType.TypeKind == TypeKind.Class && !mockedType.IsSealed;
         }
 
+        public void Executing()
+        {
+            protectedLikes.Clear();
+            minimallyUniqueLikeTypeNames.Clear();
+        }
     }
 
 }

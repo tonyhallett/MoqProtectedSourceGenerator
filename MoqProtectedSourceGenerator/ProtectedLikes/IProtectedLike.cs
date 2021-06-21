@@ -5,7 +5,7 @@ namespace MoqProtectedSourceGenerator
 {
     public interface IProtectedLike
     {
-        List<ProtectedLikeMethodDetails> Methods { get; }
+        List<ProtectedLikeMethodDetail> Methods { get; }
         List<PropertyDetails> Properties { get; }
         ITypeSymbol MockedType { get; }
         string MinimallyUniqueLikeTypeName();

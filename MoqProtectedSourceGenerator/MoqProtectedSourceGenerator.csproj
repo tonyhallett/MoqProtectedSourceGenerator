@@ -38,4 +38,7 @@
       <LogicalName>BuilderTypes</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="SourceProviders\Helpers\" />
+  </ItemGroup>
 </Project>

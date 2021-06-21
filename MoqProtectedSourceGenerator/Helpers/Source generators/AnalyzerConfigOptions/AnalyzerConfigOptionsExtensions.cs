@@ -5,34 +5,10 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace MoqProtectedSourceGenerator
 {
-
     public static class AnalyzerConfigOptionsExtensions
     {
         public static AnalyzerConfigOptions MockAnalyzerConfigOptions { get; set; }
-        private static (bool converted, object value) ConvertValue(string value, Type toType)
-        {
-            if (toType == typeof(string))
-            {
-                return (true, value);
-            }
-            else
-            {
-                //do a case statement instead ?
-                var tryParseMethods = toType.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(m => m.Name == "TryParse");
-                var tryParseMethod = tryParseMethods.FirstOrDefault(m => m.GetParameters().Length == 2);
-                if (tryParseMethod != null)
-                {
-                    var args = new object[] { value, null };
-                    var parsed = (bool)tryParseMethod.Invoke(null, args);
-                    if (parsed)
-                    {
-                        return (true, args[1]);
-                    }
-                }
-            }
-            return (false, null);
-        }
-
+        
         public static void GetOption<T>(this AnalyzerConfigOptions analyzerConfigOptions, Option<T> option, OptionSearch optionSearch = OptionSearch.Both)
         {
             if (MockAnalyzerConfigOptions != null)
@@ -65,6 +41,7 @@ namespace MoqProtectedSourceGenerator
                 }
             }
         }
+        
         private static Finding GetFinding(AnalyzerConfigOptions analyzerConfigOptions, string key, Type toType, OptionSearch optionSearch)
         {
             var msbuildKey = $"build_property.{key}";
@@ -86,6 +63,31 @@ namespace MoqProtectedSourceGenerator
             }
             return finding;
         }
+        
+        private static (bool converted, object value) ConvertValue(string value, Type toType)
+        {
+            if (toType == typeof(string))
+            {
+                return (true, value);
+            }
+            else
+            {
+                //do a case statement instead ?
+                var tryParseMethods = toType.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(m => m.Name == "TryParse");
+                var tryParseMethod = tryParseMethods.FirstOrDefault(m => m.GetParameters().Length == 2);
+                if (tryParseMethod != null)
+                {
+                    var args = new object[] { value, null };
+                    var parsed = (bool)tryParseMethod.Invoke(null, args);
+                    if (parsed)
+                    {
+                        return (true, args[1]);
+                    }
+                }
+            }
+            return (false, null);
+        }
+
     }
 
 }

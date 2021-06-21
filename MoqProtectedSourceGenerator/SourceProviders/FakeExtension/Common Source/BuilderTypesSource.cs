@@ -5,7 +5,8 @@ using Microsoft.CodeAnalysis;
 namespace MoqProtectedSourceGenerator
 {
     [Export(typeof(IBuilderTypesSource))]
-    public class BuilderTypesSource : IBuilderTypesSource
+    [Export(typeof(IExecuteAware))]
+    public class BuilderTypesSource : IBuilderTypesSource, IExecuteAware
     {
         private bool addedSource;
         public void AddSource(GeneratorExecutionContext context)
@@ -22,6 +23,10 @@ namespace MoqProtectedSourceGenerator
 
         }
 
+        public void Executing()
+        {
+            addedSource = false;
+        }
     }
 
 }

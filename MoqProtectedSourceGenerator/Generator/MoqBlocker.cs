@@ -5,13 +5,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MoqProtectedSourceGenerator
 {
-    public interface IMoqBlocker
-    {
-        bool Allow(SyntaxNode node);
-    }
-
-    [Export(typeof(IMoqBlocker))]
-    public class MoqBlocker : IMoqBlocker
+    [Export(typeof(MoqBlocker))]
+    public class MoqBlocker : IVisitBlocker
     {
         private bool allow;
         public bool Allow(SyntaxNode node)

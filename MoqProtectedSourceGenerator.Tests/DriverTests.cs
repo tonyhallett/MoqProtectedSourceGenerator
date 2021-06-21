@@ -42,10 +42,10 @@ namespace ClassLibrary1
     }
     public abstract class MyProtected
     { 
-        //protected abstract void AbstractMethodArgs<T>(T t1, T t2) where T:ConstraintClass;
+        protected abstract void AbstractMethodArgs<T>(T t1, T t2);// where T:ConstraintClass;
         //protected abstract void RefMethod(ref int refArg);
         //protected abstract void RefGenericMethod<T>(ref T refArg);
-        protected abstract void OutParameter(out int outInt);
+        //protected abstract void OutParameter(out int outInt);
     }
     
     public class ConstraintClass{}
@@ -55,15 +55,10 @@ namespace ClassLibrary1
     {
         public void Generate()
         {
-            var mockDuplicate = new ProtectedMock<Duplicate>();
-            mockDuplicate.Dupe(0).Build().Setup().Returns(""First"");
-            var mockDuplicateDll = new ProtectedMock<ProtectedDll.Duplicate>();
-            mockDuplicateDll.Dupe(0).Build().Setup().Returns(""Second"");
-
-            //var mock = new ProtectedMock<MyProtected>();
+            var mock = new ProtectedMock<MyProtected>();
             //mock.OutParameter(     null).Build().Setup();
             //mock.RefGenericMethod(ref It.Ref<It.IsSubtype<SubType2>>.IsAny).Build().Setup();
-            //mock.AbstractMethodArgs(1,It.IsAny<int>()).Build().Setup();
+            mock.AbstractMethodArgs(1,It.IsAny<int>()).Build().Setup();
             //mock.AbstractMethodArgs(Out.Param(1)).Build().Setup();
         }
         

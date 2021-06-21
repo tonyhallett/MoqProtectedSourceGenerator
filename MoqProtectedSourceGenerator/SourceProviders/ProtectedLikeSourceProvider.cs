@@ -7,44 +7,20 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MoqProtectedSourceGenerator
 {
-    [Export(typeof(ISyntaxSourceProvider))]
-    public class ProtectedLikeSourceProvider : ISyntaxSourceProvider
+    [Export(typeof(IExecutingVisitingSourceProvider))]
+    public class ProtectedLikeSourceProvider : IExecutingVisitingSourceProvider
     {
         private readonly IProtectedMock protectedTypeIdentifier;
         private readonly IProtectedLikes protectedLikes;
         private readonly Dictionary<string, IProtectedLike> protectedLikeSources = new();
+        private GeneratorExecutionContext context;
+        private SemanticModel semanticModel;
 
         [ImportingConstructor]
         public ProtectedLikeSourceProvider(IProtectedLikes protectedLikes, IProtectedMock protectedTypeIdentifier)
         {
             this.protectedLikes = protectedLikes;
             this.protectedTypeIdentifier = protectedTypeIdentifier;
-        }
-
-        public void AddSource(GeneratorExecutionContext context)
-        {
-            foreach (var kvp in protectedLikeSources)
-            {
-                var protectedLike = kvp.Value;
-                var likeTypeName = protectedLike.MinimallyUniqueLikeTypeName();
-                var source = SourceHelper.Create(
-                        SourceHelper.CreateUsings(GetUniqueNamespaces(protectedLike)),
-                        SourceHelper.CreateInternalInterface(
-                            likeTypeName,
-                            SourceHelper.CreateMembers(protectedLike.Properties.Select(p => p.Declaration), protectedLike.Methods.Select(m => m.Declaration))
-                        )
-                    );
-                context.AddSource($"{likeTypeName}.cs", source);
-            }
-        }
-
-        public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
-        {
-            var mockedType = protectedTypeIdentifier.GetMockedType(context.Node);
-            if (mockedType != null)
-            {
-                GenerateProtectedLikeIfProtected(mockedType, context.SemanticModel);
-            }
         }
 
         private IEnumerable<INamespaceSymbol> GetUniqueNamespaces(IProtectedLike protectedLike)
@@ -67,6 +43,44 @@ namespace MoqProtectedSourceGenerator
                 }
             }
 
+        }
+
+        public void Executing(GeneratorExecutionContext context)
+        {
+            protectedLikeSources.Clear();
+
+            this.context = context;
+        }
+
+        public void AddSource()
+        {
+            foreach (var kvp in protectedLikeSources)
+            {
+                var protectedLike = kvp.Value;
+                var likeTypeName = protectedLike.MinimallyUniqueLikeTypeName();
+                var source = SourceHelper.Create(
+                        SourceHelper.CreateUsings(GetUniqueNamespaces(protectedLike)),
+                        SourceHelper.CreateInternalInterface(
+                            likeTypeName,
+                            SourceHelper.CreateMembers(protectedLike.Properties.Select(p => p.Declaration), protectedLike.Methods.Select(m => m.Declaration))
+                        )
+                    );
+                context.AddSource($"{likeTypeName}.cs", source);
+            }
+        }
+
+        public void OnVisitTree(SyntaxTree syntaxTree)
+        {
+            semanticModel = context.Compilation.GetSemanticModel(syntaxTree);
+        }
+
+        public void OnVisitSyntaxNode(SyntaxNode node)
+        {
+            var mockedType = protectedTypeIdentifier.GetMockedType(node);
+            if (mockedType != null)
+            {
+                GenerateProtectedLikeIfProtected(mockedType, semanticModel);
+            }
         }
     }
 

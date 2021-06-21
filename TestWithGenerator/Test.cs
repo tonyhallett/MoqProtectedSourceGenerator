@@ -62,6 +62,20 @@ namespace ClassLibrary1
         {
             return GenericNoConstraintsMultipleArgs(t1, t2);
         }
+
+        protected abstract string Overloaded(int intParam);
+        protected abstract string Overloaded(string stringParam);
+        public string InvokeOverloaded(int intParam)
+        {
+            return Overloaded(intParam);
+        }
+        public string InvokeOverloaded(string stringParam)
+        {
+            return Overloaded(stringParam);
+        }
+
+        protected abstract string OverloadedGeneric<T>(T t, int intParam);
+        protected abstract string OverloadedGeneric<T>(T t, string stringParam);
     }
 
     public class ExpectedException : Exception { }
@@ -87,7 +101,8 @@ namespace ClassLibrary1
     {
         public bool Matches(Type typeArgument)
         {
-            if(typeArgument != this.GetType()){
+            if (typeArgument != this.GetType())
+            {
                 var genericArgument = typeArgument.GetGenericArguments()[0];
                 var match = genericArgument == typeof(int) || genericArgument == typeof(string);
                 return match;
@@ -110,6 +125,16 @@ namespace ClassLibrary1
         public void Generate()
         {
             var mock = new ProtectedMock<MyProtected>();
+
+            mock.Overloaded(999).Build().Setup().Returns("999");
+            Assert.AreEqual("999", mock.Object.InvokeOverloaded(999));
+
+            mock.Overloaded("123").Build().Setup().Returns("123");
+            Assert.AreEqual("123", mock.Object.InvokeOverloaded("123"));
+
+            mock.OverloadedGeneric(1, 1).Build().Setup();
+            mock.OverloadedGeneric("1", 1).Build().Setup();
+
             mock.AbstractMethod().Build().Setup().Throws(new ExpectedException());
             //mock.AbstractMethod().Build("", 0).Setup();// build error *************
             //mock.AbstractMethod().Build();//build error ************
@@ -127,13 +152,11 @@ namespace ClassLibrary1
 
             mock.Object.InvokeAbstractMethodArgs(1);
             Verify();
-            
+
             var mockOut = new ProtectedMock<MyProtected>();
             mockOut.OutMethod(Out.From(123)).Build().Setup();
             mockOut.Object.InvokeOutMethod(out var outInt);
             Assert.AreEqual(123, outInt);
-
-            //mockOut.OutMethod(null).Build().Setup();// build error *********************
 
             var mockNullIt = new ProtectedMock<MyProtected>();
             mockNullIt.NullIt(It.IsAny<IInterface>()).Build().Setup().Returns("Match");
@@ -141,7 +164,7 @@ namespace ClassLibrary1
 
             var mockGenericNoConstraints = new ProtectedMock<MyProtected>();
             mockGenericNoConstraints.GenericNoConstraints<Implementation>(null).Build().Setup().Returns("Impl null");
-            Assert.AreEqual("Impl null",mockGenericNoConstraints.Object.InvokeGenericNoConstraints<Implementation>(null));
+            Assert.AreEqual("Impl null", mockGenericNoConstraints.Object.InvokeGenericNoConstraints<Implementation>(null));
 
             mockGenericNoConstraints.GenericNoConstraints(null as string).Build().Setup().Returns("string null");
             Assert.AreEqual("string null", mockGenericNoConstraints.Object.InvokeGenericNoConstraints(null as string));
@@ -149,10 +172,10 @@ namespace ClassLibrary1
             mockGenericNoConstraints.GenericNoConstraints(It.Is<string>(s => s == "match")).Build().Setup().Returns("matcher");
             Assert.AreEqual("matcher", mockGenericNoConstraints.Object.InvokeGenericNoConstraints("match"));
 
-            mockGenericNoConstraints.GenericNoConstraints(CustomMatcher.Wrap(MyCustomMatcher.GreaterThan,1000)).Build().Setup().Returns("custom matcher");
+            mockGenericNoConstraints.GenericNoConstraints(CustomMatcher.Wrap(MyCustomMatcher.GreaterThan, 1000)).Build().Setup().Returns("custom matcher");
             Assert.AreEqual("custom matcher", mockGenericNoConstraints.Object.InvokeGenericNoConstraints(1001));
 
-            mockGenericNoConstraints.GenericNoConstraints( It.IsAny< GenericParameterIsIntOrString >()).Build().Setup().Returns("custom type matcher");
+            mockGenericNoConstraints.GenericNoConstraints(It.IsAny<GenericParameterIsIntOrString>()).Build().Setup().Returns("custom type matcher");
             Assert.AreEqual("custom type matcher", mockGenericNoConstraints.Object.InvokeGenericNoConstraints(new List<string>()));
 
             mockGenericNoConstraints.GenericNoConstraints(It.IsAny<It.IsSubtype<SubType1>>()).Build().Setup().Returns("sub type");
@@ -169,7 +192,7 @@ namespace ClassLibrary1
             mockRefGeneric.RefGeneric(ref It.Ref<It.IsSubtype<SubType1>>.IsAny).Build().Setup().Returns("subtype1");
             var refSubType1 = new Derivation1();
             Assert.AreEqual("subtype1", mockRefGeneric.Object.InvokeRefGeneric(ref refSubType1));
-            mockRefGeneric.RefGeneric(ref   It.Ref< It.IsSubtype< SubType2>>.IsAny).Build().Setup().Returns("subtype2");
+            mockRefGeneric.RefGeneric(ref It.Ref<It.IsSubtype<SubType2>>.IsAny).Build().Setup().Returns("subtype2");
             var refSubType2 = new Derivation2();
             Assert.AreEqual("subtype2", mockRefGeneric.Object.InvokeRefGeneric(ref refSubType2));
 
@@ -178,7 +201,7 @@ namespace ClassLibrary1
             Assert.AreEqual("different namespace", mockRefGeneric.Object.InvokeRefGeneric(ref refDifferentNamespace));
 
             var mockDll = new ProtectedMock<ProtectedDll.DllProtected>();
-            
+
 
             var impl = new Implementation();
             mockDll.ProtectedGenericMethod(null, impl).Build().Setup().Throws(new ExpectedException());

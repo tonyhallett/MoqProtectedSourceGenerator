@@ -4,6 +4,7 @@ using System.ComponentModel.Composition;
 namespace MoqProtectedSourceGenerator
 {
     [Export(typeof(ISetupExpressionArgumentSource))]
+    [Export(typeof(IExecuteAware))]
     public class SetupExpressionArgumentSource : CommonSingleSource, ISetupExpressionArgumentSource
     {
         public static readonly string className = "SetupExpressionArgument";

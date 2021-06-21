@@ -5,8 +5,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MoqProtectedSourceGenerator
 {
-    [Export(typeof(ISyntaxSourceProvider))]
-    public class FakeExtensionsSourceProvider : ISyntaxSourceProvider
+    [Export(typeof(IExecutingVisitingSourceProvider))]
+    public class FakeExtensionsSourceProvider : IExecutingVisitingSourceProvider
     {
         private readonly IProtectedLikes protectedLikes;
         private readonly IProtectedMock protectedMock;
@@ -14,7 +14,8 @@ namespace MoqProtectedSourceGenerator
 #pragma warning disable RS1024 // Compare symbols correctly - false positive waiting for version 3.3 https://github.com/dotnet/roslyn-analyzers/issues/4845
         private readonly Dictionary<ITypeSymbol, IProtectedLikeExtensions> protectedLikeExtensionsLookup = new(SymbolEqualityComparer.Default);
 #pragma warning restore RS1024 // Compare symbols correctly
-        private bool hasProtectedLikes;
+        private GeneratorExecutionContext context;
+        private SemanticModel semanticModel;
 
         [ImportingConstructor]
         public FakeExtensionsSourceProvider(
@@ -30,31 +31,20 @@ namespace MoqProtectedSourceGenerator
 
         private void ProtectedLikes_NewLikeEvent(IProtectedLike protectedLike)
         {
-            hasProtectedLikes = true;
             protectedLikeExtensionsLookup.Add(
                 protectedLike.MockedType,
                 protectedLikeExtensionsFactory.Create(protectedLike)
             );
         }
 
-        public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
+        public void Executing(GeneratorExecutionContext context)
         {
-            if (hasProtectedLikes)
-            {
-                var node = context.Node;
-                if (node is InvocationExpressionSyntax invocation)
-                {
-                    var protectedMockExtension = protectedMock.ProtectedMockExtensionInvocation(invocation, context.SemanticModel);
-                    if (protectedMockExtension != null)
-                    {
-                        var protectedLikeExtensions = protectedLikeExtensionsLookup[protectedMockExtension.MockedType];
-                        protectedLikeExtensions.ExtensionInvocation(invocation, protectedMockExtension.ExtensionName, context.SemanticModel);
-                    }
-                }
-            }
+            protectedLikeExtensionsLookup.Clear();
+
+            this.context = context;
         }
 
-        public void AddSource(GeneratorExecutionContext context)
+        public void AddSource()
         {
             if (protectedLikeExtensionsLookup.Count > 0)
             {
@@ -63,7 +53,27 @@ namespace MoqProtectedSourceGenerator
                     protectedLikeExtensions.AddSource(context);
                 }
             }
+        }
 
+        public void OnVisitTree(SyntaxTree syntaxTree)
+        {
+            semanticModel = context.Compilation.GetSemanticModel(syntaxTree);
+        }
+
+        public void OnVisitSyntaxNode(SyntaxNode node)
+        {
+            if (protectedLikeExtensionsLookup.Count > 0)
+            {
+                if (node is InvocationExpressionSyntax invocation)
+                {
+                    var protectedMockExtension = protectedMock.ProtectedMockExtensionInvocation(invocation, semanticModel);
+                    if (protectedMockExtension != null)
+                    {
+                        var protectedLikeExtensions = protectedLikeExtensionsLookup[protectedMockExtension.MockedType];
+                        protectedLikeExtensions.ExtensionInvocation(invocation, protectedMockExtension.ExtensionName, semanticModel);
+                    }
+                }
+            }
         }
     }
 }

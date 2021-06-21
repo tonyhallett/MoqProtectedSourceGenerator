@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 
 namespace MoqProtectedSourceGenerator
 {
-    public abstract class CommonSingleSource
+    public abstract class CommonSingleSource : IExecuteAware
     {
         private bool addedSource;
 
@@ -18,6 +18,11 @@ namespace MoqProtectedSourceGenerator
                 addedSource = true;
             }
 
+        }
+
+        public void Executing()
+        {
+            addedSource = false;
         }
     }
 
