@@ -12,7 +12,11 @@ namespace MoqProtectedGenerated
         private string sourceFilePath;
         private int sourceLineNumber;
 
-        public SetupVerifyBuilder(Func<string, int, TSetup> setup, Func<string, int, TSetupSequence> setupSequence, Action<string, int, Times?, string> verify)
+        public SetupVerifyBuilder(
+            Func<string, int, TSetup> setup, 
+            Func<string, int, TSetupSequence> setupSequence, 
+            Action<string, int, Times?, string> verify
+        )
         {
             this.setup = setup;
             this.setupSequence = setupSequence;

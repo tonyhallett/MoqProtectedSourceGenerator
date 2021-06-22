@@ -5,7 +5,6 @@ using Moq.Language.Flow;
 namespace MoqProtectedGenerated
 {
     public interface IVoidMethodBuilder<T> : 
-        ISetupVerifyBuilder<ISetup<T>,
-        ISetupSequentialAction> where T : class
+        ISetupVerifyBuilder<ISetup<T>, ISetupSequentialAction> where T : class
     { }
 }
