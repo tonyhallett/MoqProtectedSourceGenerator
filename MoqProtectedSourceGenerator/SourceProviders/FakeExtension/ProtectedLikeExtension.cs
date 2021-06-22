@@ -410,7 +410,7 @@ $@"public static class {className}
             }
         }
 
-        public void ExtensionInvocation(InvocationExpressionSyntax invocation, string extensionName, SemanticModel semanticModel)
+        public void ExtensionInvocation(InvocationExpressionSyntax invocation, string extensionName, SemanticModel semanticModel, GeneratorExecutionContext context)
         {
             if (methodNames.Contains(extensionName))
             {
