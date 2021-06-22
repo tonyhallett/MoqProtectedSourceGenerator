@@ -13,7 +13,6 @@ namespace MoqProtectedSourceGenerator
     public class ProtectedLikeExtension : IProtectedLikeExtensions
     {
         private readonly List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> setups = new();
-        private readonly List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> verifications = new();
         private readonly List<Diagnostic> diagnostics = new();
         private readonly Dictionary<string, SyntaxList<UsingDirectiveSyntax>> extensionsUsingsByFilePath = new();
         private bool isGlobal;
@@ -230,10 +229,9 @@ namespace MoqProtectedSourceGenerator
             
         var matches = MatcherObserver.GetMatches();
 
-        Expression<{expressionDelegate}> GetSetUpOrVerifyExpression(bool isSetup, string sourceFileInfo, int sourceLineNumber)
+        Expression<{expressionDelegate}> GetSetUpOrVerifyExpression(string sourceFileInfo, int sourceLineNumber)
         {{
-            var dictionary = isSetup ? Setups : Verifications;
-            var parameterInfos = dictionary[GetKey(sourceFileInfo, sourceLineNumber)];
+            var parameterInfos = Setups[GetKey(sourceFileInfo, sourceLineNumber)];
 {statements}
             var call = Expression.Call(likeParameter, ""{methodName}"", new Type[] {{ {genericTypeParameters} }}, {expressionArrayVariable});
             return Expression.Lambda<{expressionDelegate}>(call, likeParameter);
@@ -241,9 +239,11 @@ namespace MoqProtectedSourceGenerator
 
         return new {methodBuilderType}(
             (sourceFileInfo, sourceLineNumber) => 
-                protectedLike.Setup(GetSetUpOrVerifyExpression(true, sourceFileInfo, sourceLineNumber)),
+                protectedLike.Setup(GetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber)),
+            (sourceFileInfo, sourceLineNumber) => 
+                protectedLike.SetupSequence(GetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber)),
             (sourceFileInfo, sourceLineNumber, times, failMessage) => 
-                protectedLike.Verify(GetSetUpOrVerifyExpression(false, sourceFileInfo, sourceLineNumber), times, failMessage)
+                protectedLike.Verify(GetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber), times, failMessage)
         );
     }}{(isLast ? "" : Environment.NewLine)}";
             return extensionMethod;
@@ -261,11 +261,10 @@ namespace MoqProtectedSourceGenerator
             return returnTypeDetails.MethodBuilderType(mockedTypeName, methodDeclaration.ReturnType.ToString());
         }
 
-        private string GetDictionary(bool isSetups)
+        private string GetDictionary()
         {
-            var fieldName = isSetups ? "Setups" : "Verifications";
-            return @$"    private static readonly Dictionary<string, List<ParameterInfo>> {fieldName} =
-        new Dictionary<string, List<ParameterInfo>>{GetSetupsOrVerificationsInitializer(isSetups)};";
+            return @$"    private static readonly Dictionary<string, List<ParameterInfo>> Setups =
+        new Dictionary<string, List<ParameterInfo>>{GetSetupsInitializer()};";
         }
 
         private string FilePathAndLine(FileLocation fileLocation)
@@ -273,16 +272,14 @@ namespace MoqProtectedSourceGenerator
             return "@\"" + $"{fileLocation.FilePath}_{fileLocation.Line + 1}" + "\"";
         }
 
-        private string GetSetupsOrVerificationsInitializer(bool isSetups)
+        private string GetSetupsInitializer()
         {
-            List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> setupsOrVerifications = isSetups ? setups : verifications;
-            var numSetupsOrVerifications = setupsOrVerifications.Count;
-            if (numSetupsOrVerifications == 0)
+            if (setups.Count == 0)
             {
                 return "{}";
             }
             var dictionaryEntryStringBuilder = new StringBuilder();
-            dictionaryEntryStringBuilder.AggregateAppendIfLast(setupsOrVerifications, (setUpOrVerification, append, isLast) =>
+            dictionaryEntryStringBuilder.AggregateAppendIfLast(setups, (setUpOrVerification, append, isLast) =>
             {
                 var comma = isLast ? "" : ",";
                 append(@$"            {{
@@ -316,9 +313,7 @@ namespace MoqProtectedSourceGenerator
             var extensionClass =
 $@"public static class {className}
 {{
-{GetDictionary(true)}
-
-{GetDictionary(false)}
+{GetDictionary()}
 
     private static string GetKey(string sourceFileInfo, int sourceLineNumber)
     {{
@@ -454,16 +449,11 @@ $@"public static class {className}
                     }
                 }
 
-                AddSetupOrVerify(buildSetupOrVerify.IsSetup, parameterInfos, buildSetupOrVerify.FileLocation);
+                setups.Add((parameterInfos, buildSetupOrVerify.FileLocation));
 
             }
 
         }
 
-        private void AddSetupOrVerify(bool isSetup, List<ParameterInfo> parameterTypes, FileLocation fileLocation)
-        {
-            var setupsOrVerifications = isSetup ? setups : verifications;
-            setupsOrVerifications.Add((parameterTypes, fileLocation));
-        }
     }
 }

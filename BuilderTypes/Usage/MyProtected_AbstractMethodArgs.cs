@@ -22,7 +22,9 @@ public static class MyProtected_AbstractMethodArgs
     {
         return new VoidMethodBuilder<MyProtected>(
             (sourceFileInfo, sourceLineNumber) => mock.Protected().As<MyProtectedLike>().Setup(Setups[GetKey(sourceFileInfo, sourceLineNumber)]),
+            (sourceFileInfo, sourceLineNumber) => mock.Protected().As<MyProtectedLike>().SetupSequence(Setups[GetKey(sourceFileInfo, sourceLineNumber)]),
             (sourceFileInfo, sourceLineNumber, times, failMessage) => mock.Protected().As<MyProtectedLike>().Verify(Verifications[GetKey(sourceFileInfo, sourceLineNumber)], times, failMessage)
+
         );
     }
 }
@@ -34,8 +36,7 @@ public static class MyProtected_AbstractMethodWithReturn
             { "the path", like => like.AbstractMethodWithReturn()}
         
         };
-    private static readonly Dictionary<string, Expression<Func<MyProtectedLike,int>>> Verifications =
-        new Dictionary<string, Expression<Func<MyProtectedLike,int>>> { };
+    
 
     private static string GetKey(string sourceFileInfo, int sourceLineNumber)
     {
@@ -46,7 +47,8 @@ public static class MyProtected_AbstractMethodWithReturn
     {
         return new ReturningMethodBuilder<MyProtected,int>(
             (sourceFileInfo, sourceLineNumber) => mock.Protected().As<MyProtectedLike>().Setup(Setups[GetKey(sourceFileInfo, sourceLineNumber)]),
-            (sourceFileInfo, sourceLineNumber, times, failMessage) => mock.Protected().As<MyProtectedLike>().Verify(Verifications[GetKey(sourceFileInfo, sourceLineNumber)], times, failMessage)
+            (sourceFileInfo, sourceLineNumber) => mock.Protected().As<MyProtectedLike>().SetupSequence(Setups[GetKey(sourceFileInfo, sourceLineNumber)]),
+            (sourceFileInfo, sourceLineNumber, times, failMessage) => mock.Protected().As<MyProtectedLike>().Verify(Setups[GetKey(sourceFileInfo, sourceLineNumber)], times, failMessage)
         );
     }
 }

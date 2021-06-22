@@ -1,10 +1,11 @@
-﻿using Moq.Language.Flow;
+﻿using Moq.Language;
+using Moq.Language.Flow;
 
 
 namespace MoqProtectedGenerated
 {
-    public interface IVoidMethodBuilder<T> : ISetupVerifyBuilder<ISetup<T>> where T : class
-    {
-
-    }
+    public interface IVoidMethodBuilder<T> : 
+        ISetupVerifyBuilder<ISetup<T>,
+        ISetupSequentialAction> where T : class
+    { }
 }

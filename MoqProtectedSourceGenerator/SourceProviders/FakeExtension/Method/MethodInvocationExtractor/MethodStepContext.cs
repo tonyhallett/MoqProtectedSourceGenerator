@@ -4,7 +4,6 @@ namespace MoqProtectedSourceGenerator
 {
     public class MethodStepContext : IStepContext
     {
-        public bool IsSetup { get; set; }
         public FileLocation FileLocation { get; set; }
         public StepContextState State { get; set; }
         private Diagnostic diagnostic;

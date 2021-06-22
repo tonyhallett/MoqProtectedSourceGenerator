@@ -229,6 +229,18 @@ namespace ClassLibrary1
             Assert.AreEqual("First", mockDuplicate.Object.Invoke(0));
             Assert.AreEqual("Second", mockDuplicateDll.Object.Invoke(0));
 
+            var mockSequenced = new ProtectedMock<MyProtected>();
+            mockSequenced.AbstractMethod().Build().SetupSequence().Pass().Throws(new ExpectedException());
+            mockSequenced.Object.InvokeAbstractMethod();
+            Assert.Throws<ExpectedException>(() => mockSequenced.Object.InvokeAbstractMethod());
+
+            var mockSequencedReturns = new ProtectedMock<MyProtected>();
+            mockSequencedReturns.GenericNoConstraints(It.IsAny<int>()).Build().SetupSequence().Returns("1").Returns("2").Throws(new ExpectedException());
+            Assert.AreEqual("1", mockSequencedReturns.Object.InvokeGenericNoConstraints(1));
+            Assert.AreEqual("2", mockSequencedReturns.Object.InvokeGenericNoConstraints(1));
+            Assert.Throws<ExpectedException>(() => mockSequencedReturns.Object.InvokeGenericNoConstraints(1));
+            mockSequencedReturns.GenericNoConstraints("");
+
         }
 
     }
