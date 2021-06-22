@@ -3,9 +3,9 @@ using System.ComponentModel.Composition;
 
 namespace MoqProtectedSourceGenerator
 {
-    [Export(typeof(IParameterInfoSource))]
+    [Export(typeof(IProtectedLikeExtensionSource))]
     [Export(typeof(IExecuteAware))]
-    public class ParameterInfoSource : CommonSingleSource, IParameterInfoSource
+    public class ParameterInfoSource : CommonSingleSource, IProtectedLikeExtensionSource
     {
         protected override List<string> Usings => new()
         {

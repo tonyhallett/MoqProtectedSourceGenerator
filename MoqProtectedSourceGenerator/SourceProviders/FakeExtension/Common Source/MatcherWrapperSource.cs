@@ -3,9 +3,9 @@ using System.ComponentModel.Composition;
 
 namespace MoqProtectedSourceGenerator
 {
-    [Export(typeof(IMatcherWrapperSource))]
+    [Export(typeof(IProtectedLikeExtensionSource))]
     [Export(typeof(IExecuteAware))]
-    public class MatcherWrapperSource : CommonSingleSource, IMatcherWrapperSource
+    public class MatcherWrapperSource : CommonSingleSource, IProtectedLikeExtensionSource
     {
         protected override string HintName => "MatcherWrapper";
         protected override List<string> Usings => new()

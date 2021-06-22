@@ -4,9 +4,9 @@ using Microsoft.CodeAnalysis;
 
 namespace MoqProtectedSourceGenerator
 {
-    [Export(typeof(IBuilderTypesSource))]
+    [Export(typeof(IProtectedLikeExtensionSource))]
     [Export(typeof(IExecuteAware))]
-    public class BuilderTypesSource : IBuilderTypesSource, IExecuteAware
+    public class BuilderTypesSource : IProtectedLikeExtensionSource, IExecuteAware
     {
         private bool addedSource;
         public void AddSource(GeneratorExecutionContext context)

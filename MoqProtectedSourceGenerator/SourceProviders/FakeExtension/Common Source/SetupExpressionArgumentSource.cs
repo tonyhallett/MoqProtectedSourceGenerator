@@ -3,9 +3,10 @@ using System.ComponentModel.Composition;
 
 namespace MoqProtectedSourceGenerator
 {
-    [Export(typeof(ISetupExpressionArgumentSource))]
+    [Export(typeof(ISetupExpressionArgument))]
     [Export(typeof(IExecuteAware))]
-    public class SetupExpressionArgumentSource : CommonSingleSource, ISetupExpressionArgumentSource
+    [Export(typeof(IProtectedLikeExtensionSource))]
+    public class SetupExpressionArgumentSource : CommonSingleSource, ISetupExpressionArgument, IProtectedLikeExtensionSource
     {
         public static readonly string className = "SetupExpressionArgument";
         public static readonly string methodName = "Create";

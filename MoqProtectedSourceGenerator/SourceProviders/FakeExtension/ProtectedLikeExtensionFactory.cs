@@ -1,48 +1,31 @@
-﻿using System.ComponentModel.Composition;
+﻿using System.Collections.Generic;
+using System.ComponentModel.Composition;
 
 namespace MoqProtectedSourceGenerator
 {
     [Export(typeof(IProtectedLikeExtensionsFactory))]
     public class ProtectedLikeExtensionFactory : IProtectedLikeExtensionsFactory
     {
-        private readonly IMethodInvocationExtractor methodInvocationExtractor;
-        private readonly IParameterInfoExtractor parameterInfoExtractor;
-        private readonly IProtectedMock protectedMock;
-        private readonly IMatcherWrapperSource matcherWrapperSource;
-        private readonly ISetupExpressionArgumentSource setupExpressionArgumentSource;
-        private readonly IParameterInfoSource parameterInfoSource;
-        private readonly IBuilderTypesSource builderTypesSource;
+        private readonly IMethodExtensionMethodsFactory methodExtensionMethodsFactory;
+        private readonly IEnumerable<IProtectedLikeExtensionSource> sources;
 
         [ImportingConstructor]
         public ProtectedLikeExtensionFactory(
-            IMethodInvocationExtractor methodInvocationExtractor,
-            IParameterInfoExtractor parameterInfoExtractor,
-            IProtectedMock protectedMock,
-            IMatcherWrapperSource matcherWrapperSource,
-            ISetupExpressionArgumentSource setupExpressionArgumentSource,
-            IParameterInfoSource parameterInfoSource,
-            IBuilderTypesSource builderTypesSource
+            IMethodExtensionMethodsFactory methodExtensionMethodsFactory,
+            [ImportMany]
+            IEnumerable<IProtectedLikeExtensionSource> sources
         )
         {
-            this.methodInvocationExtractor = methodInvocationExtractor;
-            this.parameterInfoExtractor = parameterInfoExtractor;
-            this.protectedMock = protectedMock;
-            this.matcherWrapperSource = matcherWrapperSource;
-            this.setupExpressionArgumentSource = setupExpressionArgumentSource;
-            this.parameterInfoSource = parameterInfoSource;
-            this.builderTypesSource = builderTypesSource;
+            this.methodExtensionMethodsFactory = methodExtensionMethodsFactory;
+            this.sources = sources;
         }
         public IProtectedLikeExtensions Create(IProtectedLike protectedLike)
         {
             return new ProtectedLikeExtension(
                 protectedLike,
-                methodInvocationExtractor,
-                parameterInfoExtractor,
-                protectedMock,
-                matcherWrapperSource,
-                setupExpressionArgumentSource,
-                parameterInfoSource,
-                builderTypesSource);
+                sources,
+                methodExtensionMethodsFactory.Create()
+                );
         }
     }
 }
