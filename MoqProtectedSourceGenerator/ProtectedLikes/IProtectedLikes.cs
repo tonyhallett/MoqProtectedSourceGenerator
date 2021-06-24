@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 
 namespace MoqProtectedSourceGenerator
 {
-    public interface IProtectedLikes : IExecuteAware
+    public interface IProtectedLikes
     {
         event Action<IProtectedLike> NewLikeEvent;
         IProtectedLike GetProtectedLikeIfApplicable(ITypeSymbol mockedType);

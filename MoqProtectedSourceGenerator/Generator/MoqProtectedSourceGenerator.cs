@@ -14,7 +14,7 @@ namespace MoqProtectedSourceGenerator
         internal IMoqBlockingSyntaxTreesVisitors moqBlockingSyntaxTreesVisitors;
         [ImportMany]
         internal IEnumerable<IExecuteAware> executeAwares;
-        [ImportMany] 
+        [ImportMany]
         internal IEnumerable<IExecutingVisitingSourceProvider> sourceProviders;
 
         public MoqProtectedSourceGenerator()

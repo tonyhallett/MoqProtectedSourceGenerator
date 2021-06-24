@@ -5,6 +5,7 @@ using DifferentNamespace;
 using IFace;
 using Moq;
 using Moq.Protected;
+using MoqProtectedGenerated;
 using MoqProtectedTyped;
 using NUnit.Framework;
 using OtherNamespace;
@@ -241,7 +242,10 @@ namespace ClassLibrary1
             Assert.Throws<ExpectedException>(() => mockSequencedReturns.Object.InvokeGenericNoConstraints(1));
             mockSequencedReturns.GenericNoConstraints("");
 
+            var mockX = new Mock<MyProtected>();
+            var x = mockX.ProtectedTyped();
         }
 
     }
+    
 }

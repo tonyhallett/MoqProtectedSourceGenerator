@@ -8,19 +8,29 @@ namespace MoqProtectedSourceGenerator
 {
     public static class SourceHelper
     {
-        public static string CreateUsings(IEnumerable<INamespaceSymbol> namespaceSymbols)
+        public static string CreateUsingsFromNamespaces(IEnumerable<INamespaceSymbol> namespaceSymbols)
         {
             var namespaces = namespaceSymbols.Select(ns => ns.FullNamespace()).OrderBy(s => s).Distinct();
-            return CreateUsings(namespaces);
+            return CreateUsingsFromNamespaces(namespaces);
         }
 
-        public static string CreateUsings(IEnumerable<string> namespaces)
+        public static string CreateUsingsFromNamespaces(IEnumerable<string> namespaces)
         {
             namespaces = namespaces.OrderBy(s => s).Distinct();
             var usingsStringBuilder = new StringBuilder();
             foreach (var ns in namespaces)
             {
                 usingsStringBuilder.AppendLine($"using {ns};");
+            }
+            return usingsStringBuilder.ToString();
+        }
+
+        public static string JoinUsings(IEnumerable<string> usings)
+        {
+            var usingsStringBuilder = new StringBuilder();
+            foreach (var @using in usings)
+            {
+                usingsStringBuilder.AppendLine(@using);
             }
             return usingsStringBuilder.ToString();
         }
@@ -48,12 +58,7 @@ namespace MoqProtectedSourceGenerator
 
         public static string Create(IEnumerable<string> usings, string types)
         {
-            var usingsStringBuilder = new StringBuilder();
-            foreach (var @using in usings)
-            {
-                usingsStringBuilder.AppendLine(@using);
-            }
-            return Create(usingsStringBuilder.ToString(), types);
+            return Create(JoinUsings(usings), types);
         }
 
         public static string Create(string usings, string types)
@@ -66,5 +71,6 @@ namespace {MoqProtectedGenerated.NamespaceName}
 }}";
             return source;
         }
+
     }
 }

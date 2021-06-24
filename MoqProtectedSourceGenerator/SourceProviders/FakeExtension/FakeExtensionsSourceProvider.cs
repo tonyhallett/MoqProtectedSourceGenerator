@@ -70,7 +70,7 @@ namespace MoqProtectedSourceGenerator
                     if (protectedMockExtension != null)
                     {
                         var protectedLikeExtensions = protectedLikeExtensionsLookup[protectedMockExtension.MockedType];
-                        protectedLikeExtensions.ExtensionInvocation(invocation, protectedMockExtension.ExtensionName, semanticModel,context);
+                        protectedLikeExtensions.ExtensionInvocation(invocation, protectedMockExtension.ExtensionName, semanticModel, context);
                     }
                 }
             }

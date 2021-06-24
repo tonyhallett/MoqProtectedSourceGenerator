@@ -10,7 +10,6 @@ namespace MoqProtectedSourceGenerator
     public class ProtectedLikeExtension : IProtectedLikeExtensions
     {
         private readonly List<Diagnostic> diagnostics = new();
-        private bool isGlobal;
         private static readonly List<string> defaultUsings = new()
         {
             "System.Collections.Generic",
@@ -23,17 +22,20 @@ namespace MoqProtectedSourceGenerator
         private readonly IProtectedLike protectedLike;
         private readonly IEnumerable<IProtectedLikeExtensionSource> sources;
         private readonly IMethodExtensionMethods methodExtensionMethods;
+        private readonly IGlobalClassFromOptions globalClassFromOptions;
         private readonly List<string> methodNames;
 
         public ProtectedLikeExtension(
             IProtectedLike protectedLike,
             IEnumerable<IProtectedLikeExtensionSource> sources,
-            IMethodExtensionMethods methodExtensionMethods
+            IMethodExtensionMethods methodExtensionMethods,
+            IGlobalClassFromOptions globalClassFromOptions
             )
         {
             this.protectedLike = protectedLike;
             this.sources = sources;
             this.methodExtensionMethods = methodExtensionMethods;
+            this.globalClassFromOptions = globalClassFromOptions;
             methodExtensionMethods.Initialize(protectedLike.Methods);
             methodNames = protectedLike.Methods.Select(m => m.Declaration.Identifier.Text).ToList();
             InitializeUsings();
@@ -50,14 +52,13 @@ namespace MoqProtectedSourceGenerator
 
         public void AddSource(GeneratorExecutionContext context)
         {
-            isGlobal = IsGlobalExtensionClass(context.AnalyzerConfigOptions);
-            var (source, className) = GetSource();
+            var (source, className) = GetSource(context.AnalyzerConfigOptions);
             context.AddSource($"{className}.cs", source);
             AddCommonSources(context);
             ReportDiagnostics(context);
         }
 
-        private (string source, string className) GetSource()
+        private (string source, string className) GetSource(AnalyzerConfigOptionsProvider analyzerConfigOptions)
         {
             var likeTypeName = protectedLike.MinimallyUniqueLikeTypeName();
             var mockedTypeName = protectedLike.MockedType.FullyQualifiedTypeName();
@@ -68,11 +69,9 @@ namespace MoqProtectedSourceGenerator
             diagnostics.AddRange(methodExtensionMethods.Diagnostics);
 
             string usings = GetUsings(methodExtensionMethods.ExtensionsUsingsByFilePath);
-            string extensionClassAndNamespace = WithNamespace(GetExtensionClass(className, methodSetups, methodExtensionMethodsSource));
-            var source =
-@$"{usings}
-{extensionClassAndNamespace}
-";
+            var extensionClass = GetExtensionClass(className, methodSetups, methodExtensionMethodsSource);
+            var source = globalClassFromOptions.Get(usings, extensionClass, analyzerConfigOptions);
+
             return (source, className);
         }
 
@@ -111,7 +110,7 @@ namespace MoqProtectedSourceGenerator
 
         private string GetExtensionClass(string className, List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> setups, string extensionMethods)
         {
-            var extensionClass =
+            return
 $@"public static class {className}
 {{
 {GetDictionary(setups)}
@@ -123,36 +122,10 @@ $@"public static class {className}
 
 {extensionMethods}
 }}";
-            if (isGlobal)
-            {
-                return extensionClass;
-            }
-
-            return extensionClass.PrefixEachLine("    ");
-        }
-
-        private string WithNamespace(string extensionClass)
-        {
-            if (!isGlobal)
-            {
-                return $@"namespace {MoqProtectedGenerated.NamespaceName}
-{{
-{extensionClass}
-}}";
-            }
-            else
-            {
-                return extensionClass;
-            }
         }
 
         private string GetUsings(Dictionary<string, SyntaxList<UsingDirectiveSyntax>> extensionsUsingsByFilePath)
         {
-            if (isGlobal)
-            {
-                usings.Add(MoqProtectedGenerated.NamespaceName);
-            }
-
             List<string> aliases = new List<string>();
             foreach (var kvp in extensionsUsingsByFilePath)
             {
@@ -171,7 +144,7 @@ $@"public static class {className}
                 }
             }
 
-            var regularUsings = SourceHelper.CreateUsings(usings);
+            var regularUsings = SourceHelper.CreateUsingsFromNamespaces(usings);
 
             if (aliases.Count == 0)
             {
@@ -188,16 +161,9 @@ $@"public static class {className}
             return result;
         }
 
-        private bool IsGlobalExtensionClass(AnalyzerConfigOptionsProvider configOptionProvider)
-        {
-            var globalExtensionsOption = new Option<bool> { Key = $"{nameof(MoqProtectedSourceGenerator)}_GlobalExtensions", Value = true };
-            configOptionProvider.GlobalOptions.GetOption(globalExtensionsOption);
-            return globalExtensionsOption.Value;
-        }
-
         private void AddCommonSources(GeneratorExecutionContext context)
         {
-            foreach(var source in sources)
+            foreach (var source in sources)
             {
                 source.AddSource(context);
             }

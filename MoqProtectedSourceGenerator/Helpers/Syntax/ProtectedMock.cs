@@ -6,7 +6,8 @@ namespace MoqProtectedSourceGenerator
 {
 
     [Export(typeof(IProtectedMock))]
-    public class ProtectedMock : IProtectedMock
+    [Export(typeof(IProtectedLikeCreationDependent))]
+    public class ProtectedMock : IProtectedMock, IProtectedLikeCreationDependent
     {
         private const string ProtectedMockTypeName = "ProtectedMock";
 

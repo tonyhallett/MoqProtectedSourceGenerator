@@ -2,7 +2,8 @@
 
 namespace MoqProtectedSourceGenerator
 {
-    public interface IProtectedLikeExtensionSource {
+    public interface IProtectedLikeExtensionSource
+    {
         void AddSource(GeneratorExecutionContext context);
     }
 

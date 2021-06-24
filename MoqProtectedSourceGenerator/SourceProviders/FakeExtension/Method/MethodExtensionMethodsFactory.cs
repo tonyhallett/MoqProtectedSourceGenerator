@@ -27,9 +27,9 @@ namespace MoqProtectedSourceGenerator
         public IMethodExtensionMethods Create()
         {
             return new MethodExtensionMethods(
-                methodInvocationExtractor, 
-                parameterInfoExtractor, 
-                protectedMock, 
+                methodInvocationExtractor,
+                parameterInfoExtractor,
+                protectedMock,
                 setupExpressionArgument);
         }
     }

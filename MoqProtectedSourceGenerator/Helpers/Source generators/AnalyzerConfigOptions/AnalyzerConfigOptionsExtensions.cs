@@ -8,7 +8,7 @@ namespace MoqProtectedSourceGenerator
     public static class AnalyzerConfigOptionsExtensions
     {
         public static AnalyzerConfigOptions MockAnalyzerConfigOptions { get; set; }
-        
+
         public static void GetOption<T>(this AnalyzerConfigOptions analyzerConfigOptions, Option<T> option, OptionSearch optionSearch = OptionSearch.Both)
         {
             if (MockAnalyzerConfigOptions != null)
@@ -41,7 +41,7 @@ namespace MoqProtectedSourceGenerator
                 }
             }
         }
-        
+
         private static Finding GetFinding(AnalyzerConfigOptions analyzerConfigOptions, string key, Type toType, OptionSearch optionSearch)
         {
             var msbuildKey = $"build_property.{key}";
@@ -63,7 +63,7 @@ namespace MoqProtectedSourceGenerator
             }
             return finding;
         }
-        
+
         private static (bool converted, object value) ConvertValue(string value, Type toType)
         {
             if (toType == typeof(string))

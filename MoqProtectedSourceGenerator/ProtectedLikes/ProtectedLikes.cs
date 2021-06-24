@@ -8,7 +8,7 @@ namespace MoqProtectedSourceGenerator
 {
     [Export(typeof(IProtectedLikes))]
     [Export(typeof(IExecuteAware))]
-    public class ProtectedLikes : IProtectedLikes
+    public class ProtectedLikes : IProtectedLikes, IExecuteAware
     {
         private const string FullyQualifiedSeparator = "_";
         private readonly List<ProtectedLike> protectedLikes = new();

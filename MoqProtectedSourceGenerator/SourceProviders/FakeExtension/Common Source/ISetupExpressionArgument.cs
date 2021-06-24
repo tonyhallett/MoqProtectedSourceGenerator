@@ -1,6 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-
-namespace MoqProtectedSourceGenerator
+﻿namespace MoqProtectedSourceGenerator
 {
     public interface ISetupExpressionArgument
     {
