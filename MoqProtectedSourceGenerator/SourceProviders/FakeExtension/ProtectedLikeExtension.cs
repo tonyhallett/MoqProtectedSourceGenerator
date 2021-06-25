@@ -22,6 +22,7 @@ namespace MoqProtectedSourceGenerator
         private readonly IProtectedLike protectedLike;
         private readonly IEnumerable<IProtectedLikeExtensionSource> sources;
         private readonly IMethodExtensionMethods methodExtensionMethods;
+        private readonly IPropertyExtensionMethods propertyExtensionMethods;
         private readonly IGlobalClassFromOptions globalClassFromOptions;
         private readonly List<string> methodNames;
 
@@ -29,14 +30,17 @@ namespace MoqProtectedSourceGenerator
             IProtectedLike protectedLike,
             IEnumerable<IProtectedLikeExtensionSource> sources,
             IMethodExtensionMethods methodExtensionMethods,
+            IPropertyExtensionMethods propertyExtensionMethods,
             IGlobalClassFromOptions globalClassFromOptions
             )
         {
             this.protectedLike = protectedLike;
             this.sources = sources;
             this.methodExtensionMethods = methodExtensionMethods;
+            this.propertyExtensionMethods = propertyExtensionMethods;
             this.globalClassFromOptions = globalClassFromOptions;
             methodExtensionMethods.Initialize(protectedLike.Methods);
+            propertyExtensionMethods.Initialize(protectedLike.Properties);
             methodNames = protectedLike.Methods.Select(m => m.Declaration.Identifier.Text).ToList();
             InitializeUsings();
         }
@@ -44,10 +48,10 @@ namespace MoqProtectedSourceGenerator
         private void InitializeUsings()
         {
             usings = new List<string>(defaultUsings);
-            foreach (var methodDetails in protectedLike.Methods)
-            {
-                usings.AddRange(methodDetails.UniqueNamespaces.Select(ns => ns.FullNamespace()));
-            }
+            var uniquePropertyNamespaces = protectedLike.Properties.SelectMany(p => p.UniqueNamespaces);
+            var uniqueMethodNamespaces = protectedLike.Methods.SelectMany(m => m.UniqueNamespaces);
+            var uniqueNamespaces = uniquePropertyNamespaces.Concat(uniqueMethodNamespaces).Distinct<INamespaceSymbol>(SymbolEqualityComparer.Default);
+            usings.AddRange(uniqueNamespaces.Select(ns => ns.FullNamespace()));
         }
 
         public void AddSource(GeneratorExecutionContext context)
@@ -64,12 +68,15 @@ namespace MoqProtectedSourceGenerator
             var mockedTypeName = protectedLike.MockedType.FullyQualifiedTypeName();
             var className = $"{likeTypeName}_FakeExtension";
 
-            var methodExtensionMethodsSource = methodExtensionMethods.GetExtensionMethods(mockedTypeName, likeTypeName);
+            var methodExtensionMethodsSource = methodExtensionMethods.GetExtensionMethods(mockedTypeName, likeTypeName, analyzerConfigOptions);
             var methodSetups = methodExtensionMethods.Setups;
             diagnostics.AddRange(methodExtensionMethods.Diagnostics);
 
+            var propertyExtensionMethodsSource = propertyExtensionMethods.GetExtensionMethods(mockedTypeName, likeTypeName, analyzerConfigOptions);
+            var propertySetups = propertyExtensionMethods.Setups;
+
             string usings = GetUsings(methodExtensionMethods.ExtensionsUsingsByFilePath);
-            var extensionClass = GetExtensionClass(className, methodSetups, methodExtensionMethodsSource);
+            var extensionClass = GetExtensionClass(className, methodSetups.Concat(propertySetups).ToList(), methodExtensionMethodsSource, propertyExtensionMethodsSource);
             var source = globalClassFromOptions.Get(usings, extensionClass, analyzerConfigOptions);
 
             return (source, className);
@@ -108,7 +115,7 @@ namespace MoqProtectedSourceGenerator
         }}";
         }
 
-        private string GetExtensionClass(string className, List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> setups, string extensionMethods)
+        private string GetExtensionClass(string className, List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> setups, string methodExtensionMethods, string propertyExtensionMethods)
         {
             return
 $@"public static class {className}
@@ -120,8 +127,8 @@ $@"public static class {className}
         return sourceFileInfo + ""_"" + sourceLineNumber;
     }}
 
-{extensionMethods}
-}}";
+{methodExtensionMethods}
+{propertyExtensionMethods}}}";
         }
 
         private string GetUsings(Dictionary<string, SyntaxList<UsingDirectiveSyntax>> extensionsUsingsByFilePath)
@@ -179,9 +186,14 @@ $@"public static class {className}
 
         public void ExtensionInvocation(InvocationExpressionSyntax invocation, string extensionName, SemanticModel semanticModel, GeneratorExecutionContext context)
         {
+            var options = context.AnalyzerConfigOptions;
             if (methodNames.Contains(extensionName))
             {
-                methodExtensionMethods.MethodInvocation(invocation, extensionName, semanticModel);
+                methodExtensionMethods.ExtensionInvocation(invocation, extensionName, semanticModel, options);
+            }
+            else
+            {
+                propertyExtensionMethods.ExtensionInvocation(invocation, extensionName, semanticModel, options);
             }
         }
 

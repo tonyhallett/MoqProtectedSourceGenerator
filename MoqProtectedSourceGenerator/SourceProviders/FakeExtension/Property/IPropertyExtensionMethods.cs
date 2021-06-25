@@ -5,13 +5,12 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace MoqProtectedSourceGenerator
 {
-    public interface IMethodExtensionMethods
+    public interface IPropertyExtensionMethods
     {
-        void Initialize(List<ProtectedLikeMethodDetail> Methods);
+        void ExtensionInvocation(InvocationExpressionSyntax invocation, string extensionName, SemanticModel semanticModel, AnalyzerConfigOptionsProvider analyzerConfigOptions);
+        void Initialize(List<ProtectedLikePropertyDetail> Methods);
         List<Diagnostic> Diagnostics { get; }
         List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> Setups { get; }
-        Dictionary<string, SyntaxList<UsingDirectiveSyntax>> ExtensionsUsingsByFilePath { get; }
-        void ExtensionInvocation(InvocationExpressionSyntax invocationExpression, string extensionName, SemanticModel semanticModel, AnalyzerConfigOptionsProvider analyzerConfigOptions);
         string GetExtensionMethods(string mockedTypeName, string likeTypeName, AnalyzerConfigOptionsProvider analyzerConfigOptions);
     }
 }

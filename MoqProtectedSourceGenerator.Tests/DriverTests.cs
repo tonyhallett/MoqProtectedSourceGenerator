@@ -46,6 +46,9 @@ namespace ClassLibrary1
         //protected abstract void RefMethod(ref int refArg);
         //protected abstract void RefGenericMethod<T>(ref T refArg);
         //protected abstract void OutParameter(out int outInt);
+        
+        [System.Runtime.CompilerServices.IndexerName(""MyIndexer"")]
+        protected abstract string this[int key] {get;set;}
     }
     
     public class ConstraintClass{}

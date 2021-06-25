@@ -26,7 +26,7 @@ namespace MoqProtectedSourceGenerator
                 this.protectedLikes = protectedLikes;
             }
             public List<ProtectedLikeMethodDetail> Methods { get; set; }
-            public List<PropertyDetails> Properties { get; set; } = new();
+            public List<ProtectedLikePropertyDetail> Properties { get; set; } = new();
             public ITypeSymbol MockedType { get; set; }
 
             public string MinimallyUniqueLikeTypeName()
@@ -80,7 +80,7 @@ namespace MoqProtectedSourceGenerator
                     Accessors accessors = accessorMethods.Count == 2 ? Accessors.GetSet : accessorMethods[0].MethodKind == MethodKind.PropertyGet ? Accessors.Get : Accessors.Set;
 
                     var propertySymbol = group.Key as IPropertySymbol;
-                    protectedLike.Properties.Add(new PropertyDetails(propertySymbol, accessors));
+                    protectedLike.Properties.Add(new ProtectedLikePropertyDetail(propertySymbol, accessors));
                 }
             }
             return protectedLike;

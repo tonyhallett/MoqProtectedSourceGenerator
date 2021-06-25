@@ -5,12 +5,12 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MoqProtectedSourceGenerator
 {
-    public class PropertyDetails
+    public class ProtectedLikePropertyDetail
     {
         public List<INamespaceSymbol> UniqueNamespaces { get; set; }
         public BasePropertyDeclarationSyntax Declaration { get; set; }
         public IPropertySymbol Symbol { get; set; }
-        public PropertyDetails(IPropertySymbol propertySymbol, Accessors accessors)
+        public ProtectedLikePropertyDetail(IPropertySymbol propertySymbol, Accessors accessors)
         {
             Symbol = propertySymbol;
 

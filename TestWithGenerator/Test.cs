@@ -77,6 +77,52 @@ namespace ClassLibrary1
 
         protected abstract string OverloadedGeneric<T>(T t, int intParam);
         protected abstract string OverloadedGeneric<T>(T t, string stringParam);
+
+        protected abstract string Stub { get; set; }
+        public string GetStub()
+        {
+            return Stub;
+        }
+
+        public void SetStub(string value)
+        {
+            Stub = value;
+        }
+
+
+        protected abstract string GetSet { get; set; }
+
+        public string GetGetSet()
+        {
+            return GetSet;
+        }
+
+        public void SetGetSet(string value)
+        {
+            GetSet = value;
+        }
+
+        protected abstract string GetOnly { get; }
+        public string GetGetOnly()
+        {
+            return GetOnly;
+        }
+
+        protected abstract string SetOnly { set; }
+        public void SetSetOnly(string value)
+        {
+            SetOnly = value;
+        }
+
+        protected abstract string this[int key] { get;set; }
+        public string GetIndex(int key)
+        {
+            return this[key];
+        }
+        public void SetIndex(int key,string value)
+        {
+            this[key] = value;
+        }
     }
 
     public class ExpectedException : Exception { }
@@ -244,6 +290,30 @@ namespace ClassLibrary1
 
             var mockX = new Mock<MyProtected>();
             var x = mockX.ProtectedTyped();
+            x.SetupProperty(m => m[0], "123");
+            Assert.AreEqual("123", mockX.Object.GetIndex(0));
+
+            var mockProperties = new ProtectedMock<MyProtected>();
+            var mockedProperties = mockProperties.Object;
+            mockProperties.GetSet().Get().Build().Setup().Returns("getter");
+            Assert.AreEqual("getter", mockedProperties.GetGetSet());
+
+            mockProperties.GetSet().Set("throw").Build().Setup().Throws(new ExpectedException());
+            mockedProperties.SetGetSet("ok");
+            Assert.Throws<ExpectedException>(() => mockedProperties.SetGetSet("throw"));
+
+            mockProperties.GetOnly().Get().Build().Setup().Returns("getter");
+            Assert.AreEqual("getter", mockedProperties.GetGetOnly());
+
+            mockProperties.SetOnly().Set("throw").Build().Setup().Throws(new ExpectedException());
+            mockedProperties.SetSetOnly("ok");
+            Assert.Throws<ExpectedException>(() => mockedProperties.SetSetOnly("throw"));
+
+            mockProperties.Stub().SetupProperty("initial value");
+            Assert.AreEqual("initial value", mockedProperties.GetStub());
+            mockedProperties.SetStub("new");
+            Assert.AreEqual("new", mockedProperties.GetStub());
+
         }
 
     }

@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace MoqProtectedSourceGenerator
 {
@@ -44,7 +45,7 @@ namespace MoqProtectedSourceGenerator
             this.methods = methods;
         }
 
-        public string GetExtensionMethods(string mockedTypeName, string likeTypeName)
+        public string GetExtensionMethods(string mockedTypeName, string likeTypeName, AnalyzerConfigOptionsProvider _)
         {
             var stringBuilder = new StringBuilder();
             var numMethods = methods.Count;
@@ -222,7 +223,7 @@ namespace MoqProtectedSourceGenerator
             return returnTypeDetails.MethodBuilderType(mockedTypeName, methodDeclaration.ReturnType.ToString());
         }
 
-        public void MethodInvocation(InvocationExpressionSyntax invocationExpression, string extensionName, SemanticModel semanticModel)
+        public void ExtensionInvocation(InvocationExpressionSyntax invocationExpression, string extensionName, SemanticModel semanticModel, AnalyzerConfigOptionsProvider _)
         {
             var buildSetupOrVerify = methodInvocationExtractor.Extract(invocationExpression);
             if (buildSetupOrVerify.Diagnostic != null)

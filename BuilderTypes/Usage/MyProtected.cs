@@ -13,5 +13,13 @@
         {
             AbstractMethodArgs(value);
         }
+
+        protected abstract int GetSet { get; set; }
+        protected abstract int GetOnly { get; }
+        protected abstract int SetOnly { set; }
+
+        protected abstract string this[int key1,float key2] { get;set; }
+
     }
+
 }
