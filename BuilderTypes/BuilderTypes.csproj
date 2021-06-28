@@ -1,8 +1,16 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="Builder types\Generated Code\SetupTypedInterfacesGeneration.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SetupTypedInterfacesGeneration.tt</DependentUpon>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Moq" Version="4.16.1" />
@@ -10,6 +18,25 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MoqProtectedTyped\MoqProtectedTyped.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Builder types\Generated Code\SetupTypedInterfacesGeneration.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>SetupTypedInterfacesGeneration.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Builder types\Generated Code\SetupTypedInterfacesGeneration.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>SetupTypedInterfacesGeneration.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

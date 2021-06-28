@@ -18,8 +18,15 @@
         protected abstract int GetOnly { get; }
         protected abstract int SetOnly { set; }
 
-        protected abstract string this[int key1,float key2] { get;set; }
-
+        protected abstract string this[int key1,string key2] { get;set; }
+        public string GetIndex(int key1, string key2)
+        {
+            return this[key1, key2];
+        }
+        public void SetIndex(int key1,string key2,string value)
+        {
+            this[key1, key2] = value;
+        }
     }
 
 }

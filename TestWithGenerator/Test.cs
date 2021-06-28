@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using DifferentNamespace;
 using IFace;
 using Moq;
+using Moq.Language.Flow;
 using Moq.Protected;
 using MoqProtectedGenerated;
 using MoqProtectedTyped;
@@ -115,6 +116,7 @@ namespace ClassLibrary1
         }
 
         protected abstract string this[int key] { get;set; }
+        protected abstract string this[string key] { get; set; }
         public string GetIndex(int key)
         {
             return this[key];

@@ -1,6 +1,6 @@
 ﻿namespace MoqProtectedGenerated
 {
-    internal interface MyProtectedLike
+    public interface MyProtectedLike
     {
         int AbstractMethodWithReturn();
         void AbstractMethod();
@@ -8,7 +8,7 @@
         int GetSet { get; set; }
         int GetOnly { get; }
         int SetOnly { set; }
-        string this[int key1, float key2] { get; set; }
+        string this[int key1, string key2] { get; set; }
     }
 
 }
