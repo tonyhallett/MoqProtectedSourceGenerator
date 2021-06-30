@@ -7,14 +7,14 @@ namespace BuilderTypesT4GeneratorTests
     public class UnitTest1
     {
         [Fact]
-        public void Test1()
+        public void GeneratorDebug()
         {
             // just for debugging as vs locks when - Debug T4 Template
             BuilderTypesT4Generator.BuilderTypesGenerator.GenerateTypes(2);
         }
 
         [Fact]
-        public void X()
+        public void EndToEnd()
         {
             TestBuilderTypes.Execute();
         }

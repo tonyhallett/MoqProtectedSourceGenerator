@@ -9,7 +9,7 @@ namespace MoqProtectedSourceGenerator
     {
         void Initialize(List<ProtectedLikeMethodDetail> Methods);
         List<Diagnostic> Diagnostics { get; }
-        List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> Setups { get; }
+        List<(List<ArgumentInfo> argumentInfos, FileLocation fileLocation)> Setups { get; }
         Dictionary<string, SyntaxList<UsingDirectiveSyntax>> ExtensionsUsingsByFilePath { get; }
         void ExtensionInvocation(InvocationExpressionSyntax invocationExpression, string extensionName, SemanticModel semanticModel, AnalyzerConfigOptionsProvider analyzerConfigOptions);
         string GetExtensionMethods(string mockedTypeName, string likeTypeName, AnalyzerConfigOptionsProvider analyzerConfigOptions);

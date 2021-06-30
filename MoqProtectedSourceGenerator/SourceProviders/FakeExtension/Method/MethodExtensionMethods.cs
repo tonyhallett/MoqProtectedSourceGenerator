@@ -13,11 +13,11 @@ namespace MoqProtectedSourceGenerator
     public class MethodExtensionMethods : IMethodExtensionMethods
     {
         private readonly IMethodInvocationExtractor methodInvocationExtractor;
-        private readonly IParameterInfoExtractor parameterInfoExtractor;
+        private readonly IArgumentInfoExtractor argumentInfoExtractor;
         private readonly IProtectedMock protectedMock;
         private readonly ISetupExpressionArgument setupExpressionArgument;
         public Dictionary<string, SyntaxList<UsingDirectiveSyntax>> ExtensionsUsingsByFilePath { get; } = new();
-        public List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> Setups { get; } = new();
+        public List<(List<ArgumentInfo> argumentInfos, FileLocation fileLocation)> Setups { get; } = new();
         private List<ProtectedLikeMethodDetail> methods;
         private readonly Dictionary<bool, IReturnTypeDetails> returnTypeDetailsLookup = new()
         {
@@ -29,13 +29,13 @@ namespace MoqProtectedSourceGenerator
 
         public MethodExtensionMethods(
             IMethodInvocationExtractor methodInvocationExtractor,
-            IParameterInfoExtractor parameterInfoExtractor,
+            IArgumentInfoExtractor argumentInfoExtractor,
             IProtectedMock protectedMock,
             ISetupExpressionArgument setupExpressionArgumentSource
         )
         {
             this.methodInvocationExtractor = methodInvocationExtractor;
-            this.parameterInfoExtractor = parameterInfoExtractor;
+            this.argumentInfoExtractor = argumentInfoExtractor;
             this.protectedMock = protectedMock;
             this.setupExpressionArgument = setupExpressionArgumentSource;
         }
@@ -98,7 +98,7 @@ namespace MoqProtectedSourceGenerator
 
         Expression<{expressionDelegate}> GetSetUpOrVerifyExpression(string sourceFileInfo, int sourceLineNumber)
         {{
-            var parameterInfos = Setups[GetKey(sourceFileInfo, sourceLineNumber)];
+            var argumentInfos = Setups[GetKey(sourceFileInfo, sourceLineNumber)];
 {statements}
             var call = Expression.Call(likeParameter, ""{methodName}"", new Type[] {{ {genericTypeParameters} }}, {expressionArrayVariable});
             return Expression.Lambda<{expressionDelegate}>(call, likeParameter);
@@ -130,14 +130,14 @@ namespace MoqProtectedSourceGenerator
                 var isRef = parameter.RefKind == RefKind.Ref;
                 if (isRef)
                 {
-                    lines.Add($"var expressionArg{count} = parameterInfos[{count}].RefAny;");
+                    lines.Add($"var expressionArg{count} = argumentInfos[{count}].RefAny;");
                 }
                 else
                 {
                     addSetupExpressionStatement = true;
                     var isOut = parameter.RefKind == RefKind.Out;
                     var value = isOut ? $"{parameterName} == null ? ({parameter.Type})default({parameter.Type}) : {parameterName}.Value" : $"({parameter.Type}){parameterName}";
-                    lines.Add($"var expressionArg{count} = {setupExpressionVariableName}.{setupExpressionArgument.MethodName}({value},parameterInfos[{count}]);");
+                    lines.Add($"var expressionArg{count} = {setupExpressionVariableName}.{setupExpressionArgument.MethodName}({value},argumentInfos[{count}]);");
                 }
 
                 count++;
@@ -225,25 +225,25 @@ namespace MoqProtectedSourceGenerator
 
         public void ExtensionInvocation(InvocationExpressionSyntax invocationExpression, string extensionName, SemanticModel semanticModel, AnalyzerConfigOptionsProvider _)
         {
-            var buildSetupOrVerify = methodInvocationExtractor.Extract(invocationExpression);
-            if (buildSetupOrVerify.Diagnostic != null)
+            var extraction = methodInvocationExtractor.Extract(invocationExpression);
+            if (extraction.Diagnostic != null)
             {
-                Diagnostics.Add(buildSetupOrVerify.Diagnostic);
+                Diagnostics.Add(extraction.Diagnostic);
             }
-            if (!buildSetupOrVerify.Success)
+            if (!extraction.Success)
             {
                 return;
             }
 
             var arguments = invocationExpression.ArgumentList.Arguments;
-            var parameterExtraction = parameterInfoExtractor.Extract(arguments, semanticModel);
-            if (parameterExtraction.Diagnostics.Count > 0)
+            var argumentExtraction = argumentInfoExtractor.Extract(arguments, semanticModel);
+            if (argumentExtraction.Diagnostics.Count > 0)
             {
-                Diagnostics.AddRange(parameterExtraction.Diagnostics);
+                Diagnostics.AddRange(argumentExtraction.Diagnostics);
             }
             else
             {
-                var parameterInfos = parameterExtraction.ParameterInfos;
+                var argumentInfos = argumentExtraction.ArgumentInfos;
                 var extensionSyntaxTree = invocationExpression.SyntaxTree;
                 var hasRefParameters = methods.Where(m => m.Symbol.Name == extensionName).Any(m => m.Symbol.Parameters.Any((p => p.RefKind == RefKind.Ref)));
                 if (hasRefParameters)
@@ -254,7 +254,7 @@ namespace MoqProtectedSourceGenerator
                     }
                 }
 
-                Setups.Add((parameterInfos, buildSetupOrVerify.FileLocation));
+                Setups.Add((argumentInfos, extraction.FileLocation));
 
             }
 

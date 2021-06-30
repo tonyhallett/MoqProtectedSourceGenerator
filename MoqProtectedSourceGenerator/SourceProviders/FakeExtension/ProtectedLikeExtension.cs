@@ -75,17 +75,17 @@ namespace MoqProtectedSourceGenerator
             var propertyExtensionMethodsSource = propertyExtensionMethods.GetExtensionMethods(mockedTypeName, likeTypeName, analyzerConfigOptions);
             var propertySetups = propertyExtensionMethods.Setups;
 
-            string usings = GetUsings(methodExtensionMethods.ExtensionsUsingsByFilePath);
+            string usings = GetUsings(methodExtensionMethods.ExtensionsUsingsByFilePath,propertyExtensionMethods.Namespaces);
             var extensionClass = GetExtensionClass(className, methodSetups.Concat(propertySetups).ToList(), methodExtensionMethodsSource, propertyExtensionMethodsSource);
             var source = globalClassFromOptions.Get(usings, extensionClass, analyzerConfigOptions);
 
             return (source, className);
         }
 
-        private string GetDictionary(List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> setups)
+        private string GetDictionary(List<(List<ArgumentInfo> argumentInfos, FileLocation fileLocation)> setups)
         {
-            return @$"    private static readonly Dictionary<string, List<ParameterInfo>> Setups =
-        new Dictionary<string, List<ParameterInfo>>{GetSetupsInitializer(setups)};";
+            return @$"    private static readonly Dictionary<string, List<ArgumentInfo>> Setups =
+        new Dictionary<string, List<ArgumentInfo>>{GetSetupsInitializer(setups)};";
         }
 
         private string FilePathAndLine(FileLocation fileLocation)
@@ -93,7 +93,7 @@ namespace MoqProtectedSourceGenerator
             return "@\"" + $"{fileLocation.FilePath}_{fileLocation.Line + 1}" + "\"";
         }
 
-        private string GetSetupsInitializer(List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> setups)
+        private string GetSetupsInitializer(List<(List<ArgumentInfo> argumentInfos, FileLocation fileLocation)> setups)
         {
             if (setups.Count == 0)
             {
@@ -105,7 +105,7 @@ namespace MoqProtectedSourceGenerator
                 var comma = isLast ? "" : ",";
                 append(@$"            {{
                 {FilePathAndLine(setUpOrVerification.fileLocation)},
-                {ParameterInfo.SourceList(setUpOrVerification.parameterInfos)}
+                {ArgumentInfo.SourceList(setUpOrVerification.argumentInfos)}
             }}{comma}");
             });
 
@@ -115,7 +115,7 @@ namespace MoqProtectedSourceGenerator
         }}";
         }
 
-        private string GetExtensionClass(string className, List<(List<ParameterInfo> parameterInfos, FileLocation fileLocation)> setups, string methodExtensionMethods, string propertyExtensionMethods)
+        private string GetExtensionClass(string className, List<(List<ArgumentInfo> argumentInfos, FileLocation fileLocation)> setups, string methodExtensionMethods, string propertyExtensionMethods)
         {
             return
 $@"public static class {className}
@@ -131,7 +131,7 @@ $@"public static class {className}
 {propertyExtensionMethods}}}";
         }
 
-        private string GetUsings(Dictionary<string, SyntaxList<UsingDirectiveSyntax>> extensionsUsingsByFilePath)
+        private string GetUsings(Dictionary<string, SyntaxList<UsingDirectiveSyntax>> extensionsUsingsByFilePath, List<string> propertyNamespaces)
         {
             List<string> aliases = new List<string>();
             foreach (var kvp in extensionsUsingsByFilePath)
@@ -151,7 +151,7 @@ $@"public static class {className}
                 }
             }
 
-            var regularUsings = SourceHelper.CreateUsingsFromNamespaces(usings);
+            var regularUsings = SourceHelper.CreateUsingsFromNamespaces(usings.Concat(propertyNamespaces));
 
             if (aliases.Count == 0)
             {

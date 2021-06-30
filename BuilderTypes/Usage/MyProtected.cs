@@ -15,6 +15,16 @@
         }
 
         protected abstract int GetSet { get; set; }
+
+        public int GetGetSet()
+        {
+            return GetSet;
+        }
+        public void SetGetSet(int value)
+        {
+            GetSet = value;
+        }
+
         protected abstract int GetOnly { get; }
         protected abstract int SetOnly { set; }
 

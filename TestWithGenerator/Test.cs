@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using DifferentNamespace;
 using IFace;
 using Moq;
-using Moq.Language.Flow;
-using Moq.Protected;
-using MoqProtectedGenerated;
 using MoqProtectedTyped;
 using NUnit.Framework;
 using OtherNamespace;
@@ -114,8 +110,9 @@ namespace ClassLibrary1
         {
             SetOnly = value;
         }
-
+        [System.Runtime.CompilerServices.IndexerName("MyIndexer")]
         protected abstract string this[int key] { get;set; }
+        [System.Runtime.CompilerServices.IndexerName("MyIndexer")]
         protected abstract string this[string key] { get; set; }
         public string GetIndex(int key)
         {
@@ -180,6 +177,10 @@ namespace ClassLibrary1
 
             mock.Overloaded("123").Build().Setup().Returns("123");
             Assert.AreEqual("123", mock.Object.InvokeOverloaded("123"));
+
+            Assert.Throws<MockException>(() => mock.Overloaded(It.IsInRange(0, 5, Moq.Range.Inclusive)).Build().Verify());
+            mock.Object.InvokeOverloaded(1);
+            mock.Overloaded(It.IsInRange(0, 5, Moq.Range.Inclusive)).Build().Verify();
 
             mock.OverloadedGeneric(1, 1).Build().Setup();
             mock.OverloadedGeneric("1", 1).Build().Setup();
@@ -290,15 +291,12 @@ namespace ClassLibrary1
             Assert.Throws<ExpectedException>(() => mockSequencedReturns.Object.InvokeGenericNoConstraints(1));
             mockSequencedReturns.GenericNoConstraints("");
 
-            var mockX = new Mock<MyProtected>();
-            var x = mockX.ProtectedTyped();
-            x.SetupProperty(m => m[0], "123");
-            Assert.AreEqual("123", mockX.Object.GetIndex(0));
-
             var mockProperties = new ProtectedMock<MyProtected>();
             var mockedProperties = mockProperties.Object;
             mockProperties.GetSet().Get().Build().Setup().Returns("getter");
+            Assert.Throws<MockException>(() => mockProperties.GetSet().Get().Build().Verify());
             Assert.AreEqual("getter", mockedProperties.GetGetSet());
+            mockProperties.GetSet().Get().Build().Verify();
 
             mockProperties.GetSet().Set("throw").Build().Setup().Throws(new ExpectedException());
             mockedProperties.SetGetSet("ok");
@@ -316,6 +314,70 @@ namespace ClassLibrary1
             mockedProperties.SetStub("new");
             Assert.AreEqual("new", mockedProperties.GetStub());
 
+            var mockPropertiesSequence = new ProtectedMock<MyProtected>();
+            var mockedPropertiesSequence = mockPropertiesSequence.Object;
+            mockPropertiesSequence.GetSet().Get().Build().SetupSequence().Returns("1").Returns("2").Throws(new ExpectedException());
+            Assert.AreEqual("1", mockedPropertiesSequence.GetGetSet());
+            Assert.AreEqual("2", mockedPropertiesSequence.GetGetSet());
+            Assert.Throws<ExpectedException>(() => mockedPropertiesSequence.GetGetSet());
+
+            mockPropertiesSequence.GetSet().Set("match").Build().SetupSequence().Pass().Pass().Throws(new ExpectedException());
+            mockedPropertiesSequence.SetGetSet("match");
+            mockedPropertiesSequence.SetGetSet("match");
+            Assert.Throws<ExpectedException>(() => mockedPropertiesSequence.SetGetSet("match"));
+
+            var mockIndex = new ProtectedMock<MyProtected>();
+            var mockedIndex = mockIndex.Object;
+            mockIndex.Item_1().Get(1).Build().Setup().Returns("One");
+            Assert.Null(mockedIndex.GetIndex(0));
+            Assert.AreEqual("One", mockedIndex.GetIndex(1));
+            mockIndex.Item_1().Set(1, It.Is<string>(v => v == "match")).Build().Setup().Throws(new ExpectedException());
+            mockedIndex.SetIndex(1, "not a match");
+            Assert.Throws<ExpectedException>(() => mockedIndex.SetIndex(1, "match"));
+
+            var mockIndexSequence = new ProtectedMock<MyProtected>();
+            var mockedIndexSequence = mockIndexSequence.Object;
+            mockIndexSequence.Item_1().Get(1).Build().SetupSequence().Returns("One").Returns("Two").Throws(new ExpectedException());
+            Assert.AreEqual("One", mockedIndexSequence.GetIndex(1));
+            Assert.AreEqual("Two", mockedIndexSequence.GetIndex(1));
+            Assert.Throws<ExpectedException>(() => mockedIndexSequence.GetIndex(1));
+
+            mockIndexSequence.Item_1().Set(1, It.Is<string>(v => v == "match")).Build().SetupSequence().Pass().Pass().Throws(new ExpectedException());
+            mockedIndexSequence.SetIndex(1,"match");
+            mockedIndexSequence.SetIndex(1, "match");
+            Assert.Throws<ExpectedException>(() => mockedIndexSequence.SetIndex(1, "match"));
+            mockedIndexSequence.SetIndex(1, "not a match");
+
+            Assert.Throws<MockException>(() => mockIndexSequence.Item_1().Set(It.IsInRange(10, 15, Moq.Range.Inclusive), "x").Build().Verify());
+            mockedIndexSequence.SetIndex(11, "x");
+            mockIndexSequence.Item_1().Set(It.IsInRange(10, 15, Moq.Range.Inclusive), "x").Build().Verify();
+
+            Assert.Throws<MockException>(() => mockIndexSequence.Item_1().Get(It.IsInRange(10, 15, Moq.Range.Inclusive)).Build().Verify());
+            mockedIndexSequence.GetIndex(11);
+            mockIndexSequence.Item_1().Get(It.IsInRange(10, 15, Moq.Range.Inclusive)).Build().Verify();
+
+            var mockCallback = new ProtectedMock<MyProtected>();
+            var mockedCallbackAndReturns = mockCallback.Object;
+            int get = 0;
+            mockCallback.Item_1().Get(It.IsAny<int>()).Build().Setup().Callback(g => get = g);
+            mockedCallbackAndReturns.GetIndex(1);
+            Assert.AreEqual(1, get);
+
+            int get1 = 0;
+            string set = null;
+            mockCallback.Item_1().Set(It.IsAny<int>(), It.IsAny<string>()).Build().Setup().Callback((g,s) => {
+                get1 = g;
+                set = s;
+            });
+            mockedCallbackAndReturns.SetIndex(1,"value");
+            Assert.AreEqual(1, get1);
+            Assert.AreEqual("value", set);
+
+            var mockReturn = new ProtectedMock<MyProtected>();
+            var mockedReturn = mockReturn.Object;
+            mockReturn.Item_1().Get(It.IsAny<int>()).Build().Setup().Returns(v => v.ToString());
+            Assert.AreEqual("0", mockedReturn.GetIndex(0));
+            Assert.AreEqual("1", mockedReturn.GetIndex(1));
         }
 
     }

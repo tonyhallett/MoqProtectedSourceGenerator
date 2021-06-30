@@ -5,19 +5,19 @@ namespace MoqProtectedSourceGenerator
 {
     [Export(typeof(IProtectedLikeExtensionSource))]
     [Export(typeof(IExecuteAware))]
-    public class ParameterInfoSource : CommonSingleSource, IProtectedLikeExtensionSource
+    public class ArgumentInfoSource : CommonSingleSource, IProtectedLikeExtensionSource
     {
         protected override List<string> Usings => new()
         {
             "using System.Linq.Expressions;"
         };
-        protected override string HintName => "ParameterInfo";
+        protected override string HintName => "ArgumentInfo";
         protected override string Source =>
-@"    public enum ParameterType { UseValue, Match, Out, RefAny }
+@"    public enum ArgumentType { UseValue, Match, Out, RefAny }
 
-    public class ParameterInfo
+    public class ArgumentInfo
     {
-        public ParameterType Type { get; set; }
+        public ArgumentType Type { get; set; }
         public Expression RefAny { get; set; }
     }
 ";

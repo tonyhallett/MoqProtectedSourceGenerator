@@ -5,11 +5,21 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MoqProtectedSourceGenerator
 {
+
     [Export(typeof(IMethodInvocationExtractor))]
     public class MethodInvocationExtractor : IMethodInvocationExtractor
     {
-        public static List<string> SetupOrVerifyMethodNames = new() { "Setup", "SetupSequence", "Verify" };
-        public BuildSetupOrVerify Extract(InvocationExpressionSyntax invocationExpression)
+        private readonly IExtractionDiagnostics extractionDiagnostics;
+        //todo - common code
+        private static readonly List<string> SetupOrVerifyMethodNames = new() { "Setup", "SetupSequence", "Verify" };
+
+        [ImportingConstructor]
+        public MethodInvocationExtractor(IExtractionDiagnostics extractionDiagnostics)
+        {
+            this.extractionDiagnostics = extractionDiagnostics;
+        }
+
+        public MethodInvocationExtraction Extract(InvocationExpressionSyntax invocationExpression)
         {
             var buildMemberAccessStep = new Step<MethodStepContext, MemberAccessExpressionSyntax>((context, memberAccess) =>
             {
@@ -26,9 +36,7 @@ namespace MoqProtectedSourceGenerator
                 var numArguments = invocation.ArgumentList.Arguments.Count;
                 if (numArguments != 0)
                 {
-                    context.Diagnostic = Diagnostic.Create(
-                        new DiagnosticDescriptor("MoqProtectedTyped1", "Do not supply arguments to build", "Do not supply arguments to build", "MoqProtectedTyped", DiagnosticSeverity.Error, true, "Do not supply arguments to build"), buildLocation
-                    );
+                    context.Diagnostic = extractionDiagnostics.BuildHasArguments(buildLocation);
                     return;
                 }
                 successfulBuild = true;
@@ -58,11 +66,10 @@ namespace MoqProtectedSourceGenerator
             var methodStepContext = SyntaxNodeAscender.Execute(invocationExpression, new MethodStepContext(), buildMemberAccessStep, buildInvocationAccessStep, setUpOrVerifyMemberAccessStep, setUpOrVerifyInvocationAccessStep);
             if (successfulBuild && methodStepContext.State == StepContextState.Failed)
             {
-                methodStepContext.Diagnostic = Diagnostic.Create(
-                    new DiagnosticDescriptor("MoqProtectedTyped2", "Build should be followed by Setup, SetupSequence or Verify", "Build should be followed by Setup or Verify", "MoqProtectedTyped", DiagnosticSeverity.Error, true, "Build should be followed by Setup or Verify"), buildLocation
-                );
+                methodStepContext.Diagnostic = extractionDiagnostics.FluentNotCompleted(buildLocation);
             }
-            return new BuildSetupOrVerify
+
+            return new MethodInvocationExtraction
             {
                 Success = successfulBuild,
                 FileLocation = methodStepContext.FileLocation,

@@ -21,6 +21,10 @@ public static class MyProtected_Extensions
                 new List<MoqProtectedGenerated.ParameterInfo>{
                     new MoqProtectedGenerated.ParameterInfo { Type = ParameterType.UseValue, RefAny = null },
                     new MoqProtectedGenerated.ParameterInfo { Type = ParameterType.UseValue, RefAny = null }
+            } },
+            { @"C:\Users\tonyh\Source\Repos\MoqProtectedSourceGenerator\BuilderTypes\Usage\Test.cs_21",
+                new List<MoqProtectedGenerated.ParameterInfo>{
+                    new MoqProtectedGenerated.ParameterInfo { Type = ParameterType.UseValue, RefAny = null }
             } }
 
         };
@@ -64,16 +68,18 @@ public static class MyProtected_Extensions
 
         Expression<Action<MyProtectedLike>> GetSetUpOrVerifyExpression(string sourceFileInfo, int sourceLineNumber,List<Match> matches,int propertyValue)
         {
+            PropertyInfo property = typeof(MyProtectedLike).GetProperty("GetSet");
+            MethodInfo setMethod = property.GetSetMethod();
+
             var parameterInfos = Setups[GetKey(sourceFileInfo, sourceLineNumber)];
             var setupExpression = new SetupExpressionArgument(matches);
 
             var expressionArg0 = setupExpression.Create((int)propertyValue, parameterInfos[0]);
             
-            var body = Expression.Assign(Expression.Property(likeParameter, "GetSet"),expressionArg0);
+            var body = Expression.Call(likeParameter, setMethod, expressionArg0);
             return Expression.Lambda<Action<MyProtectedLike>>(body, likeParameter);
         }
         return new NonIndexerFluentGetSet<MyProtected, MyProtectedLike, int>(protectedMock, GetSetUpOrVerifyExpression, like => like.GetSet);
-        
     }
 
     public static IIndexerFluentGetSet<MyProtected, int, string, string> Index(this ProtectedMock<MyProtected> protectedMock)

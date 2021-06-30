@@ -30,6 +30,10 @@ namespace MoqProtectedGenerated{
     public interface ICallbackTyped<TArg1,TArg2> : ICallbackBase {
         ICallbackResult Callback(Action<TArg1,TArg2> action);
     }
+
+    public interface ICallbackTyped<TArg1,TArg2,TArg3> : ICallbackBase {
+        ICallbackResult Callback(Action<TArg1,TArg2,TArg3> action);
+    }
     #endregion
     #region ISetupTyped
     #region Base
@@ -239,6 +243,20 @@ namespace MoqProtectedGenerated{
         public SetupTyped(ISetup<TMock> actual):base(actual){}
         
         public ICallbackResult Callback(Action<TArg1,TArg2> action)
+        {
+            return actual.Callback(action);
+        }
+    }
+    #endregion
+    #region 3 args
+
+    public interface ISetupTyped<TMock,TArg1,TArg2,TArg3> : ISetupTypedBase<TMock>, ICallbackTyped<TArg1,TArg2,TArg3> where TMock:class {}
+
+    public class SetupTyped<TMock, TArg1,TArg2,TArg3> : SetupTypedBase<TMock>, ISetupTyped<TMock, TArg1,TArg2,TArg3> where TMock:class
+    {
+        public SetupTyped(ISetup<TMock> actual):base(actual){}
+        
+        public ICallbackResult Callback(Action<TArg1,TArg2,TArg3> action)
         {
             return actual.Callback(action);
         }
@@ -821,8 +839,8 @@ namespace MoqProtectedGenerated{
         ISetupVerifyBuilder<ISetupTypedResult<TMock, TArg1, TProperty>, ISetupSequentialResult<TProperty>>
         where TMock : class { }
 
-    public interface IIndexerSetterBuilder<TMock, TArg1> :
-        ISetupVerifyBuilder<ISetupTyped<TMock, TArg1>, ISetupSequentialAction>
+    public interface IIndexerSetterBuilder<TMock, TArg1,TProperty> :
+        ISetupVerifyBuilder<ISetupTyped<TMock, TArg1,TProperty>, ISetupSequentialAction>
         where TMock : class { }
 
     public class IndexerGetterBuilder<TMock, TArg1, TProperty> :
@@ -837,13 +855,13 @@ namespace MoqProtectedGenerated{
         ) : base(setup, setupSequence, verify) { }
     }
 
-    public class IndexerSetterBuilder<TMock,TArg1> :
-        SetupVerifyBuilder<ISetupTyped<TMock, TArg1>, ISetupSequentialAction>,
-        IIndexerSetterBuilder<TMock, TArg1>
+    public class IndexerSetterBuilder<TMock,TArg1,TProperty> :
+        SetupVerifyBuilder<ISetupTyped<TMock, TArg1,TProperty>, ISetupSequentialAction>,
+        IIndexerSetterBuilder<TMock, TArg1,TProperty>
         where TMock : class
     {
         public IndexerSetterBuilder(
-            Func<string, int, ISetupTyped<TMock,TArg1>> setup,
+            Func<string, int, ISetupTyped<TMock,TArg1,TProperty>> setup,
             Func<string, int, ISetupSequentialAction> setupSequence,
             Action<string, int, Times?, string> verify
         ) : base(setup, setupSequence, verify) { }
@@ -851,12 +869,12 @@ namespace MoqProtectedGenerated{
 
     public interface IIndexerFluentGet<TMock,TArg1,TProperty> where TMock : class
     {
-        IIndexerGetterBuilder<TMock,TArg1, TProperty> Get(TArg1 a1);
+        IIndexerGetterBuilder<TMock,TArg1, TProperty> Get(TArg1 key1);
     }
 
     public interface IIndexerFluentSet<TMock, TArg1, TProperty> where TMock : class
     {
-        IIndexerSetterBuilder<TMock,TArg1> Set(TArg1 a1, TProperty value);
+        IIndexerSetterBuilder<TMock,TArg1,TProperty> Set(TArg1 key1, TProperty value);
     }
     
     public interface IIndexerFluentGetSet<TMock,TArg1,TProperty> : 
@@ -864,60 +882,59 @@ namespace MoqProtectedGenerated{
         IIndexerFluentSet<TMock, TArg1, TProperty> where TMock : class {}
 
     public class IndexerFluentGetSet<TMock, TLike, TArg1, TProperty> : IIndexerFluentGetSet<TMock, TArg1, TProperty>
-    where TMock : class
-    where TLike : class
-{
-    private readonly Func<string, int, List<Match>, TArg1, Expression<Func<TLike, TProperty>>> getterGetSetUpOrVerifyExpression;
-    private readonly Func<string, int, List<Match>, TArg1, TProperty, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression;
-    private readonly IProtectedAsMock<TMock, TLike> protectedLike;
+        where TMock : class
+        where TLike : class
+    {
+        private readonly Func<string, int, List<Match>, TArg1, Expression<Func<TLike, TProperty>>> getterGetSetUpOrVerifyExpression;
+        private readonly Func<string, int, List<Match>, TArg1, TProperty, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression;
+        private readonly IProtectedAsMock<TMock, TLike> protectedLike;
 
-    public IndexerFluentGetSet(
-        ProtectedMock<TMock> protectedMock,
-        Func<string, int, List<Match>, TArg1, Expression<Func<TLike, TProperty>>> getterGetSetUpOrVerifyExpression,
-        Func<string, int, List<Match>, TArg1, TProperty, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression
+        public IndexerFluentGetSet(
+            ProtectedMock<TMock> protectedMock,
+            Func<string, int, List<Match>, TArg1, Expression<Func<TLike, TProperty>>> getterGetSetUpOrVerifyExpression,
+            Func<string, int, List<Match>, TArg1, TProperty, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression
         )
-    {
-        protectedLike = protectedMock.Mock.Protected().As<TLike>();
-        this.getterGetSetUpOrVerifyExpression = getterGetSetUpOrVerifyExpression;
-        this.setterGetSetUpOrVerifyExpression = setterGetSetUpOrVerifyExpression;
+        {
+            protectedLike = protectedMock.Mock.Protected().As<TLike>();
+            this.getterGetSetUpOrVerifyExpression = getterGetSetUpOrVerifyExpression;
+            this.setterGetSetUpOrVerifyExpression = setterGetSetUpOrVerifyExpression;
+        }
 
-    }
+        public IIndexerGetterBuilder<TMock, TArg1, TProperty> Get(TArg1 key1)
+        {
+            var matches = MatcherObserver.GetMatches();
 
-    public IIndexerGetterBuilder<TMock, TArg1, TProperty> Get(TArg1 a1)
-    {
-        var matches = MatcherObserver.GetMatches();
-
-        return new IndexerGetterBuilder<TMock, TArg1, TProperty>(
-            (sourceFileInfo, sourceLineNumber) =>
-                new SetupTypedResult<TMock, TArg1, TProperty>(
-                    protectedLike.Setup(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, a1))
-                )
-            ,
-            (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, a1)),
-            (sourceFileInfo, sourceLineNumber, times, failMessage) =>
-            {
-                Times t = Times.AtLeastOnce();
-                if (times.HasValue)
+            return new IndexerGetterBuilder<TMock, TArg1, TProperty>(
+                (sourceFileInfo, sourceLineNumber) =>
+                    new SetupTypedResult<TMock, TArg1, TProperty>(
+                        protectedLike.Setup(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1))
+                    )
+                ,
+                (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1)),
+                (sourceFileInfo, sourceLineNumber, times, failMessage) =>
                 {
-                    t = times.Value;
-                }
-                protectedLike.VerifyGet(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, a1), t, failMessage);
-            });
+                    Times t = Times.AtLeastOnce();
+                    if (times.HasValue)
+                    {
+                        t = times.Value;
+                    }
+                    protectedLike.VerifyGet(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1), t, failMessage);
+                });
+        }
+
+        public IIndexerSetterBuilder<TMock, TArg1, TProperty> Set(TArg1 key1, TProperty value)
+        {
+            var matches = MatcherObserver.GetMatches();
+
+            return new IndexerSetterBuilder<TMock, TArg1,TProperty>(
+                (sourceFileInfo, sourceLineNumber) => new SetupTyped<TMock, TArg1, TProperty>(
+                    protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1, value))),
+                (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1, value)),
+                (sourceFileInfo, sourceLineNumber, times, failMessage) => protectedLike.Verify(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1, value), times, failMessage)
+             );
+        }
+
     }
-
-    public IIndexerSetterBuilder<TMock, TArg1> Set(TArg1 a1, TProperty value)
-    {
-        var matches = MatcherObserver.GetMatches();
-
-        return new IndexerSetterBuilder<TMock, TArg1>(
-            (sourceFileInfo, sourceLineNumber) => new SetupTyped<TMock, TArg1>(
-                protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, a1, value))),
-            (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, a1, value)),
-            (sourceFileInfo, sourceLineNumber, times, failMessage) => protectedLike.Verify(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, a1, value), times, failMessage)
-         );
-    }
-
-}
     
     #endregion
     #region 2 args
@@ -926,8 +943,8 @@ namespace MoqProtectedGenerated{
         ISetupVerifyBuilder<ISetupTypedResult<TMock, TArg1,TArg2, TProperty>, ISetupSequentialResult<TProperty>>
         where TMock : class { }
 
-    public interface IIndexerSetterBuilder<TMock, TArg1,TArg2> :
-        ISetupVerifyBuilder<ISetupTyped<TMock, TArg1,TArg2>, ISetupSequentialAction>
+    public interface IIndexerSetterBuilder<TMock, TArg1,TArg2,TProperty> :
+        ISetupVerifyBuilder<ISetupTyped<TMock, TArg1,TArg2,TProperty>, ISetupSequentialAction>
         where TMock : class { }
 
     public class IndexerGetterBuilder<TMock, TArg1,TArg2, TProperty> :
@@ -942,13 +959,13 @@ namespace MoqProtectedGenerated{
         ) : base(setup, setupSequence, verify) { }
     }
 
-    public class IndexerSetterBuilder<TMock,TArg1,TArg2> :
-        SetupVerifyBuilder<ISetupTyped<TMock, TArg1,TArg2>, ISetupSequentialAction>,
-        IIndexerSetterBuilder<TMock, TArg1,TArg2>
+    public class IndexerSetterBuilder<TMock,TArg1,TArg2,TProperty> :
+        SetupVerifyBuilder<ISetupTyped<TMock, TArg1,TArg2,TProperty>, ISetupSequentialAction>,
+        IIndexerSetterBuilder<TMock, TArg1,TArg2,TProperty>
         where TMock : class
     {
         public IndexerSetterBuilder(
-            Func<string, int, ISetupTyped<TMock,TArg1,TArg2>> setup,
+            Func<string, int, ISetupTyped<TMock,TArg1,TArg2,TProperty>> setup,
             Func<string, int, ISetupSequentialAction> setupSequence,
             Action<string, int, Times?, string> verify
         ) : base(setup, setupSequence, verify) { }
@@ -956,12 +973,12 @@ namespace MoqProtectedGenerated{
 
     public interface IIndexerFluentGet<TMock,TArg1,TArg2,TProperty> where TMock : class
     {
-        IIndexerGetterBuilder<TMock,TArg1,TArg2, TProperty> Get(TArg1 a1,TArg2 a2);
+        IIndexerGetterBuilder<TMock,TArg1,TArg2, TProperty> Get(TArg1 key1,TArg2 key2);
     }
 
     public interface IIndexerFluentSet<TMock, TArg1,TArg2, TProperty> where TMock : class
     {
-        IIndexerSetterBuilder<TMock,TArg1,TArg2> Set(TArg1 a1,TArg2 a2, TProperty value);
+        IIndexerSetterBuilder<TMock,TArg1,TArg2,TProperty> Set(TArg1 key1,TArg2 key2, TProperty value);
     }
     
     public interface IIndexerFluentGetSet<TMock,TArg1,TArg2,TProperty> : 
@@ -969,60 +986,59 @@ namespace MoqProtectedGenerated{
         IIndexerFluentSet<TMock, TArg1,TArg2, TProperty> where TMock : class {}
 
     public class IndexerFluentGetSet<TMock, TLike, TArg1,TArg2, TProperty> : IIndexerFluentGetSet<TMock, TArg1,TArg2, TProperty>
-    where TMock : class
-    where TLike : class
-{
-    private readonly Func<string, int, List<Match>, TArg1,TArg2, Expression<Func<TLike, TProperty>>> getterGetSetUpOrVerifyExpression;
-    private readonly Func<string, int, List<Match>, TArg1,TArg2, TProperty, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression;
-    private readonly IProtectedAsMock<TMock, TLike> protectedLike;
+        where TMock : class
+        where TLike : class
+    {
+        private readonly Func<string, int, List<Match>, TArg1,TArg2, Expression<Func<TLike, TProperty>>> getterGetSetUpOrVerifyExpression;
+        private readonly Func<string, int, List<Match>, TArg1,TArg2, TProperty, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression;
+        private readonly IProtectedAsMock<TMock, TLike> protectedLike;
 
-    public IndexerFluentGetSet(
-        ProtectedMock<TMock> protectedMock,
-        Func<string, int, List<Match>, TArg1,TArg2, Expression<Func<TLike, TProperty>>> getterGetSetUpOrVerifyExpression,
-        Func<string, int, List<Match>, TArg1,TArg2, TProperty, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression
+        public IndexerFluentGetSet(
+            ProtectedMock<TMock> protectedMock,
+            Func<string, int, List<Match>, TArg1,TArg2, Expression<Func<TLike, TProperty>>> getterGetSetUpOrVerifyExpression,
+            Func<string, int, List<Match>, TArg1,TArg2, TProperty, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression
         )
-    {
-        protectedLike = protectedMock.Mock.Protected().As<TLike>();
-        this.getterGetSetUpOrVerifyExpression = getterGetSetUpOrVerifyExpression;
-        this.setterGetSetUpOrVerifyExpression = setterGetSetUpOrVerifyExpression;
+        {
+            protectedLike = protectedMock.Mock.Protected().As<TLike>();
+            this.getterGetSetUpOrVerifyExpression = getterGetSetUpOrVerifyExpression;
+            this.setterGetSetUpOrVerifyExpression = setterGetSetUpOrVerifyExpression;
+        }
 
-    }
+        public IIndexerGetterBuilder<TMock, TArg1,TArg2, TProperty> Get(TArg1 key1,TArg2 key2)
+        {
+            var matches = MatcherObserver.GetMatches();
 
-    public IIndexerGetterBuilder<TMock, TArg1,TArg2, TProperty> Get(TArg1 a1,TArg2 a2)
-    {
-        var matches = MatcherObserver.GetMatches();
-
-        return new IndexerGetterBuilder<TMock, TArg1,TArg2, TProperty>(
-            (sourceFileInfo, sourceLineNumber) =>
-                new SetupTypedResult<TMock, TArg1,TArg2, TProperty>(
-                    protectedLike.Setup(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, a1,a2))
-                )
-            ,
-            (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, a1,a2)),
-            (sourceFileInfo, sourceLineNumber, times, failMessage) =>
-            {
-                Times t = Times.AtLeastOnce();
-                if (times.HasValue)
+            return new IndexerGetterBuilder<TMock, TArg1,TArg2, TProperty>(
+                (sourceFileInfo, sourceLineNumber) =>
+                    new SetupTypedResult<TMock, TArg1,TArg2, TProperty>(
+                        protectedLike.Setup(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1,key2))
+                    )
+                ,
+                (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1,key2)),
+                (sourceFileInfo, sourceLineNumber, times, failMessage) =>
                 {
-                    t = times.Value;
-                }
-                protectedLike.VerifyGet(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, a1,a2), t, failMessage);
-            });
+                    Times t = Times.AtLeastOnce();
+                    if (times.HasValue)
+                    {
+                        t = times.Value;
+                    }
+                    protectedLike.VerifyGet(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1,key2), t, failMessage);
+                });
+        }
+
+        public IIndexerSetterBuilder<TMock, TArg1,TArg2, TProperty> Set(TArg1 key1,TArg2 key2, TProperty value)
+        {
+            var matches = MatcherObserver.GetMatches();
+
+            return new IndexerSetterBuilder<TMock, TArg1,TArg2,TProperty>(
+                (sourceFileInfo, sourceLineNumber) => new SetupTyped<TMock, TArg1,TArg2, TProperty>(
+                    protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1,key2, value))),
+                (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1,key2, value)),
+                (sourceFileInfo, sourceLineNumber, times, failMessage) => protectedLike.Verify(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1,key2, value), times, failMessage)
+             );
+        }
+
     }
-
-    public IIndexerSetterBuilder<TMock, TArg1,TArg2> Set(TArg1 a1,TArg2 a2, TProperty value)
-    {
-        var matches = MatcherObserver.GetMatches();
-
-        return new IndexerSetterBuilder<TMock, TArg1,TArg2>(
-            (sourceFileInfo, sourceLineNumber) => new SetupTyped<TMock, TArg1,TArg2>(
-                protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, a1,a2, value))),
-            (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, a1,a2, value)),
-            (sourceFileInfo, sourceLineNumber, times, failMessage) => protectedLike.Verify(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, a1,a2, value), times, failMessage)
-         );
-    }
-
-}
     
     #endregion
     #endregion

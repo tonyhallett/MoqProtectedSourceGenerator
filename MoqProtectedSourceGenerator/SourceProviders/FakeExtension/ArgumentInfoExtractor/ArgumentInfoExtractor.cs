@@ -7,17 +7,17 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MoqProtectedSourceGenerator
 {
-    [Export(typeof(IParameterInfoExtractor))]
-    public class ParameterInfoExtractor : IParameterInfoExtractor
+    [Export(typeof(IArgumentInfoExtractor))]
+    public class ArgumentInfoExtractor : IArgumentInfoExtractor
     {
-        public ParameterInfoExtraction Extract(SeparatedSyntaxList<ArgumentSyntax> arguments, SemanticModel semanticModel)
+        public ArgumentInfoExtraction Extract(SeparatedSyntaxList<ArgumentSyntax> arguments, SemanticModel semanticModel)
         {
             List<Diagnostic> diagnostics = new();
-            var parameterInfos = arguments.Select(argument =>
+            var argumentInfos = arguments.Select(argument =>
            {
-               var parameterInfo = new ParameterInfo
+               var argumentInfo = new ArgumentInfo
                {
-                   Type = ParameterType.UseValue
+                   Type = ArgumentType.UseValue
                };
 
                if (argument.RefKindKeyword.IsKind(SyntaxKind.RefKeyword))
@@ -25,8 +25,8 @@ namespace MoqProtectedSourceGenerator
                    var potentialItRef = argument.NormalizeWhitespace().ToString();
                    if (potentialItRef.StartsWith("ref It.Ref<"))
                    {
-                       parameterInfo.Type = ParameterType.RefAny;
-                       parameterInfo.RefAny = potentialItRef.Substring(4);
+                       argumentInfo.Type = ArgumentType.RefAny;
+                       argumentInfo.RefAny = potentialItRef.Substring(4);
                    }
                    else
                    {
@@ -39,22 +39,22 @@ namespace MoqProtectedSourceGenerator
                {
                    if (IsItArgument(invocation))
                    {
-                       parameterInfo.Type = ParameterType.Match;
+                       argumentInfo.Type = ArgumentType.Match;
                    }
                    else if (IsWrappedCustomMatcher(invocation))
                    {
-                       parameterInfo.Type = ParameterType.Match;
+                       argumentInfo.Type = ArgumentType.Match;
                    }
                    else if (OutType.IsOutArgument(invocation))
                    {
-                       parameterInfo.Type = ParameterType.Out;
+                       argumentInfo.Type = ArgumentType.Out;
                    }
                    // later provide means of searching syntax for custom matcher
                }
 
-               return parameterInfo;
+               return argumentInfo;
            }).ToList();
-            return new ParameterInfoExtraction { ParameterInfos = parameterInfos, Diagnostics = diagnostics };
+            return new ArgumentInfoExtraction { ArgumentInfos = argumentInfos, Diagnostics = diagnostics };
         }
         private bool IsWrappedCustomMatcher(InvocationExpressionSyntax invocation)
         {

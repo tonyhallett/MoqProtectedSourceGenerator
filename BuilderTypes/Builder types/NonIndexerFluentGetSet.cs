@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using MoqProtectedTyped;
-using Moq.Language.Flow;
+using MoqProtectedGenerated;
 
 public class NonIndexerFluentGetSet<T,TLike, TProperty> : INonIndexerFluentGetSet<T, TProperty> 
     where T : class
@@ -46,10 +46,12 @@ public class NonIndexerFluentGetSet<T,TLike, TProperty> : INonIndexerFluentGetSe
 
     public ISetterBuilder<T, TProperty> Set(TProperty property)
     {
-        //SetupSet does not exist - will use SetUp ( this would not work with indexer )
         var matches = MatcherObserver.GetMatches();
         return new SetterBuilder<T, TProperty>(
-            (sourceFileInfo, sourceLineNumber) => protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, property)) as ISetupSetter<T,TProperty>,
+            (sourceFileInfo, sourceLineNumber) => 
+                new SetupTyped<T,TProperty>(
+                    protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, property))
+                ),
             (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, property)),
             (sourceFileInfo, sourceLineNumber, times,failMessage) => protectedLike.Verify(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, property),times,failMessage)
         );

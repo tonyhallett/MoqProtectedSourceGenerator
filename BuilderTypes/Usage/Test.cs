@@ -16,8 +16,11 @@ namespace ANamespace
             AssertException<ExpectedException>(() => mock.Object.SetIndex(2, "2", "Two"));
             
             //mock.AbstractMethod().Build().Setup();
-            //mock.GetSet().Get().Build().Setup().Returns(9);
-            //mock.GetSet().Set(It.IsAny<int>()).Build().Setup().Throws(new Exception());
+            mock.GetSet().Get().Build().Setup().Returns(9);
+            AssertEquals(9, mock.Object.GetGetSet());
+            mock.GetSet().Set(1).Build().Setup().Throws(new ExpectedException());
+            mock.Object.SetGetSet(123);
+            AssertException<ExpectedException>(() => mock.Object.SetGetSet(1));
         }
 
         private static void AssertException<T>(Action action)

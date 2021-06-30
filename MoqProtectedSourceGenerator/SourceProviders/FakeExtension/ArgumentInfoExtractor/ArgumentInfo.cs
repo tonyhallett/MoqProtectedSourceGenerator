@@ -4,17 +4,17 @@ using System.Text;
 
 namespace MoqProtectedSourceGenerator
 {
-    public class ParameterInfo
+    public class ArgumentInfo
     {
-        public ParameterType Type { get; set; }
+        public ArgumentType Type { get; set; }
         public string RefAny { get; set; }
 
-        public static string SourceList(List<ParameterInfo> parameterInfos)
+        public static string SourceList(List<ArgumentInfo> argumentInfos)
         {
-            var numParameterInfos = parameterInfos.Count;
-            var stringBuilder = new StringBuilder("new List<ParameterInfo>{");
+            var numArgumentInfos = argumentInfos.Count;
+            var stringBuilder = new StringBuilder("new List<ArgumentInfo>{");
 
-            if (numParameterInfos == 0)
+            if (numArgumentInfos == 0)
             {
                 stringBuilder.Append("}");
             }
@@ -35,11 +35,11 @@ namespace MoqProtectedSourceGenerator
                 stringBuilder.AppendLine("");
 
                 var count = 0;
-                foreach (var parameterInfo in parameterInfos)
+                foreach (var argumentInfo in argumentInfos)
                 {
-                    var isLast = count == numParameterInfos - 1;
+                    var isLast = count == numArgumentInfos - 1;
                     var comma = isLast ? "" : ",";
-                    var refAny = parameterInfo.RefAny;
+                    var refAny = argumentInfo.RefAny;
                     var refExpression = "null";
                     if (refAny != null)
                     {
@@ -47,7 +47,7 @@ namespace MoqProtectedSourceGenerator
                         refExpression = @$"Expression.Field(null, typeof({withoutRefAny}), ""IsAny"")";
 
                     }
-                    AppendLineTabbed(@$"new ParameterInfo {{ Type = ParameterType.{parameterInfo.Type}, RefAny = {refExpression} }}{comma}");
+                    AppendLineTabbed(@$"new ArgumentInfo {{ Type = ArgumentType.{argumentInfo.Type}, RefAny = {refExpression} }}{comma}");
                     count++;
                 }
                 AppendLineTabbed("}", false, SpaceTabs.GetSpaces(4));

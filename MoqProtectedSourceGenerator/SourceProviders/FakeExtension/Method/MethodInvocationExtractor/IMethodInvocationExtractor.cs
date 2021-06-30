@@ -4,6 +4,6 @@ namespace MoqProtectedSourceGenerator
 {
     public interface IMethodInvocationExtractor
     {
-        BuildSetupOrVerify Extract(InvocationExpressionSyntax invocation);
+        MethodInvocationExtraction Extract(InvocationExpressionSyntax invocation);
     }
 }

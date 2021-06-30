@@ -29,20 +29,20 @@ namespace MoqProtectedSourceGenerator
             this.matches = matches;
         }}
 
-        public Expression {methodName}<TArg>(TArg t, ParameterInfo parameterInfo)
+        public Expression {methodName}<TArg>(TArg t, ArgumentInfo argumentInfo)
         {{
             Expression expression = null;
-            switch (parameterInfo.Type)
+            switch (argumentInfo.Type)
             {{
-                case ParameterType.UseValue:
-                case ParameterType.Out:
+                case ArgumentType.UseValue:
+                case ArgumentType.Out:
                     expression = Expression.Constant(t);
                     if (t == null)
                     {{
                         expression = Expression.Convert(expression, typeof(TArg));
                     }}
                     break;
-                case ParameterType.Match:
+                case ArgumentType.Match:
                     expression = Expression.Call(Matcher.GetWrapMethod<TArg>(), Expression.Constant(this.matches[matchCount]));
                     matchCount++;
                     break;

@@ -30,6 +30,7 @@ namespace MoqProtectedSourceGenerator.Tests
 using Moq;
 using Moq.Protected;
 using MoqProtectedTyped;
+using System;
 namespace ClassLibrary1
 {
     public abstract class Duplicate
@@ -49,8 +50,10 @@ namespace ClassLibrary1
         
         [System.Runtime.CompilerServices.IndexerName(""MyIndexer"")]
         protected abstract string this[int key] {get;set;}
+
+        protected abstract string GetSet {get;set;}
     }
-    
+    public class ExpectedException : Exception{}
     public class ConstraintClass{}
     public class SubType1{}
     public class SubType2{}
@@ -61,8 +64,10 @@ namespace ClassLibrary1
             var mock = new ProtectedMock<MyProtected>();
             //mock.OutParameter(     null).Build().Setup();
             //mock.RefGenericMethod(ref It.Ref<It.IsSubtype<SubType2>>.IsAny).Build().Setup();
-            mock.AbstractMethodArgs(1,It.IsAny<int>()).Build().Setup();
+            //mock.AbstractMethodArgs(1,It.IsAny<int>()).Build().Setup();
             //mock.AbstractMethodArgs(Out.Param(1)).Build().Setup();
+            //mock.MyIndexer().Get(123).Build().Setup().Returns(""123"");
+            mock.GetSet().Set(""throw"").Build().Setup().Throws(new ExpectedException());
         }
         
 

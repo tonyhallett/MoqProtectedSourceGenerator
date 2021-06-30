@@ -6,20 +6,20 @@ namespace MoqProtectedSourceGenerator
     public class MethodExtensionMethodsFactory : IMethodExtensionMethodsFactory
     {
         private readonly IMethodInvocationExtractor methodInvocationExtractor;
-        private readonly IParameterInfoExtractor parameterInfoExtractor;
+        private readonly IArgumentInfoExtractor argumentInfoExtractor;
         private readonly IProtectedMock protectedMock;
         private readonly ISetupExpressionArgument setupExpressionArgument;
 
         [ImportingConstructor]
         public MethodExtensionMethodsFactory(
             IMethodInvocationExtractor methodInvocationExtractor,
-            IParameterInfoExtractor parameterInfoExtractor,
+            IArgumentInfoExtractor argumentInfoExtractor,
             IProtectedMock protectedMock,
             ISetupExpressionArgument setupExpressionArgument
         )
         {
             this.methodInvocationExtractor = methodInvocationExtractor;
-            this.parameterInfoExtractor = parameterInfoExtractor;
+            this.argumentInfoExtractor = argumentInfoExtractor;
             this.protectedMock = protectedMock;
             this.setupExpressionArgument = setupExpressionArgument;
         }
@@ -28,7 +28,7 @@ namespace MoqProtectedSourceGenerator
         {
             return new MethodExtensionMethods(
                 methodInvocationExtractor,
-                parameterInfoExtractor,
+                argumentInfoExtractor,
                 protectedMock,
                 setupExpressionArgument);
         }
