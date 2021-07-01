@@ -62,6 +62,7 @@ namespace MoqProtectedSourceGenerator
         {
             var expressionDelegate = ExpressionDelegate(likeTypeName, methodDetail.Declaration);
             var methodBuilderType = MethodBuilderType(mockedTypeName, methodDetail.Declaration);
+            var setupTyped = SetupTyped(mockedTypeName, methodDetail.Declaration);
             var methodName = methodDetail.Declaration.Identifier.Text;
             var genericTypeParameters = "";
             if (methodDetail.Symbol.IsGenericMethod)
@@ -106,7 +107,9 @@ namespace MoqProtectedSourceGenerator
 
         return new {methodBuilderType}(
             (sourceFileInfo, sourceLineNumber) => 
-                protectedLike.Setup(GetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber)),
+                new {setupTyped}(
+                    protectedLike.Setup(GetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber))
+                ),
             (sourceFileInfo, sourceLineNumber) => 
                 protectedLike.SetupSequence(GetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber)),
             (sourceFileInfo, sourceLineNumber, times, failMessage) => 
@@ -220,7 +223,15 @@ namespace MoqProtectedSourceGenerator
         private string MethodBuilderType(string mockedTypeName, MethodDeclarationSyntax methodDeclaration)
         {
             var returnTypeDetails = returnTypeDetailsLookup[methodDeclaration.ReturnTypeIsVoid()];
-            return returnTypeDetails.MethodBuilderType(mockedTypeName, methodDeclaration.ReturnType.ToString());
+            var typeParameters = methodDeclaration.ParameterList.Parameters.Select(p => p.Type.ToString());
+            return returnTypeDetails.MethodBuilderType(mockedTypeName, methodDeclaration.ReturnType.ToString(), typeParameters);
+        }
+
+        private string SetupTyped(string mockedTypeName, MethodDeclarationSyntax methodDeclaration)
+        {
+            var returnTypeDetails = returnTypeDetailsLookup[methodDeclaration.ReturnTypeIsVoid()];
+            var typeParameters = methodDeclaration.ParameterList.Parameters.Select(p => p.Type.ToString());
+            return returnTypeDetails.SetupTyped(mockedTypeName, methodDeclaration.ReturnType.ToString(), typeParameters);
         }
 
         public void ExtensionInvocation(InvocationExpressionSyntax invocationExpression, string extensionName, SemanticModel semanticModel, AnalyzerConfigOptionsProvider _)

@@ -57,14 +57,14 @@ using System.Linq.Expressions;
               {
                   stringBuilder.Append(@"
     public interface ICallbackBase : IFluentInterface {
+        // acceptable on all
+        ICallbackResult Callback(Action action);
         ICallbackResult Callback(InvocationAction action);
         ICallbackResult Callback(Delegate callback);//is this really necessary ?
     }
 ");
                   stringBuilder.Append(@"
-    public interface ICallbackTyped : ICallbackBase {
-        ICallbackResult Callback(Action action);
-    }
+    public interface ICallbackTyped : ICallbackBase { }
 ");
                   var typeArgs = "";
                   for (var i = 1; i < numTypeArguments + 1; i++)
@@ -112,11 +112,6 @@ using System.Linq.Expressions;
     public class SetupTyped<TMock> : SetupTypedBase<TMock>, ISetupTyped<TMock> where TMock:class
     {{
         public SetupTyped(ISetup<TMock> actual):base(actual){{}}
-        
-        public ICallbackResult Callback(Action action)
-        {{
-            return actual.Callback(action);
-        }}
     }}
 ");
                 });
@@ -176,6 +171,11 @@ using System.Linq.Expressions;
         public IVerifies AtMostOnce()
         {
             return actual.AtMostOnce();
+        }
+
+        public ICallbackResult Callback(Action action)
+        {
+            return actual.Callback(action);
         }
 
         public ICallbackResult Callback(InvocationAction action)
@@ -516,6 +516,9 @@ using System.Linq.Expressions;
         #endregion
 
         #region ICallbackBase
+        public ICallbackResult Callback(Action action){
+            return actual.Callback(action);
+        }
 
         public ICallbackResult Callback(InvocationAction action)
         {
@@ -597,12 +600,6 @@ using System.Linq.Expressions;
     public class ReturnsResultTyped<TMock> : ReturnsResultTypedBase<TMock>, IReturnsResultTyped<TMock> where TMock : class
     {{
         public ReturnsResultTyped(IReturnsResult<TMock> actual) : base(actual) {{ }}
-
-        public ICallbackResult Callback(Action action)
-        {{
-            return actual.Callback(action);
-        }}
-    
     }}
 
     public class SetupTypedResult<TMock, TResult> : SetupTypedResultBase<TMock,TResult>, ISetupTypedResult<TMock, TResult> where TMock:class
@@ -792,6 +789,60 @@ using System.Linq.Expressions;
 
         }
 
+        //prefix , if typeArgs
+        private static void AddVoidBuilder(string typeArgs, StringBuilder stringBuilder)
+        {
+            stringBuilder.Append($@"
+    public interface IVoidBuilder<TMock{typeArgs}> :
+        ISetupVerifyBuilder<ISetupTyped<TMock{typeArgs}>, ISetupSequentialAction>
+        where TMock : class {{ }}
+
+    public class VoidBuilder<TMock{typeArgs}> :
+        SetupVerifyBuilder<ISetupTyped<TMock{typeArgs}>, ISetupSequentialAction>,
+        IVoidBuilder<TMock{typeArgs}>
+        where TMock : class
+    {{
+        public VoidBuilder(
+            Func<string, int, ISetupTyped<TMock{typeArgs}>> setup,
+            Func<string, int, ISetupSequentialAction> setupSequence,
+            Action<string, int, Times?, string> verify
+        ) : base(setup, setupSequence, verify) {{ }}
+    }}
+");
+        }
+
+        // suffix , if there are type args
+        private static void AddReturningBuilder(string typeArgs, StringBuilder stringBuilder)
+        {
+            stringBuilder.Append($@"
+    public interface IReturningBuilder<TMock, {typeArgs}TResult> :
+        ISetupVerifyBuilder<ISetupTypedResult<TMock, {typeArgs}TResult>, ISetupSequentialResult<TResult>>
+        where TMock : class {{ }}
+
+    public class ReturningBuilder<TMock, {typeArgs}TResult> :
+        SetupVerifyBuilder<ISetupTypedResult<TMock, {typeArgs}TResult>, ISetupSequentialResult<TResult>>,
+        IReturningBuilder<TMock, {typeArgs}TResult>
+        where TMock : class
+    {{
+        public ReturningBuilder(
+            Func<string, int, ISetupTypedResult<TMock, {typeArgs}TResult>> setup,
+            Func<string, int, ISetupSequentialResult<TResult>> setupSequence,
+            Action<string, int, Times?, string> verify
+        ) : base(setup, setupSequence, verify) {{ }}
+    }}
+");
+        }
+
+        private static string GetTypeArg(int position)
+        {
+            return $"TArg{position}";
+        }
+
+        private static string GetParameterName(int position)
+        {
+            return $"p{position}";
+        }
+
         private static void AddIndexerFluent(int numTypeArguments, StringBuilder stringBuilder)
         {
             AddRegion("Indexer fluent", stringBuilder, () =>
@@ -799,6 +850,14 @@ using System.Linq.Expressions;
                 var typeArgs = "";
                 var getSetParameters = "";
                 var getSetArguments = "";
+
+                AddRegion("0 args", stringBuilder, () =>
+                {
+                    AddReturningBuilder("", stringBuilder);
+                    AddVoidBuilder("", stringBuilder);
+                    
+                });
+
                 for (var i = 1; i < numTypeArguments + 1; i++)
                 {
                     if (i != 1)
@@ -808,54 +867,25 @@ using System.Linq.Expressions;
                         getSetArguments += ",";
 
                     }
-                    var typeArg = $"TArg{i}";
+                    var typeArg = GetTypeArg(i);
                     typeArgs += typeArg;
-                    getSetParameters += $"{typeArg} key{i}";
-                    getSetArguments += $"key{i}";
+                    var parameterName = GetParameterName(i);
+                    getSetParameters += $"{typeArg} {parameterName}";
+                    getSetArguments += parameterName;
 
                     AddRegion(i == 1 ? "1 arg" : $"{i} args", stringBuilder, () =>
                     {
+                        AddReturningBuilder($"{typeArgs},", stringBuilder);
+                        AddVoidBuilder($",{typeArgs}", stringBuilder);
                         stringBuilder.Append($@"
-    public interface IIndexerGetterBuilder<TMock, {typeArgs},TProperty> :
-        ISetupVerifyBuilder<ISetupTypedResult<TMock, {typeArgs}, TProperty>, ISetupSequentialResult<TProperty>>
-        where TMock : class {{ }}
-
-    public interface IIndexerSetterBuilder<TMock, {typeArgs},TProperty> :
-        ISetupVerifyBuilder<ISetupTyped<TMock, {typeArgs},TProperty>, ISetupSequentialAction>
-        where TMock : class {{ }}
-
-    public class IndexerGetterBuilder<TMock, {typeArgs}, TProperty> :
-        SetupVerifyBuilder<ISetupTypedResult<TMock, {typeArgs}, TProperty>, ISetupSequentialResult<TProperty>>,
-        IIndexerGetterBuilder<TMock, {typeArgs}, TProperty>
-        where TMock : class
-    {{
-        public IndexerGetterBuilder(
-            Func<string, int, ISetupTypedResult<TMock, {typeArgs}, TProperty>> setup,
-            Func<string, int, ISetupSequentialResult<TProperty>> setupSequence,
-            Action<string, int, Times?, string> verify
-        ) : base(setup, setupSequence, verify) {{ }}
-    }}
-
-    public class IndexerSetterBuilder<TMock,{typeArgs},TProperty> :
-        SetupVerifyBuilder<ISetupTyped<TMock, {typeArgs},TProperty>, ISetupSequentialAction>,
-        IIndexerSetterBuilder<TMock, {typeArgs},TProperty>
-        where TMock : class
-    {{
-        public IndexerSetterBuilder(
-            Func<string, int, ISetupTyped<TMock,{typeArgs},TProperty>> setup,
-            Func<string, int, ISetupSequentialAction> setupSequence,
-            Action<string, int, Times?, string> verify
-        ) : base(setup, setupSequence, verify) {{ }}
-    }}
-
     public interface IIndexerFluentGet<TMock,{typeArgs},TProperty> where TMock : class
     {{
-        IIndexerGetterBuilder<TMock,{typeArgs}, TProperty> Get({getSetParameters});
+        IReturningBuilder<TMock,{typeArgs}, TProperty> Get({getSetParameters});
     }}
 
     public interface IIndexerFluentSet<TMock, {typeArgs}, TProperty> where TMock : class
     {{
-        IIndexerSetterBuilder<TMock,{typeArgs},TProperty> Set({getSetParameters}, TProperty value);
+        IVoidBuilder<TMock,{typeArgs},TProperty> Set({getSetParameters}, TProperty value);
     }}
     
     public interface IIndexerFluentGetSet<TMock,{typeArgs},TProperty> : 
@@ -881,11 +911,11 @@ using System.Linq.Expressions;
             this.setterGetSetUpOrVerifyExpression = setterGetSetUpOrVerifyExpression;
         }}
 
-        public IIndexerGetterBuilder<TMock, {typeArgs}, TProperty> Get({getSetParameters})
+        public IReturningBuilder<TMock, {typeArgs}, TProperty> Get({getSetParameters})
         {{
             var matches = MatcherObserver.GetMatches();
 
-            return new IndexerGetterBuilder<TMock, {typeArgs}, TProperty>(
+            return new ReturningBuilder<TMock, {typeArgs}, TProperty>(
                 (sourceFileInfo, sourceLineNumber) =>
                     new SetupTypedResult<TMock, {typeArgs}, TProperty>(
                         protectedLike.Setup(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, {getSetArguments}))
@@ -903,11 +933,11 @@ using System.Linq.Expressions;
                 }});
         }}
 
-        public IIndexerSetterBuilder<TMock, {typeArgs}, TProperty> Set({getSetParameters}, TProperty value)
+        public IVoidBuilder<TMock, {typeArgs}, TProperty> Set({getSetParameters}, TProperty value)
         {{
             var matches = MatcherObserver.GetMatches();
 
-            return new IndexerSetterBuilder<TMock, {typeArgs},TProperty>(
+            return new VoidBuilder<TMock, {typeArgs},TProperty>(
                 (sourceFileInfo, sourceLineNumber) => new SetupTyped<TMock, {typeArgs}, TProperty>(
                     protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, {getSetArguments}, value))),
                 (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, {getSetArguments}, value)),
@@ -920,6 +950,14 @@ using System.Linq.Expressions;
 ");
                     });
                 }
+                var additionalArgs = numTypeArguments + 1;
+                AddRegion($"{additionalArgs} args", stringBuilder, () =>
+                {
+                    typeArgs += $",{GetTypeArg(additionalArgs)}";
+                    AddVoidBuilder($",{typeArgs}", stringBuilder);
+                });
+
+                
             });
         }
     }

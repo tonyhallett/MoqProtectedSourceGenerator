@@ -186,6 +186,7 @@ namespace ClassLibrary1
             mock.OverloadedGeneric("1", 1).Build().Setup();
 
             mock.AbstractMethod().Build().Setup().Throws(new ExpectedException());
+            //mock.AbstractMethod().Build().Setup().Callback(a => { }) // Delegate 'Action' does not take 1 arguments
             //mock.AbstractMethod().Build("", 0).Setup();// build error *************
             //mock.AbstractMethod().Build();//build error ************
             Assert.Throws<ExpectedException>(() => mock.Object.InvokeAbstractMethod());
@@ -203,6 +204,16 @@ namespace ClassLibrary1
             mock.Object.InvokeAbstractMethodArgs(1);
             Verify();
 
+            var calledBack = false;
+            //Action allowed for all 
+            mock.AbstractMethodArgs(456).Build().Setup().Callback(() => calledBack = true);
+            mock.Object.InvokeAbstractMethodArgs(456);
+            Assert.True(calledBack);
+            var callbackArg = 0;
+            mock.AbstractMethodArgs(789).Build().Setup().Callback((a) => callbackArg = a);
+            mock.Object.InvokeAbstractMethodArgs(789);
+            Assert.AreEqual(789, callbackArg);
+
             var mockOut = new ProtectedMock<MyProtected>();
             mockOut.OutMethod(Out.From(123)).Build().Setup();
             mockOut.Object.InvokeOutMethod(out var outInt);
@@ -219,8 +230,13 @@ namespace ClassLibrary1
             mockGenericNoConstraints.GenericNoConstraints(null as string).Build().Setup().Returns("string null");
             Assert.AreEqual("string null", mockGenericNoConstraints.Object.InvokeGenericNoConstraints(null as string));
 
-            mockGenericNoConstraints.GenericNoConstraints(It.Is<string>(s => s == "match")).Build().Setup().Returns("matcher");
+            string genericCallbackBefore = null;
+            string genericCallbackAfter = null;
+            mockGenericNoConstraints.GenericNoConstraints(It.Is<string>(s => s == "match")).Build().Setup().
+                Callback(s => genericCallbackBefore = s).Returns("matcher").Callback(s => genericCallbackAfter = s);
             Assert.AreEqual("matcher", mockGenericNoConstraints.Object.InvokeGenericNoConstraints("match"));
+            Assert.AreEqual("match", genericCallbackBefore);
+            Assert.AreEqual("match", genericCallbackAfter);
 
             mockGenericNoConstraints.GenericNoConstraints(CustomMatcher.Wrap(MyCustomMatcher.GreaterThan, 1000)).Build().Setup().Returns("custom matcher");
             Assert.AreEqual("custom matcher", mockGenericNoConstraints.Object.InvokeGenericNoConstraints(1001));

@@ -43,15 +43,18 @@ namespace ClassLibrary1
     }
     public abstract class MyProtected
     { 
-        protected abstract void AbstractMethodArgs<T>(T t1, T t2);// where T:ConstraintClass;
+        //protected abstract void AbstractMethodArgs<T>(T t1, T t2);// where T:ConstraintClass;
         //protected abstract void RefMethod(ref int refArg);
         //protected abstract void RefGenericMethod<T>(ref T refArg);
         //protected abstract void OutParameter(out int outInt);
         
-        [System.Runtime.CompilerServices.IndexerName(""MyIndexer"")]
-        protected abstract string this[int key] {get;set;}
+        //[System.Runtime.CompilerServices.IndexerName(""MyIndexer"")]
+        //protected abstract string this[int key] {get;set;}
 
-        protected abstract string GetSet {get;set;}
+        //protected abstract string GetSet {get;set;}
+
+        //protected abstract void Method(out int arg1,ref string arg2);
+        protected abstract string GenericNoConstraints<T>(T t);
     }
     public class ExpectedException : Exception{}
     public class ConstraintClass{}
@@ -67,7 +70,7 @@ namespace ClassLibrary1
             //mock.AbstractMethodArgs(1,It.IsAny<int>()).Build().Setup();
             //mock.AbstractMethodArgs(Out.Param(1)).Build().Setup();
             //mock.MyIndexer().Get(123).Build().Setup().Returns(""123"");
-            mock.GetSet().Set(""throw"").Build().Setup().Throws(new ExpectedException());
+            //mock.GetSet().Set(""throw"").Build().Setup().Throws(new ExpectedException());
         }
         
 

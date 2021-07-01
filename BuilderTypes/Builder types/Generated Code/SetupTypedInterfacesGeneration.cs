@@ -15,13 +15,13 @@ namespace MoqProtectedGenerated{
     #region ICallbackTyped
 
     public interface ICallbackBase : IFluentInterface {
+        // acceptable on all
+        ICallbackResult Callback(Action action);
         ICallbackResult Callback(InvocationAction action);
         ICallbackResult Callback(Delegate callback);//is this really necessary ?
     }
 
-    public interface ICallbackTyped : ICallbackBase {
-        ICallbackResult Callback(Action action);
-    }
+    public interface ICallbackTyped : ICallbackBase { }
 
     public interface ICallbackTyped<TArg1> : ICallbackBase {
         ICallbackResult Callback(Action<TArg1> action);
@@ -68,6 +68,11 @@ namespace MoqProtectedGenerated{
         public IVerifies AtMostOnce()
         {
             return actual.AtMostOnce();
+        }
+
+        public ICallbackResult Callback(Action action)
+        {
+            return actual.Callback(action);
         }
 
         public ICallbackResult Callback(InvocationAction action)
@@ -213,11 +218,6 @@ namespace MoqProtectedGenerated{
     public class SetupTyped<TMock> : SetupTypedBase<TMock>, ISetupTyped<TMock> where TMock:class
     {
         public SetupTyped(ISetup<TMock> actual):base(actual){}
-        
-        public ICallbackResult Callback(Action action)
-        {
-            return actual.Callback(action);
-        }
     }
     #endregion
     #region 1 arg
@@ -459,6 +459,9 @@ namespace MoqProtectedGenerated{
         #endregion
 
         #region ICallbackBase
+        public ICallbackResult Callback(Action action){
+            return actual.Callback(action);
+        }
 
         public ICallbackResult Callback(InvocationAction action)
         {
@@ -536,12 +539,6 @@ namespace MoqProtectedGenerated{
     public class ReturnsResultTyped<TMock> : ReturnsResultTypedBase<TMock>, IReturnsResultTyped<TMock> where TMock : class
     {
         public ReturnsResultTyped(IReturnsResult<TMock> actual) : base(actual) { }
-
-        public ICallbackResult Callback(Action action)
-        {
-            return actual.Callback(action);
-        }
-    
     }
 
     public class SetupTypedResult<TMock, TResult> : SetupTypedResultBase<TMock,TResult>, ISetupTypedResult<TMock, TResult> where TMock:class
@@ -833,35 +830,69 @@ namespace MoqProtectedGenerated{
     #endregion
     #endregion
     #region Indexer fluent
-    #region 1 arg
+    #region 0 args
 
-    public interface IIndexerGetterBuilder<TMock, TArg1,TProperty> :
-        ISetupVerifyBuilder<ISetupTypedResult<TMock, TArg1, TProperty>, ISetupSequentialResult<TProperty>>
+    public interface IReturningBuilder<TMock, TResult> :
+        ISetupVerifyBuilder<ISetupTypedResult<TMock, TResult>, ISetupSequentialResult<TResult>>
         where TMock : class { }
 
-    public interface IIndexerSetterBuilder<TMock, TArg1,TProperty> :
-        ISetupVerifyBuilder<ISetupTyped<TMock, TArg1,TProperty>, ISetupSequentialAction>
-        where TMock : class { }
-
-    public class IndexerGetterBuilder<TMock, TArg1, TProperty> :
-        SetupVerifyBuilder<ISetupTypedResult<TMock, TArg1, TProperty>, ISetupSequentialResult<TProperty>>,
-        IIndexerGetterBuilder<TMock, TArg1, TProperty>
+    public class ReturningBuilder<TMock, TResult> :
+        SetupVerifyBuilder<ISetupTypedResult<TMock, TResult>, ISetupSequentialResult<TResult>>,
+        IReturningBuilder<TMock, TResult>
         where TMock : class
     {
-        public IndexerGetterBuilder(
-            Func<string, int, ISetupTypedResult<TMock, TArg1, TProperty>> setup,
-            Func<string, int, ISetupSequentialResult<TProperty>> setupSequence,
+        public ReturningBuilder(
+            Func<string, int, ISetupTypedResult<TMock, TResult>> setup,
+            Func<string, int, ISetupSequentialResult<TResult>> setupSequence,
             Action<string, int, Times?, string> verify
         ) : base(setup, setupSequence, verify) { }
     }
 
-    public class IndexerSetterBuilder<TMock,TArg1,TProperty> :
-        SetupVerifyBuilder<ISetupTyped<TMock, TArg1,TProperty>, ISetupSequentialAction>,
-        IIndexerSetterBuilder<TMock, TArg1,TProperty>
+    public interface IVoidBuilder<TMock> :
+        ISetupVerifyBuilder<ISetupTyped<TMock>, ISetupSequentialAction>
+        where TMock : class { }
+
+    public class VoidBuilder<TMock> :
+        SetupVerifyBuilder<ISetupTyped<TMock>, ISetupSequentialAction>,
+        IVoidBuilder<TMock>
         where TMock : class
     {
-        public IndexerSetterBuilder(
-            Func<string, int, ISetupTyped<TMock,TArg1,TProperty>> setup,
+        public VoidBuilder(
+            Func<string, int, ISetupTyped<TMock>> setup,
+            Func<string, int, ISetupSequentialAction> setupSequence,
+            Action<string, int, Times?, string> verify
+        ) : base(setup, setupSequence, verify) { }
+    }
+    #endregion
+    #region 1 arg
+
+    public interface IReturningBuilder<TMock, TArg1,TResult> :
+        ISetupVerifyBuilder<ISetupTypedResult<TMock, TArg1,TResult>, ISetupSequentialResult<TResult>>
+        where TMock : class { }
+
+    public class ReturningBuilder<TMock, TArg1,TResult> :
+        SetupVerifyBuilder<ISetupTypedResult<TMock, TArg1,TResult>, ISetupSequentialResult<TResult>>,
+        IReturningBuilder<TMock, TArg1,TResult>
+        where TMock : class
+    {
+        public ReturningBuilder(
+            Func<string, int, ISetupTypedResult<TMock, TArg1,TResult>> setup,
+            Func<string, int, ISetupSequentialResult<TResult>> setupSequence,
+            Action<string, int, Times?, string> verify
+        ) : base(setup, setupSequence, verify) { }
+    }
+
+    public interface IVoidBuilder<TMock,TArg1> :
+        ISetupVerifyBuilder<ISetupTyped<TMock,TArg1>, ISetupSequentialAction>
+        where TMock : class { }
+
+    public class VoidBuilder<TMock,TArg1> :
+        SetupVerifyBuilder<ISetupTyped<TMock,TArg1>, ISetupSequentialAction>,
+        IVoidBuilder<TMock,TArg1>
+        where TMock : class
+    {
+        public VoidBuilder(
+            Func<string, int, ISetupTyped<TMock,TArg1>> setup,
             Func<string, int, ISetupSequentialAction> setupSequence,
             Action<string, int, Times?, string> verify
         ) : base(setup, setupSequence, verify) { }
@@ -869,12 +900,12 @@ namespace MoqProtectedGenerated{
 
     public interface IIndexerFluentGet<TMock,TArg1,TProperty> where TMock : class
     {
-        IIndexerGetterBuilder<TMock,TArg1, TProperty> Get(TArg1 key1);
+        IReturningBuilder<TMock,TArg1, TProperty> Get(TArg1 p1);
     }
 
     public interface IIndexerFluentSet<TMock, TArg1, TProperty> where TMock : class
     {
-        IIndexerSetterBuilder<TMock,TArg1,TProperty> Set(TArg1 key1, TProperty value);
+        IVoidBuilder<TMock,TArg1,TProperty> Set(TArg1 p1, TProperty value);
     }
     
     public interface IIndexerFluentGetSet<TMock,TArg1,TProperty> : 
@@ -900,17 +931,17 @@ namespace MoqProtectedGenerated{
             this.setterGetSetUpOrVerifyExpression = setterGetSetUpOrVerifyExpression;
         }
 
-        public IIndexerGetterBuilder<TMock, TArg1, TProperty> Get(TArg1 key1)
+        public IReturningBuilder<TMock, TArg1, TProperty> Get(TArg1 p1)
         {
             var matches = MatcherObserver.GetMatches();
 
-            return new IndexerGetterBuilder<TMock, TArg1, TProperty>(
+            return new ReturningBuilder<TMock, TArg1, TProperty>(
                 (sourceFileInfo, sourceLineNumber) =>
                     new SetupTypedResult<TMock, TArg1, TProperty>(
-                        protectedLike.Setup(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1))
+                        protectedLike.Setup(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, p1))
                     )
                 ,
-                (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1)),
+                (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, p1)),
                 (sourceFileInfo, sourceLineNumber, times, failMessage) =>
                 {
                     Times t = Times.AtLeastOnce();
@@ -918,19 +949,19 @@ namespace MoqProtectedGenerated{
                     {
                         t = times.Value;
                     }
-                    protectedLike.VerifyGet(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1), t, failMessage);
+                    protectedLike.VerifyGet(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, p1), t, failMessage);
                 });
         }
 
-        public IIndexerSetterBuilder<TMock, TArg1, TProperty> Set(TArg1 key1, TProperty value)
+        public IVoidBuilder<TMock, TArg1, TProperty> Set(TArg1 p1, TProperty value)
         {
             var matches = MatcherObserver.GetMatches();
 
-            return new IndexerSetterBuilder<TMock, TArg1,TProperty>(
+            return new VoidBuilder<TMock, TArg1,TProperty>(
                 (sourceFileInfo, sourceLineNumber) => new SetupTyped<TMock, TArg1, TProperty>(
-                    protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1, value))),
-                (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1, value)),
-                (sourceFileInfo, sourceLineNumber, times, failMessage) => protectedLike.Verify(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1, value), times, failMessage)
+                    protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, p1, value))),
+                (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, p1, value)),
+                (sourceFileInfo, sourceLineNumber, times, failMessage) => protectedLike.Verify(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, p1, value), times, failMessage)
              );
         }
 
@@ -939,33 +970,33 @@ namespace MoqProtectedGenerated{
     #endregion
     #region 2 args
 
-    public interface IIndexerGetterBuilder<TMock, TArg1,TArg2,TProperty> :
-        ISetupVerifyBuilder<ISetupTypedResult<TMock, TArg1,TArg2, TProperty>, ISetupSequentialResult<TProperty>>
+    public interface IReturningBuilder<TMock, TArg1,TArg2,TResult> :
+        ISetupVerifyBuilder<ISetupTypedResult<TMock, TArg1,TArg2,TResult>, ISetupSequentialResult<TResult>>
         where TMock : class { }
 
-    public interface IIndexerSetterBuilder<TMock, TArg1,TArg2,TProperty> :
-        ISetupVerifyBuilder<ISetupTyped<TMock, TArg1,TArg2,TProperty>, ISetupSequentialAction>
-        where TMock : class { }
-
-    public class IndexerGetterBuilder<TMock, TArg1,TArg2, TProperty> :
-        SetupVerifyBuilder<ISetupTypedResult<TMock, TArg1,TArg2, TProperty>, ISetupSequentialResult<TProperty>>,
-        IIndexerGetterBuilder<TMock, TArg1,TArg2, TProperty>
+    public class ReturningBuilder<TMock, TArg1,TArg2,TResult> :
+        SetupVerifyBuilder<ISetupTypedResult<TMock, TArg1,TArg2,TResult>, ISetupSequentialResult<TResult>>,
+        IReturningBuilder<TMock, TArg1,TArg2,TResult>
         where TMock : class
     {
-        public IndexerGetterBuilder(
-            Func<string, int, ISetupTypedResult<TMock, TArg1,TArg2, TProperty>> setup,
-            Func<string, int, ISetupSequentialResult<TProperty>> setupSequence,
+        public ReturningBuilder(
+            Func<string, int, ISetupTypedResult<TMock, TArg1,TArg2,TResult>> setup,
+            Func<string, int, ISetupSequentialResult<TResult>> setupSequence,
             Action<string, int, Times?, string> verify
         ) : base(setup, setupSequence, verify) { }
     }
 
-    public class IndexerSetterBuilder<TMock,TArg1,TArg2,TProperty> :
-        SetupVerifyBuilder<ISetupTyped<TMock, TArg1,TArg2,TProperty>, ISetupSequentialAction>,
-        IIndexerSetterBuilder<TMock, TArg1,TArg2,TProperty>
+    public interface IVoidBuilder<TMock,TArg1,TArg2> :
+        ISetupVerifyBuilder<ISetupTyped<TMock,TArg1,TArg2>, ISetupSequentialAction>
+        where TMock : class { }
+
+    public class VoidBuilder<TMock,TArg1,TArg2> :
+        SetupVerifyBuilder<ISetupTyped<TMock,TArg1,TArg2>, ISetupSequentialAction>,
+        IVoidBuilder<TMock,TArg1,TArg2>
         where TMock : class
     {
-        public IndexerSetterBuilder(
-            Func<string, int, ISetupTyped<TMock,TArg1,TArg2,TProperty>> setup,
+        public VoidBuilder(
+            Func<string, int, ISetupTyped<TMock,TArg1,TArg2>> setup,
             Func<string, int, ISetupSequentialAction> setupSequence,
             Action<string, int, Times?, string> verify
         ) : base(setup, setupSequence, verify) { }
@@ -973,12 +1004,12 @@ namespace MoqProtectedGenerated{
 
     public interface IIndexerFluentGet<TMock,TArg1,TArg2,TProperty> where TMock : class
     {
-        IIndexerGetterBuilder<TMock,TArg1,TArg2, TProperty> Get(TArg1 key1,TArg2 key2);
+        IReturningBuilder<TMock,TArg1,TArg2, TProperty> Get(TArg1 p1,TArg2 p2);
     }
 
     public interface IIndexerFluentSet<TMock, TArg1,TArg2, TProperty> where TMock : class
     {
-        IIndexerSetterBuilder<TMock,TArg1,TArg2,TProperty> Set(TArg1 key1,TArg2 key2, TProperty value);
+        IVoidBuilder<TMock,TArg1,TArg2,TProperty> Set(TArg1 p1,TArg2 p2, TProperty value);
     }
     
     public interface IIndexerFluentGetSet<TMock,TArg1,TArg2,TProperty> : 
@@ -1004,17 +1035,17 @@ namespace MoqProtectedGenerated{
             this.setterGetSetUpOrVerifyExpression = setterGetSetUpOrVerifyExpression;
         }
 
-        public IIndexerGetterBuilder<TMock, TArg1,TArg2, TProperty> Get(TArg1 key1,TArg2 key2)
+        public IReturningBuilder<TMock, TArg1,TArg2, TProperty> Get(TArg1 p1,TArg2 p2)
         {
             var matches = MatcherObserver.GetMatches();
 
-            return new IndexerGetterBuilder<TMock, TArg1,TArg2, TProperty>(
+            return new ReturningBuilder<TMock, TArg1,TArg2, TProperty>(
                 (sourceFileInfo, sourceLineNumber) =>
                     new SetupTypedResult<TMock, TArg1,TArg2, TProperty>(
-                        protectedLike.Setup(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1,key2))
+                        protectedLike.Setup(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, p1,p2))
                     )
                 ,
-                (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1,key2)),
+                (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, p1,p2)),
                 (sourceFileInfo, sourceLineNumber, times, failMessage) =>
                 {
                     Times t = Times.AtLeastOnce();
@@ -1022,24 +1053,42 @@ namespace MoqProtectedGenerated{
                     {
                         t = times.Value;
                     }
-                    protectedLike.VerifyGet(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1,key2), t, failMessage);
+                    protectedLike.VerifyGet(getterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, p1,p2), t, failMessage);
                 });
         }
 
-        public IIndexerSetterBuilder<TMock, TArg1,TArg2, TProperty> Set(TArg1 key1,TArg2 key2, TProperty value)
+        public IVoidBuilder<TMock, TArg1,TArg2, TProperty> Set(TArg1 p1,TArg2 p2, TProperty value)
         {
             var matches = MatcherObserver.GetMatches();
 
-            return new IndexerSetterBuilder<TMock, TArg1,TArg2,TProperty>(
+            return new VoidBuilder<TMock, TArg1,TArg2,TProperty>(
                 (sourceFileInfo, sourceLineNumber) => new SetupTyped<TMock, TArg1,TArg2, TProperty>(
-                    protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1,key2, value))),
-                (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1,key2, value)),
-                (sourceFileInfo, sourceLineNumber, times, failMessage) => protectedLike.Verify(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, key1,key2, value), times, failMessage)
+                    protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, p1,p2, value))),
+                (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, p1,p2, value)),
+                (sourceFileInfo, sourceLineNumber, times, failMessage) => protectedLike.Verify(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, p1,p2, value), times, failMessage)
              );
         }
 
     }
     
+    #endregion
+    #region 3 args
+
+    public interface IVoidBuilder<TMock,TArg1,TArg2,TArg3> :
+        ISetupVerifyBuilder<ISetupTyped<TMock,TArg1,TArg2,TArg3>, ISetupSequentialAction>
+        where TMock : class { }
+
+    public class VoidBuilder<TMock,TArg1,TArg2,TArg3> :
+        SetupVerifyBuilder<ISetupTyped<TMock,TArg1,TArg2,TArg3>, ISetupSequentialAction>,
+        IVoidBuilder<TMock,TArg1,TArg2,TArg3>
+        where TMock : class
+    {
+        public VoidBuilder(
+            Func<string, int, ISetupTyped<TMock,TArg1,TArg2,TArg3>> setup,
+            Func<string, int, ISetupSequentialAction> setupSequence,
+            Action<string, int, Times?, string> verify
+        ) : base(setup, setupSequence, verify) { }
+    }
     #endregion
     #endregion
 
