@@ -1,7 +1,6 @@
 ﻿using System;
 using Moq;
 
-
 namespace MoqProtectedGenerated
 {
     public class SetupVerifyBuilder<TSetup,TSetupSequence> : ISetupVerifyBuilder<TSetup,TSetupSequence>, ISetupVerify<TSetup,TSetupSequence>

@@ -1,5 +1,7 @@
-﻿public interface INonIndexerFluentSet<T, TProperty> where T : class
+﻿namespace MoqProtectedGenerated
 {
-    ISetterBuilder<T, TProperty> Set(TProperty property);
-
+    public interface INonIndexerFluentSet<T, TProperty> where T : class
+    {
+        ISetterBuilder<T, TProperty> Set(TProperty property);
+    }
 }

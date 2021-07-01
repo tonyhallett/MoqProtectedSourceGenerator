@@ -1,6 +1,10 @@
-﻿public interface INonIndexerFluentGet<T, TProperty> where T : class
+﻿namespace MoqProtectedGenerated
 {
-    IGetterBuilder<T, TProperty> Get();
+    public interface INonIndexerFluentGet<T, TProperty> where T : class
+    {
+        IGetterBuilder<T, TProperty> Get();
 
+    }
 }
+
 
