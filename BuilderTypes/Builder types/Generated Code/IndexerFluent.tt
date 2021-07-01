@@ -7,6 +7,6 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="BuilderTypesT4Generator" #>
 <#@ output extension=".cs" #>
-<#int numTypeParameters = 2;
+<#int numTypeParameters = 12;
 Write(BuilderTypesGenerator.GenerateTypes(numTypeParameters));
  #>

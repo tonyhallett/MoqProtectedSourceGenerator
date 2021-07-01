@@ -54,31 +54,30 @@ using System.Linq.Expressions;
 
         private static void AddIndexerFluent(int numTypeArguments, StringBuilder stringBuilder)
         {
-            AddRegion("Indexer fluent", stringBuilder, () =>
+            
+            var typeArgs = "";
+            var getSetParameters = "";
+            var getSetArguments = "";
+
+            for (var i = 1; i < numTypeArguments + 1; i++)
             {
-                var typeArgs = "";
-                var getSetParameters = "";
-                var getSetArguments = "";
-
-                for (var i = 1; i < numTypeArguments + 1; i++)
+                if (i != 1)
                 {
-                    if (i != 1)
-                    {
-                        typeArgs += ",";
-                        getSetParameters += ",";
-                        getSetArguments += ",";
+                    typeArgs += ",";
+                    getSetParameters += ",";
+                    getSetArguments += ",";
 
-                    }
-                    var typeArg = GetTypeArg(i);
-                    typeArgs += typeArg;
-                    var parameterName = GetParameterName(i);
-                    getSetParameters += $"{typeArg} {parameterName}";
-                    getSetArguments += parameterName;
+                }
+                var typeArg = GetTypeArg(i);
+                typeArgs += typeArg;
+                var parameterName = GetParameterName(i);
+                getSetParameters += $"{typeArg} {parameterName}";
+                getSetArguments += parameterName;
 
-                    AddRegion(i == 1 ? "1 arg" : $"{i} args", stringBuilder, () =>
-                    {
+                AddRegion(i == 1 ? "1 arg" : $"{i} args", stringBuilder, () =>
+                {
                         
-                        stringBuilder.Append($@"
+                    stringBuilder.Append($@"
     public interface IIndexerFluentGet<TMock,{typeArgs},TProperty> where TMock : class
     {{
         IReturningBuilder<TMock,TProperty,Action<{typeArgs}>,Func<{typeArgs},TProperty>> Get({getSetParameters});
@@ -150,8 +149,8 @@ using System.Linq.Expressions;
     
 ");
                     });
-                }
-            });
+            }
+            
         }
     }
 }
