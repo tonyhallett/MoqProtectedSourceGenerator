@@ -3,9 +3,9 @@ using Moq.Language;
 
 namespace MoqProtectedGenerated
 {
-    public interface IVoidBuilder<TMock, TDelegate> :
-            ISetupVerifyBuilder<ISetupTyped<TMock, TDelegate>, ISetupSequentialAction>
+    public interface IVoidBuilder<TMock, TCallbackDelegate> :
+            ISetupVerifyBuilder<ISetupTyped<TMock, TCallbackDelegate>, ISetupSequentialAction>
             where TMock : class
-            where TDelegate : Delegate
+            where TCallbackDelegate : Delegate
     { }
 }

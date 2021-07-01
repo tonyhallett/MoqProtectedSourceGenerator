@@ -3,18 +3,18 @@ using Moq;
 
 namespace MoqProtectedGenerated
 {
-    public interface ISetupTypedResult<TMock, TResult, TCallbackDelegate, TResultDelegate> :
+    public interface ISetupTypedResult<TMock, TResult, TCallbackDelegate, TReturnsDelegate> :
         ISetupsTypedBase<TMock>,
-        IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate>,
-        IReturnsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate>
+        IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate>,
+        IReturnsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate>
         where TMock: class
         where TCallbackDelegate : Delegate
-        where TResultDelegate : Delegate
+        where TReturnsDelegate : Delegate
     {
-        IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate> Callback(InvocationAction action);
-        IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate> Callback(Delegate callback);
-        IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate> Callback(Action action);
+        IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate> Callback(InvocationAction action);
+        IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate> Callback(Delegate callback);
+        IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate> Callback(Action action);
 
-        IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate> Callback(TCallbackDelegate callback);
+        IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate> Callback(TCallbackDelegate callback);
     }
 }

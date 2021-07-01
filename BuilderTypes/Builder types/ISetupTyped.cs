@@ -4,14 +4,14 @@ using Moq.Language.Flow;
 
 namespace MoqProtectedGenerated
 {
-    public interface ISetupTyped<TMock, TDelegate> :
+    public interface ISetupTyped<TMock, TCallbackDelegate> :
         ISetupsTypedBase<TMock>,
-        ICallbackDelegate<TDelegate>,
+        ICallbackDelegate<TCallbackDelegate>,
         ICallBase,
         ICallBaseResult,
         ICallbackResult,
         IRaise<TMock>
             where TMock : class
-            where TDelegate : Delegate
+            where TCallbackDelegate : Delegate
     { }
 }

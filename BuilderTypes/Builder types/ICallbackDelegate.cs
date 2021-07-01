@@ -4,9 +4,9 @@ using Moq.Language.Flow;
 
 namespace MoqProtectedGenerated
 {
-    public interface ICallbackDelegate<TDelegate> : IFluentInterface where TDelegate : Delegate
+    public interface ICallbackDelegate<TCallbackDelegate> : IFluentInterface where TCallbackDelegate : Delegate
     {
-        ICallbackResult Callback(TDelegate del);
+        ICallbackResult Callback(TCallbackDelegate del);
         ICallbackResult Callback(Action action);
         ICallbackResult Callback(InvocationAction action);
         ICallbackResult Callback(Delegate callback);

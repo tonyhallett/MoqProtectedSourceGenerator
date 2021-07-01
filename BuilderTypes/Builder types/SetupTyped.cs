@@ -6,9 +6,9 @@ using Moq.Language.Flow;
 
 namespace MoqProtectedGenerated
 {
-    public class SetupTyped<TMock, TDelegate> : ISetupTyped<TMock, TDelegate>
+    public class SetupTyped<TMock, TCallbackDelegate> : ISetupTyped<TMock, TCallbackDelegate>
         where TMock : class
-        where TDelegate : Delegate
+        where TCallbackDelegate : Delegate
     {
         private readonly ISetup<TMock> actual;
 
@@ -46,7 +46,7 @@ namespace MoqProtectedGenerated
             return actual.Callback(callback);
         }
 
-        public ICallbackResult Callback(TDelegate callback)
+        public ICallbackResult Callback(TCallbackDelegate callback)
         {
             return actual.Callback(callback);
         }

@@ -4,11 +4,11 @@ using Moq.Language.Flow;
 
 namespace MoqProtectedGenerated
 {
-    public class ReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate> :
-        IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate> 
+    public class ReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate> :
+        IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate> 
         where TMock : class
         where TCallbackDelegate : Delegate
-        where TResultDelegate : Delegate
+        where TReturnsDelegate : Delegate
     {
         private readonly IReturnsThrows<TMock, TResult> actual;
 
@@ -52,7 +52,7 @@ namespace MoqProtectedGenerated
             return new ReturnsResultTyped<TMock, TCallbackDelegate>(actual.Returns(valueFunction));
         }
 
-        public IReturnsResultTyped<TMock, TCallbackDelegate> Returns(TResultDelegate valueFunction)
+        public IReturnsResultTyped<TMock, TCallbackDelegate> Returns(TReturnsDelegate valueFunction)
         {
             return new ReturnsResultTyped<TMock, TCallbackDelegate>(actual.Returns(valueFunction));
         }

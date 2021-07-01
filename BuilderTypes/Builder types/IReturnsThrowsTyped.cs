@@ -4,13 +4,13 @@ using Moq.Language;
 
 namespace MoqProtectedGenerated
 {
-    public interface IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate> : 
+    public interface IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate> : 
         IFluentInterface, 
         IThrows, 
-        IReturnsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate>
+        IReturnsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate>
         where TMock : class
         where TCallbackDelegate : Delegate
-        where TResultDelegate : Delegate
+        where TReturnsDelegate : Delegate
     {
 
     }

@@ -4,10 +4,10 @@ using Moq.Language.Flow;
 
 namespace MoqProtectedGenerated
 {
-    public class SetupTypedResult<TMock, TResult, TCallbackDelegate, TResultDelegate> : ISetupTypedResult<TMock, TResult, TCallbackDelegate, TResultDelegate> 
+    public class SetupTypedResult<TMock, TResult, TCallbackDelegate, TReturnsDelegate> : ISetupTypedResult<TMock, TResult, TCallbackDelegate, TReturnsDelegate> 
         where TMock : class
         where TCallbackDelegate : Delegate
-        where TResultDelegate : Delegate
+        where TReturnsDelegate : Delegate
     {
         private readonly ISetup<TMock, TResult> actual;
         public SetupTypedResult(ISetup<TMock, TResult> actual)
@@ -42,24 +42,24 @@ namespace MoqProtectedGenerated
        
 
         #region Callback
-        public IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate> Callback(InvocationAction action)
+        public IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate> Callback(InvocationAction action)
         {
-            return new ReturnsThrowsTyped<TMock, TResult,TCallbackDelegate, TResultDelegate>(actual.Callback(action));
+            return new ReturnsThrowsTyped<TMock, TResult,TCallbackDelegate, TReturnsDelegate>(actual.Callback(action));
         }
 
-        public IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate> Callback(Delegate callback)
+        public IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate> Callback(Delegate callback)
         {
-            return new ReturnsThrowsTyped<TMock, TResult,TCallbackDelegate, TResultDelegate>(actual.Callback(callback));
+            return new ReturnsThrowsTyped<TMock, TResult,TCallbackDelegate, TReturnsDelegate>(actual.Callback(callback));
         }
 
-        public IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate> Callback(Action action)
+        public IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate> Callback(Action action)
         {
-            return new ReturnsThrowsTyped<TMock, TResult,TCallbackDelegate, TResultDelegate>(actual.Callback(action));
+            return new ReturnsThrowsTyped<TMock, TResult,TCallbackDelegate, TReturnsDelegate>(actual.Callback(action));
         }
 
-        public IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TResultDelegate> Callback(TCallbackDelegate callback)
+        public IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate> Callback(TCallbackDelegate callback)
         {
-            return new ReturnsThrowsTyped<TMock, TResult,TCallbackDelegate, TResultDelegate>(actual.Callback(callback));
+            return new ReturnsThrowsTyped<TMock, TResult,TCallbackDelegate, TReturnsDelegate>(actual.Callback(callback));
         }
         #endregion
 
@@ -88,7 +88,7 @@ namespace MoqProtectedGenerated
             return new ReturnsResultTyped<TMock,TCallbackDelegate>(actual.Returns(valueFunction));
         }
 
-        public IReturnsResultTyped<TMock, TCallbackDelegate> Returns(TResultDelegate valueFunction)
+        public IReturnsResultTyped<TMock, TCallbackDelegate> Returns(TReturnsDelegate valueFunction)
         {
             return new ReturnsResultTyped<TMock,TCallbackDelegate>(actual.Returns(valueFunction));
         }
