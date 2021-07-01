@@ -9,19 +9,22 @@ namespace MoqProtectedSourceGenerator
         private readonly IArgumentInfoExtractor argumentInfoExtractor;
         private readonly IProtectedMock protectedMock;
         private readonly ISetupExpressionArgument setupExpressionArgument;
+        private readonly IDelegateProvider delegateProvider;
 
         [ImportingConstructor]
         public MethodExtensionMethodsFactory(
             IMethodInvocationExtractor methodInvocationExtractor,
             IArgumentInfoExtractor argumentInfoExtractor,
             IProtectedMock protectedMock,
-            ISetupExpressionArgument setupExpressionArgument
+            ISetupExpressionArgument setupExpressionArgument,
+            IDelegateProvider delegateProvider
         )
         {
             this.methodInvocationExtractor = methodInvocationExtractor;
             this.argumentInfoExtractor = argumentInfoExtractor;
             this.protectedMock = protectedMock;
             this.setupExpressionArgument = setupExpressionArgument;
+            this.delegateProvider = delegateProvider;
         }
 
         public IMethodExtensionMethods Create()
@@ -30,7 +33,9 @@ namespace MoqProtectedSourceGenerator
                 methodInvocationExtractor,
                 argumentInfoExtractor,
                 protectedMock,
-                setupExpressionArgument);
+                setupExpressionArgument,
+                delegateProvider
+                );
         }
     }
 }

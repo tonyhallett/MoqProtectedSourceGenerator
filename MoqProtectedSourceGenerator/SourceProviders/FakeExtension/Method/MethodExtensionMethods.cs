@@ -16,6 +16,8 @@ namespace MoqProtectedSourceGenerator
         private readonly IArgumentInfoExtractor argumentInfoExtractor;
         private readonly IProtectedMock protectedMock;
         private readonly ISetupExpressionArgument setupExpressionArgument;
+        private readonly IDelegateProvider delegateProvider;
+
         public Dictionary<string, SyntaxList<UsingDirectiveSyntax>> ExtensionsUsingsByFilePath { get; } = new();
         public List<(List<ArgumentInfo> argumentInfos, FileLocation fileLocation)> Setups { get; } = new();
         private List<ProtectedLikeMethodDetail> methods;
@@ -31,13 +33,15 @@ namespace MoqProtectedSourceGenerator
             IMethodInvocationExtractor methodInvocationExtractor,
             IArgumentInfoExtractor argumentInfoExtractor,
             IProtectedMock protectedMock,
-            ISetupExpressionArgument setupExpressionArgumentSource
+            ISetupExpressionArgument setupExpressionArgumentSource,
+            IDelegateProvider delegateProvider
         )
         {
             this.methodInvocationExtractor = methodInvocationExtractor;
             this.argumentInfoExtractor = argumentInfoExtractor;
             this.protectedMock = protectedMock;
             this.setupExpressionArgument = setupExpressionArgumentSource;
+            this.delegateProvider = delegateProvider;
         }
 
         public void Initialize(List<ProtectedLikeMethodDetail> methods)
@@ -61,8 +65,9 @@ namespace MoqProtectedSourceGenerator
         private string GetExtensionMethod(string mockedTypeName, string likeTypeName, ProtectedLikeMethodDetail methodDetail, bool isLast)
         {
             var expressionDelegate = ExpressionDelegate(likeTypeName, methodDetail.Declaration);
-            var methodBuilderType = MethodBuilderType(mockedTypeName, methodDetail.Declaration);
-            var setupTyped = SetupTyped(mockedTypeName, methodDetail.Declaration);
+
+            var (methodBuilderClass,setupType) = GetSetupAndBuilderTypes(mockedTypeName, methodDetail.Declaration);
+            
             var methodName = methodDetail.Declaration.Identifier.Text;
             var genericTypeParameters = "";
             if (methodDetail.Symbol.IsGenericMethod)
@@ -88,7 +93,7 @@ namespace MoqProtectedSourceGenerator
             var (statements, expressionArrayVariable) = GetExpressionConstants(methodDetail.Symbol.Parameters);
 
             var extensionMethod =
-            $@"    {ExtensionMethodSignature(mockedTypeName, methodDetail.Declaration)}
+            $@"    {ExtensionMethodSignature(mockedTypeName, methodDetail.Declaration,methodBuilderClass)}
     {{
         var mock = protectedMock.Mock;
         var protectedLike = mock.Protected().As<{likeTypeName}>();
@@ -105,9 +110,9 @@ namespace MoqProtectedSourceGenerator
             return Expression.Lambda<{expressionDelegate}>(call, likeParameter);
         }}
 
-        return new {methodBuilderType}(
+        return new {methodBuilderClass}(
             (sourceFileInfo, sourceLineNumber) => 
-                new {setupTyped}(
+                new {setupType}(
                     protectedLike.Setup(GetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber))
                 ),
             (sourceFileInfo, sourceLineNumber) => 
@@ -173,10 +178,10 @@ namespace MoqProtectedSourceGenerator
             return (stringBuilder.ToString(), "expressionArgs");
         }
 
-        private string ExtensionMethodSignature(string mockedTypeName, MethodDeclarationSyntax methodDeclaration)
+        private string ExtensionMethodSignature(string mockedTypeName, MethodDeclarationSyntax methodDeclaration,string methodBuilderClass)
         {
             var extensionMethod = methodDeclaration.MakeExtension(protectedMock.GetClosedTypeName(mockedTypeName), "protectedMock")
-                .WithReturnType(SyntaxFactory.ParseTypeName($"I{MethodBuilderType(mockedTypeName, methodDeclaration)}"))
+                .WithReturnType(SyntaxFactory.ParseTypeName($"I{methodBuilderClass}"))
                 .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.None))
                 .WithModifiers(
                     new SyntaxTokenList(
@@ -220,18 +225,14 @@ namespace MoqProtectedSourceGenerator
             return returnTypeDetails.ExpressionDelegate(likeTypeName, methodDeclaration.ReturnType.ToString());
         }
 
-        private string MethodBuilderType(string mockedTypeName, MethodDeclarationSyntax methodDeclaration)
+        private (string builderType, string setupType) GetSetupAndBuilderTypes(string mockedTypeName, MethodDeclarationSyntax methodDeclaration)
         {
             var returnTypeDetails = returnTypeDetailsLookup[methodDeclaration.ReturnTypeIsVoid()];
-            var typeParameters = methodDeclaration.ParameterList.Parameters.Select(p => p.Type.ToString());
-            return returnTypeDetails.MethodBuilderType(mockedTypeName, methodDeclaration.ReturnType.ToString(), typeParameters);
-        }
-
-        private string SetupTyped(string mockedTypeName, MethodDeclarationSyntax methodDeclaration)
-        {
-            var returnTypeDetails = returnTypeDetailsLookup[methodDeclaration.ReturnTypeIsVoid()];
-            var typeParameters = methodDeclaration.ParameterList.Parameters.Select(p => p.Type.ToString());
-            return returnTypeDetails.SetupTyped(mockedTypeName, methodDeclaration.ReturnType.ToString(), typeParameters);
+            var returnType = methodDeclaration.ReturnType.ToString();
+            var delegates = delegateProvider.GetDelegates(methodDeclaration);
+            var builderType = returnTypeDetails.MethodBuilderType(mockedTypeName, returnType, delegates);
+            var setupType = returnTypeDetails.SetupTyped(mockedTypeName, returnType, delegates);
+            return (builderType, setupType);
         }
 
         public void ExtensionInvocation(InvocationExpressionSyntax invocationExpression, string extensionName, SemanticModel semanticModel, AnalyzerConfigOptionsProvider _)

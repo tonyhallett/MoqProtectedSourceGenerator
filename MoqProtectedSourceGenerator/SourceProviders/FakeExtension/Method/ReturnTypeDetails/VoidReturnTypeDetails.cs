@@ -10,28 +10,19 @@ namespace MoqProtectedSourceGenerator
             return $"Action<{likeTypeName}>";
         }
 
-        public string MethodBuilderType(string mockedTypeName, string returnType, IEnumerable<string> typeParameters)
+        public string MethodBuilderType(string mockedTypeName, string returnType, string delegates)
         {
-            return GetType("VoidBuilder",mockedTypeName,typeParameters);
+            return GetType("VoidBuilder",mockedTypeName,delegates);
         }
 
-        public string SetupTyped(string mockedTypeName, string returnType, IEnumerable<string> typeParameters)
+        public string SetupTyped(string mockedTypeName, string returnType, string delegates)
         {
-            return GetType("SetupTyped", mockedTypeName, typeParameters);
+            return GetType("SetupTyped", mockedTypeName, delegates);
         }
 
-        private string GetType(string type,string mockedTypeName, IEnumerable<string> typeParameters)
+        private string GetType(string type,string mockedTypeName, string delegates)
         {
-            var stringBuilder = new StringBuilder($"{type}<{mockedTypeName}");
-            foreach (var typeParameter in typeParameters)
-            {
-                stringBuilder.Append(",");
-
-                stringBuilder.Append(typeParameter);
-            }
-
-            stringBuilder.Append($">");
-            return stringBuilder.ToString();
+            return $"{type}<{mockedTypeName}, {delegates}>";
         }
 
     }

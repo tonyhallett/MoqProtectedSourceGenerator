@@ -53,8 +53,9 @@ namespace ClassLibrary1
 
         //protected abstract string GetSet {get;set;}
 
-        //protected abstract void Method(out int arg1,ref string arg2);
-        protected abstract string GenericNoConstraints<T>(T t);
+        protected abstract int ReturningMethodOutAndRef(out int arg1,int notRef, ref string arg2);
+        //protected abstract void VoidMethodNoOutRef(int arg1, string arg2);
+        //protected abstract string GenericNoConstraints<T>(T t);
     }
     public class ExpectedException : Exception{}
     public class ConstraintClass{}

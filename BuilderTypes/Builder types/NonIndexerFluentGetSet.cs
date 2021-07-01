@@ -49,7 +49,7 @@ public class NonIndexerFluentGetSet<T,TLike, TProperty> : INonIndexerFluentGetSe
         var matches = MatcherObserver.GetMatches();
         return new SetterBuilder<T, TProperty>(
             (sourceFileInfo, sourceLineNumber) => 
-                new SetupTyped<T,TProperty>(
+                new SetupTyped<T,Action<TProperty>>(
                     protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, property))
                 ),
             (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, property)),

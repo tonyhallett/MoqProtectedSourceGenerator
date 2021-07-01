@@ -9,13 +9,15 @@ using OtherNamespace;
 
 namespace ClassLibrary1
 {
+    
     public abstract class MyProtected
     {
         protected abstract void OutMethod(out int outInt);
         protected abstract void AbstractMethod();
 
         protected abstract string RefGeneric<T>(ref T t);
-        protected abstract string Ref(ref int refInt);
+        protected abstract string Ref(ref int refInt,string other);
+        protected abstract int DuplicateGenericDelegate(ref string refStr, int other);
 
         protected abstract string GenericNoConstraints<T>(T t);
         protected abstract string GenericNoConstraintsMultipleArgs<T>(T t1, T t2);
@@ -42,9 +44,9 @@ namespace ClassLibrary1
             return RefGeneric(ref t);
         }
 
-        public string InvokeRef(ref int refInt)
+        public string InvokeRef(ref int refInt,string other)
         {
-            return Ref(ref refInt);
+            return Ref(ref refInt,other);
         }
 
         public string InvokeNullIt(IInterface arg)
@@ -219,6 +221,13 @@ namespace ClassLibrary1
             mockOut.Object.InvokeOutMethod(out var outInt);
             Assert.AreEqual(123, outInt);
 
+            var mockOutCallback = new ProtectedMock<MyProtected>();
+            // generated callback for out !
+            mockOutCallback.OutMethod(Out.From(0)).Build().Setup().Callback((out int o) => o = 999);
+            mockOutCallback.Object.InvokeOutMethod(out var outInt2);
+            Assert.AreEqual(999, outInt2);
+
+
             var mockNullIt = new ProtectedMock<MyProtected>();
             mockNullIt.NullIt(It.IsAny<IInterface>()).Build().Setup().Returns("Match");
             Assert.AreEqual("Match", mockNullIt.Object.InvokeNullIt(new Implementation()));
@@ -248,9 +257,10 @@ namespace ClassLibrary1
             Assert.AreEqual("sub type", mockGenericNoConstraints.Object.InvokeGenericNoConstraints(new Derivation1()));
 
             var mockRef = new ProtectedMock<MyProtected>();
-            mockRef.Ref(ref It.Ref<int>.IsAny).Build().Setup().Returns("ref match");
+            // type returns !
+            mockRef.Ref(ref It.Ref<int>.IsAny,It.IsAny<string>()).Build().Setup().Returns((ref int r,string other) => other);
             var refInt = 0;
-            Assert.AreEqual("ref match", mockRef.Object.InvokeRef(ref refInt));//should also callback and demo 
+            Assert.AreEqual("other", mockRef.Object.InvokeRef(ref refInt,"other")); 
 
             //mockRef.Ref(ref refInt).Build().Setup(); // build error ***************************************
 
@@ -279,6 +289,10 @@ namespace ClassLibrary1
             Assert.AreEqual("match", mockGenericMultipleNoConstraints.Object.InvokeGenericNoConstraintsMultipleArgs(null, "arg"));
             mockGenericMultipleNoConstraints.GenericNoConstraintsMultipleArgs(null, It.Is<string>(s => s == "match")).Build().Setup().Returns("matcher");
             Assert.AreEqual("matcher", mockGenericMultipleNoConstraints.Object.InvokeGenericNoConstraintsMultipleArgs(null, "match"));
+            var intCallback = 0;
+            mockGenericMultipleNoConstraints.GenericNoConstraintsMultipleArgs(1, 2).Build().Setup().Callback((a1, a2) => intCallback = a1 + a2);
+            string stringCallback = null;
+            mockGenericMultipleNoConstraints.GenericNoConstraintsMultipleArgs("1", "2").Build().Setup().Callback((a1, a2) => stringCallback = a1 + a2);
 
             mockDll.ProtectedGenericMethod(It.IsAny<Implementation>(), It.IsAny<Implementation>()).Build().Setup().Throws(new ExpectedException());
             Assert.Throws<ExpectedException>(() => mockDll.Object.CallProtectedGenericMethod(new Implementation(), new Implementation()));

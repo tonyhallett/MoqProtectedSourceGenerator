@@ -5,10 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="Builder types\Generated Code\SetupTypedInterfacesGeneration.cs">
+    <None Include="Builder types\Generated Code\IndexerFluent.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>SetupTypedInterfacesGeneration.tt</DependentUpon>
+      <DependentUpon>IndexerFluent.tt</DependentUpon>
     </None>
   </ItemGroup>
 
@@ -21,9 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Builder types\Generated Code\SetupTypedInterfacesGeneration.tt">
+    <None Update="Builder types\Generated Code\IndexerFluent.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>SetupTypedInterfacesGeneration.cs</LastGenOutput>
+      <LastGenOutput>IndexerFluent.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
@@ -32,6 +32,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Builder types\Generated Code\IndexerFluent.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>IndexerFluent.tt</DependentUpon>
+    </Compile>
     <Compile Update="Builder types\Generated Code\SetupTypedInterfacesGeneration.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

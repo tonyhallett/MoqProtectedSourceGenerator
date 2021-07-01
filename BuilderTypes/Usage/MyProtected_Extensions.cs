@@ -34,34 +34,6 @@ public static class MyProtected_Extensions
         return sourceFileInfo + "_" + sourceLineNumber;
     }
 
-    public static IVoidMethodBuilder<MyProtected> AbstractMethod(this ProtectedMock<MyProtected> protectedMock)
-    {
-        var mock = protectedMock.Mock;
-        var protectedLike = mock.Protected().As<MyProtectedLike>();
-        var likeParameter = Expression.Parameter(typeof(MyProtectedLike));
-        
-        var matches = MatcherObserver.GetMatches();
-
-        Expression<Action<MyProtectedLike>> GetSetUpOrVerifyExpression(string sourceFileInfo, int sourceLineNumber)
-        {
-            var parameterInfos = Setups[GetKey(sourceFileInfo, sourceLineNumber)];
-
-            var expressionArgs = new Expression[] { };
-
-            var call = Expression.Call(likeParameter, "AbstractMethod", new Type[] { }, expressionArgs);
-            return Expression.Lambda<Action<MyProtectedLike>>(call, likeParameter);
-        }
-
-        return new VoidMethodBuilder<MyProtected>(
-            (sourceFileInfo, sourceLineNumber) =>
-                protectedLike.Setup(GetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber)),
-            (sourceFileInfo, sourceLineNumber) =>
-                protectedLike.SetupSequence(GetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber)),
-            (sourceFileInfo, sourceLineNumber, times, failMessage) =>
-                protectedLike.Verify(GetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber), times, failMessage)
-        );
-    }
-    
     public static INonIndexerFluentGetSet<MyProtected,int> GetSet(this ProtectedMock<MyProtected> protectedMock)
     {
         var likeParameter = Expression.Parameter(typeof(MyProtectedLike));

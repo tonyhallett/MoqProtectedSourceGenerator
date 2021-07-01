@@ -25,7 +25,7 @@ namespace MoqProtectedSourceGenerator
             {
                 this.protectedLikes = protectedLikes;
             }
-            public List<ProtectedLikeMethodDetail> Methods { get; set; }
+            public List<ProtectedLikeMethodDetail> Methods { get; set; } = new();
             public List<ProtectedLikePropertyDetail> Properties { get; set; } = new();
             public ITypeSymbol MockedType { get; set; }
 

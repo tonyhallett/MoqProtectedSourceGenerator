@@ -10,40 +10,19 @@ namespace MoqProtectedSourceGenerator
             return $"Func<{likeTypeName},{returnType}>";
         }
 
-        public string MethodBuilderType(string mockedTypeName, string returnType, IEnumerable<string> typeParameters)
+        public string MethodBuilderType(string mockedTypeName, string returnType, string delegates)
         {
-            return GetType("ReturningBuilder", mockedTypeName, returnType, typeParameters);
+            return GetType("ReturningBuilder", mockedTypeName, returnType, delegates);
         }
 
-        public string SetupTyped(string mockedTypeName, string returnType, IEnumerable<string> typeParameters)
+        public string SetupTyped(string mockedTypeName, string returnType, string delegates)
         {
-            return GetType("SetupTypedResult", mockedTypeName,returnType, typeParameters);
+            return GetType("SetupTypedResult", mockedTypeName,returnType, delegates);
         }
 
-        private string GetType(string type, string mockedTypeName, string returnType, IEnumerable<string> typeParameters)
+        private string GetType(string type, string mockedTypeName, string returnType, string delegates)
         {
-            var stringBuilder = new StringBuilder($"{type}<{mockedTypeName},");
-            var hasTypeParameters = false;
-            var first = true;
-            foreach (var typeParameter in typeParameters)
-            {
-                hasTypeParameters = true;
-                if (first)
-                {
-                    first = false;
-                }
-                else
-                {
-                    stringBuilder.Append(",");
-                }
-                stringBuilder.Append(typeParameter);
-            }
-            if (hasTypeParameters)
-            {
-                stringBuilder.Append(",");
-            }
-            stringBuilder.Append($"{returnType}>");
-            return stringBuilder.ToString();
+            return $"{type}<{mockedTypeName},{returnType},{delegates}>";
         }
     }
 }
