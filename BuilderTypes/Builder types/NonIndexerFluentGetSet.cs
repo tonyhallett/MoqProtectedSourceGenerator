@@ -13,6 +13,7 @@ namespace MoqProtectedGenerated
     {
         private readonly Func<string, int, List<Match>, TProperty, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression;
         private readonly Expression<Func<TLike, TProperty>> getter;
+        private readonly ProtectedMock<T> protectedMock;
         private readonly IProtectedAsMock<T, TLike> protectedLike;
 
         public NonIndexerFluentGetSet(
@@ -23,6 +24,7 @@ namespace MoqProtectedGenerated
         {
             this.setterGetSetUpOrVerifyExpression = setterGetSetUpOrVerifyExpression;
             this.getter = getter;
+            this.protectedMock = protectedMock;
             protectedLike = protectedMock.Mock.Protected().As<TLike>();
 
         }
@@ -58,10 +60,10 @@ namespace MoqProtectedGenerated
             );
         }
 
-        public void SetupProperty(TProperty initialValue = default)
+        public ProtectedMock<T> SetupProperty(TProperty initialValue = default)
         {
             protectedLike.SetupProperty(getter, initialValue);
-            // determine the return 
+            return protectedMock;
         }
     }
 }
