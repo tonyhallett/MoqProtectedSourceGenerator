@@ -4,10 +4,11 @@ using Moq.Language.Flow;
 
 namespace MoqProtectedGenerated
 {
-    public class SetupTypedResult<TMock, TResult, TCallbackDelegate, TReturnsDelegate> : ISetupTypedResult<TMock, TResult, TCallbackDelegate, TReturnsDelegate> 
-        where TMock : class
-        where TCallbackDelegate : Delegate
-        where TReturnsDelegate : Delegate
+    public class SetupTypedResult<TMock, TResult, TCallbackDelegate, TReturnsDelegate> : 
+        ISetupTypedResult<TMock, TResult, TCallbackDelegate, TReturnsDelegate> 
+            where TMock : class
+            where TCallbackDelegate : Delegate
+            where TReturnsDelegate : Delegate
     {
         private readonly ISetup<TMock, TResult> actual;
         public SetupTypedResult(ISetup<TMock, TResult> actual)
@@ -15,6 +16,7 @@ namespace MoqProtectedGenerated
             this.actual = actual;
         }
 
+        #region Throws
         public IThrowsResult Throws(Exception exception)
         {
             return actual.Throws(exception);
@@ -25,6 +27,9 @@ namespace MoqProtectedGenerated
             return actual.Throws<TException>();
         }
 
+        #endregion
+
+        #region Verifiable
         public void Verifiable()
         {
             actual.Verifiable();
@@ -34,6 +39,7 @@ namespace MoqProtectedGenerated
         {
             actual.Verifiable(failMessage);
         }
+        #endregion
 
         public override string ToString()
         {
@@ -68,6 +74,7 @@ namespace MoqProtectedGenerated
             return new ReturnsResultTyped<TMock,TCallbackDelegate>(actual.CallBase());
         }
 
+        #region Returns
         public IReturnsResultTyped<TMock, TCallbackDelegate> Returns(TResult value)
         {
             return new ReturnsResultTyped<TMock,TCallbackDelegate>(actual.Returns(value));
@@ -92,6 +99,7 @@ namespace MoqProtectedGenerated
         {
             return new ReturnsResultTyped<TMock,TCallbackDelegate>(actual.Returns(valueFunction));
         }
+        #endregion
 
     }
 }

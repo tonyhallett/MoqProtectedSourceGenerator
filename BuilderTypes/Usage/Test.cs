@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Threading.Tasks;
+using Moq;
+using Moq.Protected;
+using MoqProtectedGenerated;
 using MoqProtectedTyped;
 
 namespace ANamespace

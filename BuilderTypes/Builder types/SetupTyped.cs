@@ -17,6 +17,7 @@ namespace MoqProtectedGenerated
             this.actual = actual;
         }
 
+        #region IOccurrence
         [Obsolete("To verify this condition, use the overload to Verify that receives Times.AtMostOnce(callCount).")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public IVerifies AtMost(int callCount)
@@ -30,7 +31,9 @@ namespace MoqProtectedGenerated
         {
             return actual.AtMostOnce();
         }
+        #endregion
 
+        #region Callback
         public ICallbackResult Callback(Action action)
         {
             return actual.Callback(action);
@@ -50,12 +53,14 @@ namespace MoqProtectedGenerated
         {
             return actual.Callback(callback);
         }
+        #endregion 
 
         public ICallBaseResult CallBase()
         {
             return actual.CallBase();
         }
 
+        #region Raises
         public IVerifies Raises(Action<TMock> eventExpression, EventArgs args)
         {
             return actual.Raises(eventExpression, args);
@@ -151,6 +156,9 @@ namespace MoqProtectedGenerated
             return actual.Raises(eventExpression, func);
         }
 
+        #endregion
+
+        #region Throws
         public IThrowsResult Throws(Exception exception)
         {
             return actual.Throws(exception);
@@ -160,7 +168,9 @@ namespace MoqProtectedGenerated
         {
             return actual.Throws<TException>();
         }
+        #endregion
 
+        #region Verifiable
         public void Verifiable()
         {
             actual.Verifiable();
@@ -170,6 +180,8 @@ namespace MoqProtectedGenerated
         {
             actual.Verifiable(failMessage);
         }
+
+        #endregion
 
         public override string ToString()
         {

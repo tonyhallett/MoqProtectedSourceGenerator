@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using DifferentNamespace;
 using IFace;
 using Moq;
 using MoqProtectedTyped;
 using NUnit.Framework;
 using OtherNamespace;
+using MoqProtectedGenerated;
+using Moq.Language.Flow;
+using System.Linq;
 
 namespace ClassLibrary1
 {
@@ -123,6 +127,13 @@ namespace ClassLibrary1
         public void SetIndex(int key,string value)
         {
             this[key] = value;
+        }
+
+        protected abstract Task<int> TaskInt();
+
+        internal Task<int> InvokeTaskInt()
+        {
+            return TaskInt();
         }
     }
 
@@ -410,6 +421,57 @@ namespace ClassLibrary1
             Assert.AreEqual("1", mockedReturn.GetIndex(1));
         }
 
+        [Test]
+        public async Task SetupTypedAsync()
+        {
+            //var mock = new Mock<MyProtected>();
+            //var protectedMock = mock.ProtectedTyped();
+            //var setup = protectedMock.Setup(m => m.TaskInt());
+            //ISetupTypedResultTaskResult<MyProtected, int, Action, Func<Task<int>>> typedSetup = new SetupTypedResultTaskResult<MyProtected, int, Action, Func<Task<int>>>(setup);
+            //typedSetup.ThrowsAsync(new Exception());
+            //var taskInt = mock.Object.InvokeTaskInt();
+            //var faultedTask = taskInt.IsFaulted;
+
+            var mock = new Mock<IThing>();
+            var setup = mock.Setup(m => m.Returns(It.IsAny<int>(), It.IsAny<string>()));
+            int refInt = 0;
+            var setupRef = mock.Setup(m => m.WithRef(ref refInt, It.IsAny<string>()));
+            var setupWrapper = new SetupWrapper<IThing, string, Func<int, string, string>>(setup);
+            setupWrapper.ReturnsAsync((i, s) => i.ToString() + s);
+            var setupRefWrapper = new SetupWrapper<IThing, string, DelReturn2_Ref1<int, string, string>>(setupRef);
+            setupRefWrapper.ReturnsAsync((ref int i, string s) => i.ToString() + s);
+            var res = await mock.Object.Returns(123, "456");
+            Assert.AreEqual("123456", res);
+            var res2 = await mock.Object.Returns(refInt, "Value");
+            Assert.AreEqual("0Value", res2);
+        }
+
     }
-    
+
+    // demo that possible to replicate GeneratedReturnsExtensions
+    public class SetupWrapper<TMock, TResult,TReturnsAsyncDelegate> where TReturnsAsyncDelegate : Delegate where TMock:class
+    {
+        private ISetup<TMock, Task<TResult>> setup;
+
+        public SetupWrapper(ISetup<TMock,Task<TResult>> setup)
+        {
+            this.setup = setup;
+            
+        }
+
+        public IReturnsResult<TMock> ReturnsAsync(TReturnsAsyncDelegate del)
+        {
+            return setup.Returns((IInvocation invocation) =>
+            {
+                var args = invocation.Arguments;
+                return Task.FromResult((TResult)del.DynamicInvoke((args as object[]) ?? args?.ToArray()));
+            });
+        }
+    }
+
+    public interface IThing
+    {
+        Task<string> Returns(int arg1, string arg2);
+        Task<string> WithRef(ref int refArg1, string arg2);
+    }
 }

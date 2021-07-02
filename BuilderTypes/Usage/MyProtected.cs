@@ -1,7 +1,14 @@
-﻿namespace ANamespace
+﻿using System.Threading.Tasks;
+
+namespace ANamespace
 {
     public abstract class MyProtected
     {
+        protected abstract Task<int> TaskInt();
+        public Task<int> InvokeTaskInt()
+        {
+            return TaskInt();
+        }
         protected abstract int AbstractMethodWithReturn();
         protected abstract void AbstractMethod();
         public void InvokeAbstractMethod()

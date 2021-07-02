@@ -1,4 +1,6 @@
-﻿namespace MoqProtectedGenerated
+﻿using System.Threading.Tasks;
+
+namespace MoqProtectedGenerated
 {
     public interface MyProtectedLike
     {
@@ -9,6 +11,7 @@
         int GetOnly { get; }
         int SetOnly { set; }
         string this[int key1, string key2] { get; set; }
+        Task<int> TaskInt();
     }
 
 }

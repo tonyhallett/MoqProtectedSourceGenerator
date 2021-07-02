@@ -1,6 +1,5 @@
 ﻿using Moq;
 
-
 namespace MoqProtectedGenerated
 {
     public interface ISetupVerify<TSetup,TSetupSequence>
