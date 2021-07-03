@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Moq;
 
 namespace MoqProtectedGenerated
@@ -13,7 +14,9 @@ namespace MoqProtectedGenerated
         IReturnsResultTyped<TMock, TCallbackDelegate> Returns(InvocationFunc valueFunction);
         IReturnsResultTyped<TMock, TCallbackDelegate> Returns(Delegate valueFunction);
         IReturnsResultTyped<TMock, TCallbackDelegate> Returns(Func<TResult> valueFunction);
-        IReturnsResultTyped<TMock, TCallbackDelegate> Returns(TReturnsDelegate valueFunction); 
+        IReturnsResultTyped<TMock, TCallbackDelegate> Returns(TReturnsDelegate valueFunction);
 
     }
+
+    
 }

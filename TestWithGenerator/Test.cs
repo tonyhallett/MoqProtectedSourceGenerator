@@ -192,7 +192,7 @@ namespace ClassLibrary1
     public class Test
     {
         [Test]
-        public void Generate()
+        public async Task Generate()
         {
             var mock = new ProtectedMock<MyProtected>();
 
@@ -442,7 +442,10 @@ namespace ClassLibrary1
             asyncMock.Task().Build().Setup().ThrowsAsync(new ExpectedException(), TimeSpan.FromSeconds(1));
             Assert.ThrowsAsync<ExpectedException>(async () => await asyncMocked.InvokeTask());
 
-
+            var taskMock = new ProtectedMock<MyProtected>();
+            // new delays for Task
+            taskMock.Task().Build().Setup().ReturnsAsync(TimeSpan.FromMilliseconds(10));
+            await taskMock.Object.InvokeTask();
         }
 
         [Test]

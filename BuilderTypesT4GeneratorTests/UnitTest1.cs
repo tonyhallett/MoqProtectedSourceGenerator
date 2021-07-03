@@ -16,7 +16,6 @@ namespace BuilderTypesT4GeneratorTests
         [Fact]
         public void EndToEnd()
         {
-            TestBuilderTypes.SetupTypedAsync();
             TestBuilderTypes.Execute();
         }
     }

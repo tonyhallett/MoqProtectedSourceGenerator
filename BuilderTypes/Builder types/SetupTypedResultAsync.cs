@@ -1,23 +1,39 @@
 ﻿using System;
 using Moq;
+using Moq.Language;
 using Moq.Language.Flow;
 
 namespace MoqProtectedGenerated
 {
-    public abstract class SetupTypedResultAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate> : 
-        ISetupTypedResultAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate>
+    public abstract class SetupTypedResultAsync<
+        TMock, 
+        TResult, 
+        TCallbackDelegate, 
+        TReturnsDelegate,
+        TReturnsThrowsTyped
+    > : IReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate>,
+        ISetupTypedCallback<
+            TCallbackDelegate,
+            TReturnsThrowsTyped
+        >,
+        IVerifies
             where TMock : class
             where TCallbackDelegate : Delegate
             where TReturnsDelegate : Delegate
     {
-        private static readonly Random random = new Random();
+        protected static readonly Random random = new Random();
         protected readonly ISetup<TMock, TResult> actual;
-        public SetupTypedResultAsync(ISetup<TMock, TResult> actual)
+
+        public SetupTypedResultAsync(
+            ISetup<TMock, TResult> actual 
+        )
         {
             this.actual = actual;
         }
 
-        private TimeSpan GetDelay(TimeSpan minDelay, TimeSpan maxDelay, Random random)
+        protected abstract TReturnsThrowsTyped ReturnsThrowsTypedFactory(IReturnsThrows<TMock, TResult> returnsThrows, IThrowsAsync<TMock, TCallbackDelegate> throwsAsync);
+
+        protected TimeSpan GetDelay(TimeSpan minDelay, TimeSpan maxDelay, Random random)
         {
             if (minDelay >= maxDelay)
             {
@@ -28,6 +44,7 @@ namespace MoqProtectedGenerated
             return new TimeSpan((long)random.Next(ticks, maxValue));
         }
 
+        #region Throws
         public IReturnsResultTyped<TMock, TCallbackDelegate> ThrowsAsync<TException>() where TException : Exception, new()
         {
             return ThrowsAsync(new TException());
@@ -63,55 +80,13 @@ namespace MoqProtectedGenerated
         protected abstract IReturnsResult<TMock> ThrowsAsyncImpl(Exception exception);
 
         protected abstract IReturnsResult<TMock> ThrowsAsyncImpl(Exception exception, TimeSpan delay);
-        
-
-        #region Verifiable
-        public void Verifiable()
-        {
-            actual.Verifiable();
-        }
-
-        public void Verifiable(string failMessage)
-        {
-            actual.Verifiable(failMessage);
-        }
         #endregion
         
-        public override string ToString()
-        {
-            return actual.ToString();
-        }
-
-
-        #region Callback
-        public IReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate> Callback(InvocationAction action)
-        {
-            return new ReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate>(actual.Callback(action), this);
-        }
-
-        public IReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate> Callback(Delegate callback)
-        {
-            return new ReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate>(actual.Callback(callback), this);
-        }
-
-        public IReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate> Callback(Action action)
-        {
-            return new ReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate>(actual.Callback(action), this);
-        }
-
-        public IReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate> Callback(TCallbackDelegate callback)
-        {
-            return new ReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate>(actual.Callback(callback), this);
-        }
-        #endregion
-
+        #region Returns
         public IReturnsResultTyped<TMock, TCallbackDelegate> CallBase()
         {
             return new ReturnsResultTyped<TMock, TCallbackDelegate>(actual.CallBase());
         }
-
-        #region Returns
-
         public IReturnsResultTyped<TMock, TCallbackDelegate> Returns(TResult value)
         {
             return new ReturnsResultTyped<TMock, TCallbackDelegate>(actual.Returns(value));
@@ -138,6 +113,47 @@ namespace MoqProtectedGenerated
         }
 
         #endregion
+        
+        #region Verifiable
+        public void Verifiable()
+        {
+            actual.Verifiable();
+        }
+
+        public void Verifiable(string failMessage)
+        {
+            actual.Verifiable(failMessage);
+        }
+        #endregion
+        
+        public override string ToString()
+        {
+            return actual.ToString();
+        }
+
+
+        #region Callback
+        public TReturnsThrowsTyped Callback(InvocationAction action)
+        {
+            return ReturnsThrowsTypedFactory(actual.Callback(action), this);
+        }
+
+        public TReturnsThrowsTyped Callback(Delegate callback)
+        {
+            return ReturnsThrowsTypedFactory(actual.Callback(callback), this);
+        }
+
+        public TReturnsThrowsTyped Callback(Action action)
+        {
+            return ReturnsThrowsTypedFactory(actual.Callback(action), this);
+        }
+
+        public TReturnsThrowsTyped Callback(TCallbackDelegate callback)
+        {
+            return ReturnsThrowsTypedFactory(actual.Callback(callback), this);
+        }
+        #endregion
+
     }
     
 }
