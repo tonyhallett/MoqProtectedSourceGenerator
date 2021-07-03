@@ -65,7 +65,7 @@ namespace MoqProtectedSourceGenerator
         private string GetExtensionMethod(string mockedTypeName, string likeTypeName, ProtectedLikeMethodDetail methodDetail, bool isLast)
         {
             var expressionDelegate = ExpressionDelegate(likeTypeName, methodDetail.Declaration);
-
+            
             var (methodBuilderClass,setupType) = GetSetupAndBuilderTypes(mockedTypeName, methodDetail.Declaration);
             
             var methodName = methodDetail.Declaration.Identifier.Text;

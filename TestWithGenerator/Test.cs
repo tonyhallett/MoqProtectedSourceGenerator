@@ -131,9 +131,20 @@ namespace ClassLibrary1
 
         protected abstract Task<int> TaskInt();
 
-        internal Task<int> InvokeTaskInt()
+        public Task<int> InvokeTaskInt()
         {
             return TaskInt();
+        }
+
+        protected abstract Task Task();
+        public Task InvokeTask()
+        {
+            return Task();
+        }
+        protected abstract ValueTask<int> ValueTask();
+        public ValueTask<int> InvokeValueTask()
+        {
+            return ValueTask();
         }
     }
 
@@ -419,6 +430,19 @@ namespace ClassLibrary1
             mockReturn.Item_1().Get(It.IsAny<int>()).Build().Setup().Returns(v => v.ToString());
             Assert.AreEqual("0", mockedReturn.GetIndex(0));
             Assert.AreEqual("1", mockedReturn.GetIndex(1));
+
+            var asyncMock = new ProtectedMock<MyProtected>();
+            var asyncMocked = asyncMock.Object;
+            //taskResultMock.TaskInt().Build().Setup().Throws() - no Throws !
+            asyncMock.TaskInt().Build().Setup().ThrowsAsync<ExpectedException>();
+            Assert.ThrowsAsync<ExpectedException>(async () => await asyncMocked.InvokeTaskInt());
+            asyncMock.ValueTask().Build().Setup().ThrowsAsync(new ExpectedException());
+            Assert.ThrowsAsync<ExpectedException>(async () => await asyncMocked.InvokeValueTask());
+            //overloads with delays
+            asyncMock.Task().Build().Setup().ThrowsAsync(new ExpectedException(), TimeSpan.FromSeconds(1));
+            Assert.ThrowsAsync<ExpectedException>(async () => await asyncMocked.InvokeTask());
+
+
         }
 
         [Test]

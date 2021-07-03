@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -54,8 +55,12 @@ namespace ClassLibrary1
         //protected abstract string GetSet {get;set;}
 
         //protected abstract int ReturningMethodOutAndRef(out int arg1,int notRef, ref string arg2);
-        protected abstract string ReturningMethodNoOutRef(int arg1, string arg2);
+        //protected abstract string ReturningMethodNoOutRef(int arg1, string arg2);
         //protected abstract string GenericNoConstraints<T>(T t);
+        //protected abstract Task<int> TaskResult();
+        //protected abstract Task Task();
+        protected abstract ValueTask<int> ValueTask();
+        // ValueTask - using ?
     }
     public class ExpectedException : Exception{}
     public class ConstraintClass{}

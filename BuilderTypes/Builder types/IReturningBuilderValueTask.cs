@@ -4,8 +4,8 @@ using Moq.Language;
 
 namespace MoqProtectedGenerated
 {
-    public interface IReturningBuilderValueTask<TMock, TResult, TCallbackDelegate, TReturnsDelegate> :
-       ISetupVerifyBuilder<ISetupTypedResultValueTask<TMock, TResult, TCallbackDelegate, TReturnsDelegate>, ISetupSequentialResult<ValueTask<TResult>>>
+    public interface IReturningBuilderValueTask<TMock, TValueTaskResult, TCallbackDelegate, TReturnsDelegate> :
+       ISetupVerifyBuilder<ISetupTypedResultValueTask<TMock, TValueTaskResult, TCallbackDelegate, TReturnsDelegate>, ISetupSequentialResult<ValueTask<TValueTaskResult>>>
        where TMock : class
        where TCallbackDelegate : Delegate
        where TReturnsDelegate : Delegate

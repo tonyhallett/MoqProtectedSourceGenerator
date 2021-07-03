@@ -30,7 +30,7 @@ namespace MoqProtectedGenerated
 
         public IReturnsResultTyped<TMock, TCallbackDelegate> ThrowsAsync<TException>() where TException : Exception, new()
         {
-            return ThrowsAsync<TException>();
+            return ThrowsAsync(new TException());
         }
 
         public IReturnsResultTyped<TMock, TCallbackDelegate> ThrowsAsync(Exception exception)

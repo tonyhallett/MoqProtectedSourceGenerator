@@ -5,16 +5,16 @@ using Moq.Language;
 
 namespace MoqProtectedGenerated
 {
-    public class ReturningBuilderValueTask<TMock, TResult, TCallbackDelegate, TReturnsDelegate> :
-        SetupVerifyBuilder<ISetupTypedResultValueTask<TMock, TResult, TCallbackDelegate, TReturnsDelegate>, ISetupSequentialResult<ValueTask<TResult>>>,
-        IReturningBuilderValueTask<TMock, TResult, TCallbackDelegate, TReturnsDelegate>
+    public class ReturningBuilderValueTask<TMock, TValueTaskResult, TCallbackDelegate, TReturnsDelegate> :
+        SetupVerifyBuilder<ISetupTypedResultValueTask<TMock, TValueTaskResult, TCallbackDelegate, TReturnsDelegate>, ISetupSequentialResult<ValueTask<TValueTaskResult>>>,
+        IReturningBuilderValueTask<TMock, TValueTaskResult, TCallbackDelegate, TReturnsDelegate>
         where TMock : class
         where TCallbackDelegate : Delegate
         where TReturnsDelegate : Delegate
     {
         public ReturningBuilderValueTask(
-            Func<string, int, ISetupTypedResultValueTask<TMock, TResult, TCallbackDelegate, TReturnsDelegate>> setup,
-            Func<string, int, ISetupSequentialResult<ValueTask<TResult>>> setupSequence,
+            Func<string, int, ISetupTypedResultValueTask<TMock, TValueTaskResult, TCallbackDelegate, TReturnsDelegate>> setup,
+            Func<string, int, ISetupSequentialResult<ValueTask<TValueTaskResult>>> setupSequence,
             Action<string, int, Times?, string> verify
         ) : base(setup, setupSequence, verify) { }
     }
