@@ -1,22 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Moq;
-using Moq.Language;
 
 namespace MoqProtectedGenerated
 {
-    public interface ISetupTypedResultValueTask<TMock, TValueTaskResult, TCallbackDelegate, TReturnsDelegate> :
-        IFluentInterface,
-        IVerifies,
-        IReturnsThrowsTypedAsync<TMock, ValueTask<TValueTaskResult>, TCallbackDelegate, TReturnsDelegate>,
-        ISetupTypedCallback<
-            TCallbackDelegate, 
-            IReturnsThrowsTypedAsync<TMock, ValueTask<TValueTaskResult>, TCallbackDelegate, TReturnsDelegate>
-        >
+    public interface ISetupTypedResultValueTask<TMock, TTaskResult, TCallbackDelegate, TReturnsDelegate, TReturnsAsyncDelegate> :
+    ISetupTypedResultTaskResultBase<TMock, ValueTask<TTaskResult>, TTaskResult, TCallbackDelegate, TReturnsDelegate, TReturnsAsyncDelegate>
         where TMock : class
         where TCallbackDelegate : Delegate
         where TReturnsDelegate : Delegate
-    {
+        where TReturnsAsyncDelegate : Delegate
+    { }
 
-    }
 }

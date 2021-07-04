@@ -11,8 +11,4 @@ namespace MoqProtectedGenerated
         where TCallbackDelegate : Delegate
         where TReturnsDelegate : Delegate
     { }
-
-    
-    
-    
 }
