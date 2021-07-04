@@ -159,13 +159,23 @@ namespace MoqProtectedSourceGenerator
         {
             var returnTypeString = returnType.ToString();
             var action = GetActionDelegate(parameters);
-            var func = $"{Func}<{returnTypeString}>";
+            var func = GetFunc(parameters,returnTypeString);
+            var actionAndFuncDelegates = $"{action},{func}";
+            if (returnTypeString.StartsWith("ValueTask<") || returnTypeString.StartsWith("Task<"))
+            {
+                actionAndFuncDelegates += $", {GetFunc(parameters, TaskGenericHelper.ExtractResultType(returnTypeString))}";
+            }
+            return actionAndFuncDelegates;
+        }
+
+        private string GetFunc(SeparatedSyntaxList<ParameterSyntax> parameters, string returnType)
+        {
+            var func = $"{Func}<{returnType}>";
             if (parameters.Count > 0)
             {
-                func = GetFuncOrActionWithParameters(parameters, Func, $",{returnTypeString}");
+                func = GetFuncOrActionWithParameters(parameters, Func, $",{returnType}");
             }
-           
-            return $"{action},{func}";
+            return func;
         }
         
         private string GetFuncOrActionWithParameters(SeparatedSyntaxList<ParameterSyntax> parameters,string delegateName, string beforeClosingBracket = "")

@@ -130,10 +130,16 @@ namespace ClassLibrary1
         }
 
         protected abstract Task<int> TaskInt();
+        protected abstract Task<string> TaskStringWithParameters(int p1, string p2);
 
         public Task<int> InvokeTaskInt()
         {
             return TaskInt();
+        }
+
+        public Task<string> InvokeTaskStringWithParameters(int p1, string p2)
+        {
+            return TaskStringWithParameters(p1, p2);
         }
 
         protected abstract Task Task();
@@ -191,6 +197,20 @@ namespace ClassLibrary1
 
     public class Test
     {
+        private void X() { }
+        [Test]
+        public async Task AsyncMessesWithMatchers()
+        {
+            var mock = new ProtectedMock<MyProtected>();
+            It.IsAny<string>();
+            Assert.AreEqual(1, MatcherObserver.GetMatches().Count);
+            
+            await Task.Delay(1000);
+            X();
+            It.IsAny<string>();
+            Assert.AreEqual(1, MatcherObserver.GetMatches().Count);
+        }
+
         [Test]
         public async Task Generate()
         {
@@ -446,59 +466,22 @@ namespace ClassLibrary1
             // new delays for Task
             taskMock.Task().Build().Setup().ReturnsAsync(TimeSpan.FromMilliseconds(10));
             await taskMock.Object.InvokeTask();
-        }
 
-        [Test]
-        public async Task SetupTypedAsync()
-        {
-            //var mock = new Mock<MyProtected>();
-            //var protectedMock = mock.ProtectedTyped();
-            //var setup = protectedMock.Setup(m => m.TaskInt());
-            //ISetupTypedResultTaskResult<MyProtected, int, Action, Func<Task<int>>> typedSetup = new SetupTypedResultTaskResult<MyProtected, int, Action, Func<Task<int>>>(setup);
-            //typedSetup.ThrowsAsync(new Exception());
-            //var taskInt = mock.Object.InvokeTaskInt();
-            //var faultedTask = taskInt.IsFaulted;
+            var taskResultMock = new ProtectedMock<MyProtected>();
+            var mockedTaskResult = taskResultMock.Object;
 
-            var mock = new Mock<IThing>();
-            var setup = mock.Setup(m => m.Returns(It.IsAny<int>(), It.IsAny<string>()));
-            int refInt = 0;
-            var setupRef = mock.Setup(m => m.WithRef(ref refInt, It.IsAny<string>()));
-            var setupWrapper = new SetupWrapper<IThing, string, Func<int, string, string>>(setup);
-            setupWrapper.ReturnsAsync((i, s) => i.ToString() + s);
-            var setupRefWrapper = new SetupWrapper<IThing, string, DelReturn2_Ref1<int, string, string>>(setupRef);
-            setupRefWrapper.ReturnsAsync((ref int i, string s) => i.ToString() + s);
-            var res = await mock.Object.Returns(123, "456");
-            Assert.AreEqual("123456", res);
-            var res2 = await mock.Object.Returns(refInt, "Value");
-            Assert.AreEqual("0Value", res2);
-        }
+            var invocationCount = 0;
+            Func<int> returner = () => invocationCount++;
+            taskResultMock.TaskInt().Build().Setup().ReturnsAsync(returner);
+            Assert.AreEqual(0, await mockedTaskResult.InvokeTaskInt());
+            Assert.AreEqual(1, await mockedTaskResult.InvokeTaskInt());
 
-    }
-
-    // demo that possible to replicate GeneratedReturnsExtensions
-    public class SetupWrapper<TMock, TResult,TReturnsAsyncDelegate> where TReturnsAsyncDelegate : Delegate where TMock:class
-    {
-        private ISetup<TMock, Task<TResult>> setup;
-
-        public SetupWrapper(ISetup<TMock,Task<TResult>> setup)
-        {
-            this.setup = setup;
-            
-        }
-
-        public IReturnsResult<TMock> ReturnsAsync(TReturnsAsyncDelegate del)
-        {
-            return setup.Returns((IInvocation invocation) =>
-            {
-                var args = invocation.Arguments;
-                return Task.FromResult((TResult)del.DynamicInvoke((args as object[]) ?? args?.ToArray()));
-            });
+            taskResultMock.TaskStringWithParameters(1, It.IsAny<string>()).Build().Setup().ReturnsAsync((i, s) => s + i.ToString(), TimeSpan.FromSeconds(1));
+            var taskResult = taskResultMock.Object.InvokeTaskStringWithParameters(1, "Hello");
+            Assert.True(!taskResult.IsCompleted);
+            Assert.AreEqual("Hello1", await taskResult);
         }
     }
 
-    public interface IThing
-    {
-        Task<string> Returns(int arg1, string arg2);
-        Task<string> WithRef(ref int refArg1, string arg2);
-    }
+    
 }

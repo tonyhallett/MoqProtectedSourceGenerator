@@ -64,7 +64,6 @@ namespace MoqProtectedGenerated
             IReturnsAsyncTypedTaskResult<TMock, TTaskResult, TCallbackDelegate, TReturnsAsyncDelegate> provider
         ) : base(actual,throwsAsync)
         {
-            this.throwsAsync = throwsAsync;
             this.provider = provider;
         }
 
