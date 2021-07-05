@@ -147,15 +147,23 @@ namespace ClassLibrary1
         {
             return Task();
         }
-        protected abstract ValueTask<int> ValueTask();
-        public ValueTask<int> InvokeValueTask()
+        protected abstract ValueTask<int> ValueTaskResult();
+        public ValueTask<int> InvokeValueTaskResult()
+        {
+            return ValueTaskResult();
+        }
+
+        protected abstract ValueTask ValueTask();
+        public ValueTask InvokeValueTask()
         {
             return ValueTask();
         }
     }
 
     public class ExpectedException : Exception { }
-    public class Implementation : IInterface { }
+    public class Implementation : IInterface
+    {
+    }
 
 
     public abstract class SubType1 { }
@@ -442,16 +450,23 @@ namespace ClassLibrary1
             //taskResultMock.TaskInt().Build().Setup().Throws() - no Throws !
             asyncMock.TaskInt().Build().Setup().ThrowsAsync<ExpectedException>();
             Assert.ThrowsAsync<ExpectedException>(async () => await asyncMocked.InvokeTaskInt());
-            asyncMock.ValueTask().Build().Setup().ThrowsAsync(new ExpectedException());
-            Assert.ThrowsAsync<ExpectedException>(async () => await asyncMocked.InvokeValueTask());
+            asyncMock.ValueTaskResult().Build().Setup().ThrowsAsync(new ExpectedException());
+            Assert.ThrowsAsync<ExpectedException>(async () => await asyncMocked.InvokeValueTaskResult());
             //overloads with delays
             asyncMock.Task().Build().Setup().ThrowsAsync(new ExpectedException(), TimeSpan.FromSeconds(1));
             Assert.ThrowsAsync<ExpectedException>(async () => await asyncMocked.InvokeTask());
+            // new throws for ValueTask
+            asyncMock.ValueTask().Build().Setup().ThrowsAsync<ExpectedException>();
+            Assert.ThrowsAsync<ExpectedException>(async () => await asyncMocked.InvokeValueTask());
+
 
             var taskMock = new ProtectedMock<MyProtected>();
             // new delays for Task
             taskMock.Task().Build().Setup().ReturnsAsync(TimeSpan.FromMilliseconds(10));
             await taskMock.Object.InvokeTask();
+            // new delays for ValueTask
+            taskMock.ValueTask().Build().Setup().ReturnsAsync(TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100));
+            await taskMock.Object.InvokeValueTask();
 
             var taskResultMock = new ProtectedMock<MyProtected>();
             var mockedTaskResult = taskResultMock.Object;
@@ -466,7 +481,7 @@ namespace ClassLibrary1
             var taskResult = taskResultMock.Object.InvokeTaskStringWithParameters(1, "Hello");
             Assert.True(!taskResult.IsCompleted);
             Assert.AreEqual("Hello1", await taskResult);
-            
+
         }
         
     }

@@ -22,11 +22,14 @@
             if(returnType == "Task")
             {
                 return $"{type}Task<{mockedTypeName},{delegates}>";
+            }else if(returnType == "ValueTask")
+            {
+                return $"{type}ValueTask<{mockedTypeName},{delegates}>";
             }
             else if (returnType.StartsWith("ValueTask<"))
             {
                 var valueTaskResultType = TaskGenericHelper.ExtractResultType(returnType);
-                return $"{type}ValueTask<{mockedTypeName},{valueTaskResultType},{delegates}>";
+                return $"{type}ValueTaskResult<{mockedTypeName},{valueTaskResultType},{delegates}>";
             }
             else if (returnType.StartsWith("Task<"))
             {
