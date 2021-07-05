@@ -197,20 +197,6 @@ namespace ClassLibrary1
 
     public class Test
     {
-        private void X() { }
-        [Test]
-        public async Task AsyncMessesWithMatchers()
-        {
-            var mock = new ProtectedMock<MyProtected>();
-            It.IsAny<string>();
-            Assert.AreEqual(1, MatcherObserver.GetMatches().Count);
-            
-            await Task.Delay(1000);
-            X();
-            It.IsAny<string>();
-            Assert.AreEqual(1, MatcherObserver.GetMatches().Count);
-        }
-
         [Test]
         public async Task Generate()
         {
@@ -480,8 +466,9 @@ namespace ClassLibrary1
             var taskResult = taskResultMock.Object.InvokeTaskStringWithParameters(1, "Hello");
             Assert.True(!taskResult.IsCompleted);
             Assert.AreEqual("Hello1", await taskResult);
+            
         }
+        
     }
 
-    
 }

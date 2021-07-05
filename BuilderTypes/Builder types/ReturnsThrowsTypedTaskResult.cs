@@ -4,11 +4,10 @@ using Moq.Language.Flow;
 
 namespace MoqProtectedGenerated
 {
-    public class ReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate> :
+    public abstract class ReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate> :
         ReturnsTypedBase<TMock, TResult, TCallbackDelegate, TReturnsDelegate>,
         IFluentInterface,
-        IReturnsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate>,
-        IThrowsAsync<TMock,TCallbackDelegate>
+        IReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate>
         where TMock : class
         where TCallbackDelegate : Delegate
         where TReturnsDelegate : Delegate

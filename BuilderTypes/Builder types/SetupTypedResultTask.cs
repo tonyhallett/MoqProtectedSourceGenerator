@@ -5,8 +5,8 @@ using Moq.Language.Flow;
 
 namespace MoqProtectedGenerated
 {
-    public class SetupTypedResultTask<TMock, TCallbackDelegate, TReturnsDelegate> : 
-        SetupTypedResultAsync<TMock, Task, TCallbackDelegate, TReturnsDelegate, IReturnsThrowsTypedTask<TMock, TCallbackDelegate, TReturnsDelegate>>,
+    public class SetupTypedResultTask<TMock, TCallbackDelegate, TReturnsDelegate> :
+        SetupTypedResultTaskNoResult<TMock, Task, TCallbackDelegate, TReturnsDelegate>,
         ISetupTypedResultTask<TMock, TCallbackDelegate, TReturnsDelegate>
         where TMock : class
         where TCallbackDelegate : Delegate
@@ -15,29 +15,18 @@ namespace MoqProtectedGenerated
 
         public SetupTypedResultTask(ISetup<TMock, Task> actual) : base(actual) { }
 
-        public IReturnsResultTyped<TMock, TCallbackDelegate> ReturnsAsync(TimeSpan delay)
+        protected override IReturnsResult<TMock> ReturnsAsyncImpl(TimeSpan delay)
         {
-            return new ReturnsResultTyped<TMock, TCallbackDelegate>(actual.Returns(delegate
+            return actual.Returns(delegate
             {
                 return Task.Delay(delay);
-            }));
+            });
         }
 
-        public IReturnsResultTyped<TMock, TCallbackDelegate> ReturnsAsync(TimeSpan minDelay, TimeSpan maxDelay)
+        
+        protected override IReturnsThrowsTypedTaskNoResult<TMock, Task, TCallbackDelegate, TReturnsDelegate> ReturnsThrowsTypedFactory(IReturnsThrows<TMock, Task> returnsThrows, IThrowsAsync<TMock, TCallbackDelegate> throwsAsync)
         {
-            TimeSpan delay = GetDelay(minDelay, maxDelay, random);
-            return ReturnsAsync(delay);
-        }
-
-        public IReturnsResultTyped<TMock, TCallbackDelegate> ReturnsAsync(TimeSpan minDelay, TimeSpan maxDelay, Random random)
-        {
-            TimeSpan delay = GetDelay(minDelay, maxDelay, random);
-            return ReturnsAsync(delay);
-        }
-
-        protected override IReturnsThrowsTypedTask<TMock, TCallbackDelegate, TReturnsDelegate> ReturnsThrowsTypedFactory(IReturnsThrows<TMock, Task> returnsThrows, IThrowsAsync<TMock, TCallbackDelegate> throwsAsync)
-        {
-            return new ReturnsThrowsTypedTask<TMock, TCallbackDelegate, TReturnsDelegate>(returnsThrows, throwsAsync, this);
+            return new ReturnsThrowsTypedTaskNoResult<TMock,Task, TCallbackDelegate, TReturnsDelegate>(returnsThrows, throwsAsync, this);
         }
 
         protected override IReturnsResult<TMock> ThrowsAsyncImpl(Exception exception)

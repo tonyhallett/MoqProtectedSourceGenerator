@@ -1,20 +1,19 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Moq.Language.Flow;
 
 namespace MoqProtectedGenerated
 {
-    public class ReturnsThrowsTypedTask<TMock, TCallbackDelegate, TReturnsDelegate> :
-        ReturnsThrowsTypedAsync<TMock, Task, TCallbackDelegate, TReturnsDelegate>,
-        IReturnsThrowsTypedTask<TMock, TCallbackDelegate, TReturnsDelegate>
+    public class ReturnsThrowsTypedTaskNoResult<TMock,TTask, TCallbackDelegate, TReturnsDelegate> :
+        ReturnsThrowsTypedAsync<TMock, TTask, TCallbackDelegate, TReturnsDelegate>,
+        IReturnsThrowsTypedTaskNoResult<TMock,TTask, TCallbackDelegate, TReturnsDelegate>
         where TMock : class
         where TCallbackDelegate : Delegate
         where TReturnsDelegate : Delegate
     {
         private readonly IReturnsAsyncTypedTask<TMock, TCallbackDelegate, TReturnsDelegate> returnsAsyncProvider;
 
-        public ReturnsThrowsTypedTask(
-            IReturnsThrows<TMock, Task> actual,
+        public ReturnsThrowsTypedTaskNoResult(
+            IReturnsThrows<TMock, TTask> actual,
             IThrowsAsync<TMock, TCallbackDelegate> throwsAsync,
             IReturnsAsyncTypedTask<TMock, TCallbackDelegate, TReturnsDelegate> returnsAsyncProvider
         ) : base(actual, throwsAsync)

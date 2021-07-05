@@ -1,65 +1,48 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Moq;
 using Moq.Language.Flow;
 
 namespace MoqProtectedGenerated
 {
-    public class SetupTypedResultValueTask<TMock, TValueTaskResult, TCallbackDelegate, TReturnsDelegate, TReturnsAsyncDelegate> : 
-        SetupTypedResultAsyncResult<TMock, ValueTask<TValueTaskResult>, TValueTaskResult, TCallbackDelegate, TReturnsDelegate, TReturnsAsyncDelegate>,
-        ISetupTypedResultValueTask<TMock, TValueTaskResult, TCallbackDelegate, TReturnsDelegate, TReturnsAsyncDelegate>
-            where TMock : class
-            where TCallbackDelegate : Delegate
-            where TReturnsDelegate : Delegate
-            where TReturnsAsyncDelegate : Delegate
+    public class SetupTypedResultValueTask<TMock, TCallbackDelegate, TReturnsDelegate> :
+        SetupTypedResultTaskNoResult<TMock, ValueTask, TCallbackDelegate, TReturnsDelegate>,
+        ISetupTypedResultValueTask<TMock, TCallbackDelegate, TReturnsDelegate>
+        where TMock : class
+        where TCallbackDelegate : Delegate
+        where TReturnsDelegate : Delegate
     {
-        public SetupTypedResultValueTask(ISetup<TMock, ValueTask<TValueTaskResult>> actual) : base(actual) { }
+        public SetupTypedResultValueTask(ISetup<TMock, ValueTask> actual) : base(actual) { }
+
+        protected override IReturnsResult<TMock> ReturnsAsyncImpl(TimeSpan delay)
+        {
+            return actual.Returns(new ValueTask(Task.Delay(delay)));
+        }
+
+        protected override IReturnsThrowsTypedTaskNoResult<TMock, ValueTask, TCallbackDelegate, TReturnsDelegate> ReturnsThrowsTypedFactory(IReturnsThrows<TMock, ValueTask> returnsThrows, IThrowsAsync<TMock, TCallbackDelegate> throwsAsync)
+        {
+            return new ReturnsThrowsTypedTaskNoResult<TMock, ValueTask, TCallbackDelegate, TReturnsDelegate>(returnsThrows, throwsAsync, this);
+        }
 
         protected override IReturnsResult<TMock> ThrowsAsyncImpl(Exception exception)
         {
-            return actual.ThrowsAsync(exception);
+            return actual.Returns(delegate {
+                TaskCompletionSource<object> source = new TaskCompletionSource<object>();
+                source.SetException(exception);
+                return new ValueTask(source.Task);
+            });
+
         }
 
         protected override IReturnsResult<TMock> ThrowsAsyncImpl(Exception exception, TimeSpan delay)
         {
-            return actual.ThrowsAsync(exception, delay);
-        }
-
-        protected override IReturnsResult<TMock> ResultImpl(Func<TValueTaskResult> valueFunction)
-        {
-            return actual.ReturnsAsync(valueFunction);
-        }
-
-        protected override IReturnsResult<TMock> ResultImpl(TReturnsAsyncDelegate valueFunction)
-        {
-            return actual.Returns((IInvocation invocation) =>
-            {
-                return new ValueTask<TValueTaskResult>(InvokeFromInvocation(invocation, valueFunction));
+            return actual.Returns(delegate {
+                TaskCompletionSource<object> source = new TaskCompletionSource<object>();
+                Task.Delay(delay).ContinueWith(delegate (Task task)
+                {
+                    source.SetException(exception);
+                });
+                return new ValueTask(source.Task);
             });
-        }
-
-        protected override IReturnsResult<TMock> DelayedResultImpl(TimeSpan delay, Func<TValueTaskResult> valueFunction)
-        {
-            if (IsNullResult(valueFunction, typeof(TValueTaskResult)))
-            {
-                return DelayedResultImpl(delay,() => default);
-            }
-
-            return actual.Returns(() => new ValueTask<TValueTaskResult>(Task.Delay(delay).ContinueWith( t => valueFunction())));
-        }
-
-        protected override IReturnsResult<TMock> DelayedResultImpl(TimeSpan delay, TReturnsAsyncDelegate valueFunction)
-        {
-            return actual.Returns((IInvocation invocation) =>
-            {
-                return new ValueTask<TValueTaskResult>(Task.Delay(delay).ContinueWith(t => InvokeFromInvocation(invocation, valueFunction)));
-            });
-        }
-
-        protected override IReturnsThrowsTypedTaskResult<TMock, ValueTask<TValueTaskResult>, TValueTaskResult, TCallbackDelegate, TReturnsDelegate, TReturnsAsyncDelegate> ReturnsThrowsTypedFactory(IReturnsThrows<TMock, ValueTask<TValueTaskResult>> returnsThrows, IThrowsAsync<TMock, TCallbackDelegate> throwsAsync)
-        {
-            return new ReturnsThrowsTypedTaskResult<TMock, ValueTask<TValueTaskResult>, TValueTaskResult, TCallbackDelegate, TReturnsDelegate, TReturnsAsyncDelegate>(returnsThrows, throwsAsync, this);
         }
     }
-    
 }
