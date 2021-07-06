@@ -75,7 +75,7 @@ namespace MoqProtectedSourceGenerator
             return propertyGetSet;
         }
 
-        private string GetNonIndexerFluentInterface(PropertyGetSet propertyGetSet)
+        private string InterfaceGetSetSuffix(PropertyGetSet propertyGetSet)
         {
             var suffix = "GetSet";
             switch (propertyGetSet)
@@ -88,7 +88,52 @@ namespace MoqProtectedSourceGenerator
                     break;
             }
 
-            return $"INonIndexerFluent{suffix}";
+            return suffix;
+        }
+
+        private (string fluentInterface, string fluentClass) GetNonIndexerFluentInterfaceAndClass(string mockedTypeName,string likeTypeName,PropertyGetSet propertyGetSet, string propertyType)
+        {
+            var interfaceGetSetSuffix = InterfaceGetSetSuffix(propertyGetSet);
+            if(propertyType == "Task")
+            {
+                return (
+                    $"INonIndexerFluent{interfaceGetSetSuffix}Task<{mockedTypeName}>",
+                    $"NonIndexerFluentGetSetTask<{mockedTypeName}, {likeTypeName}>"
+                );
+
+            }else if(propertyType == "ValueTask")
+            {
+                return (
+                    $"INonIndexerFluent{interfaceGetSetSuffix}ValueTask<{mockedTypeName}>",
+                    $"NonIndexerFluentGetSetValueTask<{mockedTypeName},{likeTypeName}>"
+                );
+
+            }
+            else if (propertyType.StartsWith("Task<"))
+            {
+                var resultType = TaskGenericHelper.ExtractResultType(propertyType);
+                return (
+                    $"INonIndexerFluent{interfaceGetSetSuffix}TaskResult<{mockedTypeName},{resultType}>",
+                    $"NonIndexerFluentGetSetTaskResult<{mockedTypeName},{likeTypeName},{resultType}>"
+                );
+
+
+            }
+            else if (propertyType.StartsWith("ValueTask<"))
+            {
+                var resultType = TaskGenericHelper.ExtractResultType(propertyType);
+                return (
+                    $"INonIndexerFluent{interfaceGetSetSuffix}ValueTaskResult<{mockedTypeName},{resultType}>",
+                    $"NonIndexerFluentGetSetValueTaskResult<{mockedTypeName},{likeTypeName},{resultType}>"
+                );
+            }
+            else
+            {
+                return (
+                    $"INonIndexerFluent{interfaceGetSetSuffix}<{mockedTypeName},{propertyType}>",
+                    $"NonIndexerFluentGetSet<{mockedTypeName},{likeTypeName},{propertyType}>"
+                );
+            }
         }
 
         private string GetSetupProperty(PropertyGetSet propertyGetSet, string propertyName)
@@ -127,23 +172,60 @@ namespace MoqProtectedSourceGenerator
         private string GetNonIndexerExtension(string mockedTypeName, string likeTypeName, PropertyGetSet propertyGetSet, string propertyType, string propertyName)
         {
             var (statements, variable) = GetSetupOrVerifyExpression(propertyGetSet, likeTypeName, propertyType, propertyName);
-            return @$"    public static {GetNonIndexerFluentInterface(propertyGetSet)}<{mockedTypeName},{propertyType}> {propertyName}(this ProtectedMock<{mockedTypeName}> protectedMock){{
+
+            var (fluentInterface, fluentClass) = GetNonIndexerFluentInterfaceAndClass(mockedTypeName, likeTypeName, propertyGetSet, propertyType);
+
+            return @$"    public static {fluentInterface} {propertyName}(this ProtectedMock<{mockedTypeName}> protectedMock){{
 {statements}
-        return new NonIndexerFluentGetSet<{mockedTypeName}, {likeTypeName}, {propertyType}>(protectedMock, {variable}, {GetSetupProperty(propertyGetSet, propertyName)});
+        return new {fluentClass}(protectedMock, {variable}, {GetSetupProperty(propertyGetSet, propertyName)});
     }}
 ";
         }
-        private string GetIndexerFluentTypeInterface(PropertyGetSet propertyGetSet)
+
+        private (string fluentInterface, string fluentClass) GetIndexerFluentInterfaceAndClass(string mockedTypeName, string likeTypeName, PropertyGetSet propertyGetSet, string propertyType,string types)
         {
-            var suffix = "GetSet";
-            if(propertyGetSet == PropertyGetSet.Get)
+            var interfaceGetSetSuffix = InterfaceGetSetSuffix(propertyGetSet);
+            if (propertyType == "Task")
             {
-                suffix = "Get";
-            }else if(propertyGetSet == PropertyGetSet.Set)
-            {
-                suffix = "Set";
+                return (
+                    $"IIndexerFluent{interfaceGetSetSuffix}Task<{mockedTypeName},  {types}>",
+                    $"IndexerFluentGetSetTask<{mockedTypeName}, {likeTypeName}, {types}>"
+                );
+
             }
-            return $"IIndexerFluent{suffix}";
+            else if (propertyType == "ValueTask")
+            {
+                return (
+                    $"IIndexerFluent{interfaceGetSetSuffix}ValueTask<{mockedTypeName},{types}>",
+                    $"IndexerFluentGetSetValueTask<{mockedTypeName}, {likeTypeName}, {types}>"
+                );
+
+            }
+            else if (propertyType.StartsWith("Task<"))
+            {
+                var resultType = TaskGenericHelper.ExtractResultType(propertyType);
+                return (
+                    $"IIndexerFluent{interfaceGetSetSuffix}TaskResult<{mockedTypeName}, {types}, {resultType}>",
+                    $"IndexerFluentGetSetTaskResult<{mockedTypeName}, {likeTypeName}, {types}, {resultType}>"
+                );
+
+
+            }
+            else if (propertyType.StartsWith("ValueTask<"))
+            {
+                var resultType = TaskGenericHelper.ExtractResultType(propertyType);
+                return (
+                    $"IIndexerFluent{interfaceGetSetSuffix}ValueTaskResult<{mockedTypeName}, {types}, {resultType}>",
+                    $"IndexerFluentGetSetValueTaskResult<{mockedTypeName}, {likeTypeName}, {types}, {resultType}>"
+                );
+            }
+            else
+            {
+                return (
+                    $"IIndexerFluent{interfaceGetSetSuffix}<{mockedTypeName},  {types},{propertyType}>",
+                    $"IndexerFluentGetSet<{mockedTypeName}, {likeTypeName}, {types}, {propertyType}>"
+                );
+            }
         }
 
         private (string types,string typeofs) TypeDetails(IEnumerable<string> types)
@@ -215,7 +297,6 @@ namespace MoqProtectedSourceGenerator
 
         private string GetIndexerExtension(string mockedTypeName, string likeTypeName, PropertyGetSet propertyGetSet, string propertyType, IPropertySymbol propertySymbol, AnalyzerConfigOptionsProvider analyzerConfigOptions,int? suffix)
         {
-            var indexerFluentTypeInterface = GetIndexerFluentTypeInterface(propertyGetSet);
             var propertyName = GetIndexerName(propertySymbol);
             var extensionMethodName = "Item";
             if (optionsProvider.IndexerExtensionNameFromIndexerNameAttribute(analyzerConfigOptions))
@@ -229,10 +310,13 @@ namespace MoqProtectedSourceGenerator
             var parameters = propertySymbol.Parameters;
 
             var (types, typeofs) = TypeDetails(parameters.Select(p => p.Type.Name));
+
+            var (fluentInterface, fluentClass) = GetIndexerFluentInterfaceAndClass(mockedTypeName, likeTypeName, propertyGetSet, propertyType, types);
+
             var (names, typesAndNames) = ParameterDetails(parameters);
             var expressions = GetExpressions(parameters);
             return @$"
-    public static {indexerFluentTypeInterface}<{mockedTypeName}, {types}, {propertyType}> {extensionMethodName}(this ProtectedMock<{mockedTypeName}> protectedMock)
+    public static {fluentInterface} {extensionMethodName}(this ProtectedMock<{mockedTypeName}> protectedMock)
     {{
         var likeParameter = Expression.Parameter(typeof({likeTypeName}));
 
@@ -269,15 +353,13 @@ namespace MoqProtectedSourceGenerator
             return GetSetUpOrVerifyExpressionBase<Func<{likeTypeName}, {propertyType}>>(sourceFileInfo, sourceLineNumber, matches, {names}, default({propertyType}),false);
         }}
 
-        return new IndexerFluentGetSet<{mockedTypeName},{likeTypeName}, {types}, {propertyType}>(protectedMock,GetGetterSetUpOrVerifyExpression,GetSetterSetUpOrVerifyExpression);
+        return new {fluentClass}(protectedMock,GetGetterSetUpOrVerifyExpression,GetSetterSetUpOrVerifyExpression);
     }}
 ";
         }
 
         private string GetIndexerName(IPropertySymbol propertySymbol)
         {
-            
-            
             var indexerNameAttribute = propertySymbol.GetAttributes().FirstOrDefault(a => a.AttributeClass != null && a.AttributeClass.FullyQualifiedTypeName() == "System.Runtime.CompilerServices.IndexerNameAttribute");
             if (indexerNameAttribute != null)
             {
@@ -299,7 +381,7 @@ namespace MoqProtectedSourceGenerator
                 var propertySymbol = property.Symbol;
 
                 var propertyName = propertySymbol.Name;
-                var propertyType = propertySymbol.Type.Name;
+                var propertyType = property.Declaration.Type.ToString();
                 var propertyGetSet = GetGetSet(propertySymbol);
                 string extensionMethod;
                 if (propertySymbol.IsIndexer)

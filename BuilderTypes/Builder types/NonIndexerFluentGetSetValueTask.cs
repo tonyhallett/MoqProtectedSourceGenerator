@@ -4,22 +4,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using MoqProtectedTyped;
+using System.Threading.Tasks;
 
 namespace MoqProtectedGenerated
 {
-    public class NonIndexerFluentGetSet<TMock, TLike, TProperty> : INonIndexerFluentGetSet<TMock, TProperty>
+    public class NonIndexerFluentGetSetValueTask<TMock, TLike> : INonIndexerFluentGetSetValueTask<TMock>
         where TMock : class
         where TLike : class
     {
-        private readonly Func<string, int, List<Match>, TProperty, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression;
-        private readonly Expression<Func<TLike, TProperty>> getter;
+        private readonly Func<string, int, List<Match>, ValueTask, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression;
+        private readonly Expression<Func<TLike, ValueTask>> getter;
         private readonly ProtectedMock<TMock> protectedMock;
         private readonly IProtectedAsMock<TMock, TLike> protectedLike;
 
-        public NonIndexerFluentGetSet(
+        public NonIndexerFluentGetSetValueTask(
             ProtectedMock<TMock> protectedMock,
-            Func<string, int, List<Match>, TProperty, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression,
-            Expression<Func<TLike, TProperty>> getter
+            Func<string, int, List<Match>, ValueTask, Expression<Action<TLike>>> setterGetSetUpOrVerifyExpression,
+            Expression<Func<TLike, ValueTask>> getter
             )
         {
             this.setterGetSetUpOrVerifyExpression = setterGetSetUpOrVerifyExpression;
@@ -29,12 +30,10 @@ namespace MoqProtectedGenerated
 
         }
 
-        public IGetterBuilder<TMock, TProperty> Get()
+        public IReturningBuilderValueTask<TMock, Action, Func<ValueTask>> Get()
         {
-            //should be able to create the getter by property name -  Expression<Func<TLike, TProperty>>
-
-            return new GetterBuilder<TMock, TProperty>(
-                (_, __) => protectedLike.SetupGet(getter),
+            return new ReturningBuilderValueTask<TMock, Action, Func<ValueTask>>(
+                (_, __) => new SetupTypedResultValueTask<TMock, Action, Func<ValueTask>>(protectedLike.Setup(getter)),
                 (_, __) => protectedLike.SetupSequence(getter),
                 (_, __, times, failMessage) =>
                 {
@@ -47,12 +46,12 @@ namespace MoqProtectedGenerated
                 });
         }
 
-        public ISetterBuilder<TMock, TProperty> Set(TProperty property)
+        public ISetterBuilder<TMock, ValueTask> Set(ValueTask property)
         {
             var matches = MatcherObserver.GetMatches();
-            return new SetterBuilder<TMock, TProperty>(
+            return new SetterBuilder<TMock, ValueTask>(
                 (sourceFileInfo, sourceLineNumber) =>
-                    new SetupTyped<TMock, Action<TProperty>>(
+                    new SetupTyped<TMock, Action<ValueTask>>(
                         protectedLike.Setup(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, property))
                     ),
                 (sourceFileInfo, sourceLineNumber) => protectedLike.SetupSequence(setterGetSetUpOrVerifyExpression(sourceFileInfo, sourceLineNumber, matches, property)),
@@ -60,7 +59,7 @@ namespace MoqProtectedGenerated
             );
         }
 
-        public ProtectedMock<TMock> SetupProperty(TProperty initialValue = default)
+        public ProtectedMock<TMock> SetupProperty(ValueTask initialValue = default)
         {
             protectedLike.SetupProperty(getter, initialValue);
             return protectedMock;

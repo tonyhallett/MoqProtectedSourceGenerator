@@ -3,7 +3,7 @@ using Moq.Language;
 
 namespace MoqProtectedGenerated
 {
-    public interface IGetterBuilder<T, TProperty> :
-            ISetupVerifyBuilder<ISetupGetter<T, TProperty>, ISetupSequentialResult<TProperty>> where T : class
+    public interface IGetterBuilder<TMock, TProperty> :
+            ISetupVerifyBuilder<ISetupGetter<TMock, TProperty>, ISetupSequentialResult<TProperty>> where TMock : class
     { }
 }

@@ -1,9 +1,10 @@
 ﻿namespace MoqProtectedGenerated
 {
-    public interface INonIndexerFluentGet<T, TProperty> where T : class
+    public interface INonIndexerFluentGet<TMock, TProperty> where TMock : class
     {
-        IGetterBuilder<T, TProperty> Get();
+        IGetterBuilder<TMock, TProperty> Get();
     }
+    
 }
 
 

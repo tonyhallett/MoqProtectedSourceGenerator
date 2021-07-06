@@ -13,7 +13,6 @@ using System.Linq;
 
 namespace ClassLibrary1
 {
-    
     public abstract class MyProtected
     {
         protected abstract void OutMethod(out int outInt);
@@ -120,6 +119,13 @@ namespace ClassLibrary1
         protected abstract string this[int key] { get;set; }
         [System.Runtime.CompilerServices.IndexerName("MyIndexer")]
         protected abstract string this[string key] { get; set; }
+        [System.Runtime.CompilerServices.IndexerName("MyIndexer")]
+        protected abstract Task<int> this[decimal key] { get; set; }
+
+        public Task<int> GetTaskIndex(decimal key)
+        {
+            return this[key];
+        }
         public string GetIndex(int key)
         {
             return this[key];
@@ -128,6 +134,19 @@ namespace ClassLibrary1
         {
             this[key] = value;
         }
+
+        protected abstract Task TaskProperty { get; set; }
+        public Task GetTaskProperty()
+        {
+            return TaskProperty;
+        }
+        protected abstract ValueTask ValueTaskProperty { get; set; }
+        protected abstract Task<int> TaskResultProperty { get; set; }
+        public Task<int> GetTaskResultProperty()
+        {
+            return TaskResultProperty;
+        }
+        protected abstract ValueTask<int> ValueTaskResultProperty { get; set; }
 
         protected abstract Task<int> TaskInt();
         protected abstract Task<string> TaskStringWithParameters(int p1, string p2);
@@ -461,12 +480,21 @@ namespace ClassLibrary1
 
 
             var taskMock = new ProtectedMock<MyProtected>();
+            var taskMocked = taskMock.Object;
             // new delays for Task
             taskMock.Task().Build().Setup().ReturnsAsync(TimeSpan.FromMilliseconds(10));
-            await taskMock.Object.InvokeTask();
+            await taskMocked.InvokeTask();
             // new delays for ValueTask
             taskMock.ValueTask().Build().Setup().ReturnsAsync(TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100));
-            await taskMock.Object.InvokeValueTask();
+            await taskMocked.InvokeValueTask();
+
+            var propertyGetInvoked = false;
+            taskMock.TaskProperty().Get().Build().Setup().ReturnsAsync(TimeSpan.FromMilliseconds(100)).Callback(() => propertyGetInvoked = true);
+            await taskMocked.GetTaskProperty();
+            Assert.True(propertyGetInvoked);
+            taskMock.TaskResultProperty().Get().Build().Setup().ThrowsAsync(new ExpectedException(), TimeSpan.FromMilliseconds(100));
+            Assert.ThrowsAsync<ExpectedException>(async () => await taskMocked.GetTaskResultProperty());
+
 
             var taskResultMock = new ProtectedMock<MyProtected>();
             var mockedTaskResult = taskResultMock.Object;
@@ -478,10 +506,13 @@ namespace ClassLibrary1
             Assert.AreEqual(1, await mockedTaskResult.InvokeTaskInt());
 
             taskResultMock.TaskStringWithParameters(1, It.IsAny<string>()).Build().Setup().ReturnsAsync((i, s) => s + i.ToString(), TimeSpan.FromSeconds(1));
-            var taskResult = taskResultMock.Object.InvokeTaskStringWithParameters(1, "Hello");
+            var taskResult = mockedTaskResult.InvokeTaskStringWithParameters(1, "Hello");
             Assert.True(!taskResult.IsCompleted);
             Assert.AreEqual("Hello1", await taskResult);
 
+            taskResultMock.Item_3().Get(1.1m).Build().Setup().ReturnsAsync(123);
+            var taskIndexResult = await mockedTaskResult.GetTaskIndex(1.1m);
+            Assert.AreEqual(123, taskIndexResult);
         }
         
     }

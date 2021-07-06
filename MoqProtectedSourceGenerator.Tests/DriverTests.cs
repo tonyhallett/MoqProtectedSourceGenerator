@@ -59,8 +59,8 @@ namespace ClassLibrary1
         //protected abstract string GenericNoConstraints<T>(T t);
         //protected abstract Task<int> TaskResult();
         //protected abstract Task Task();
-        protected abstract ValueTask<int> ValueTask();
-        // ValueTask - using ?
+        //protected abstract ValueTask<int> ValueTask();
+        protected abstract ValueTask<int> ValueTaskResultProperty { get; set; }
     }
     public class ExpectedException : Exception{}
     public class ConstraintClass{}
