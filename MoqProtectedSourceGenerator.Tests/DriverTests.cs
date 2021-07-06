@@ -32,61 +32,24 @@ using Moq;
 using Moq.Protected;
 using MoqProtectedTyped;
 using System;
+
 namespace ClassLibrary1
 {
-    public abstract class Duplicate
-    {
-        protected abstract string Dupe(int value);
-        public string Invoke(int value)
-        {
-            return Dupe(value);
-        }
-    }
     public abstract class MyProtected
     { 
-        //protected abstract void AbstractMethodArgs<T>(T t1, T t2);// where T:ConstraintClass;
-        //protected abstract void RefMethod(ref int refArg);
-        //protected abstract void RefGenericMethod<T>(ref T refArg);
-        //protected abstract void OutParameter(out int outInt);
-        
-        //[System.Runtime.CompilerServices.IndexerName(""MyIndexer"")]
-        //protected abstract string this[int key] {get;set;}
-
-        //protected abstract string GetSet {get;set;}
-
-        //protected abstract int ReturningMethodOutAndRef(out int arg1,int notRef, ref string arg2);
-        //protected abstract string ReturningMethodNoOutRef(int arg1, string arg2);
-        //protected abstract string GenericNoConstraints<T>(T t);
-        //protected abstract Task<int> TaskResult();
-        //protected abstract Task Task();
-        //protected abstract ValueTask<int> ValueTask();
-        protected abstract ValueTask<int> ValueTaskResultProperty { get; set; }
+        // add members
     }
-    public class ExpectedException : Exception{}
-    public class ConstraintClass{}
-    public class SubType1{}
-    public class SubType2{}
+   
     public class Test
     {
         public void Generate()
         {
             var mock = new ProtectedMock<MyProtected>();
-            //mock.OutParameter(     null).Build().Setup();
-            //mock.RefGenericMethod(ref It.Ref<It.IsSubtype<SubType2>>.IsAny).Build().Setup();
-            //mock.AbstractMethodArgs(1,It.IsAny<int>()).Build().Setup();
-            //mock.AbstractMethodArgs(Out.Param(1)).Build().Setup();
-            //mock.MyIndexer().Get(123).Build().Setup().Returns(""123"");
-            //mock.GetSet().Set(""throw"").Build().Setup().Throws(new ExpectedException());
+            // use generated extension methods
         }
-        
 
     }
-
-    public static class CustomMatchers{
-        public static int FromStatic(int equalTo){
-            return Match.Create<int>(value => value == equalTo);
-        }
-    }
+    
 }
 
 ";

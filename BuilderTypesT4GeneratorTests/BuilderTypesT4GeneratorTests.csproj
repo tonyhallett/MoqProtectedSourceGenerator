@@ -21,7 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BuilderTypesT4Generator\BuilderTypesT4Generator.csproj" />
-    <ProjectReference Include="..\BuilderTypes\BuilderTypes.csproj" />
   </ItemGroup>
 
 </Project>
