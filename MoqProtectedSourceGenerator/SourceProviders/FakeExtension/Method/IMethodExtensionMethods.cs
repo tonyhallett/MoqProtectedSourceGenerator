@@ -7,7 +7,7 @@ namespace MoqProtectedSourceGenerator
 {
     public interface IMethodExtensionMethods
     {
-        void Initialize(List<ProtectedLikeMethodDetail> Methods);
+        void Initialize(List<ProtectedLikeMethodDetail> methods);
         List<Diagnostic> Diagnostics { get; }
         List<(List<ArgumentInfo> argumentInfos, FileLocation fileLocation)> Setups { get; }
         Dictionary<string, SyntaxList<UsingDirectiveSyntax>> ExtensionsUsingsByFilePath { get; }

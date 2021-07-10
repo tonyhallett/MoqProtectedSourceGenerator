@@ -41,7 +41,7 @@ namespace MoqProtectedSourceGenerator
             {
                 foreach (var sourceProvider in TreeVisitors)
                 {
-                    if (visitedTree == false)
+                    if (!visitedTree)
                     {
                         sourceProvider.OnVisitTree(currentTree);
                     }

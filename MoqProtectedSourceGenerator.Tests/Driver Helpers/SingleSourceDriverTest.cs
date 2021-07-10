@@ -22,11 +22,9 @@ namespace MoqProtectedSourceGenerator.Tests
             var generatedSource = GetGeneratedSourceResult(inputCompilation, generator, hintName).SourceText.ToString();
             return generatedSource;
         }
-
-        public static void AssertEqualGeneratedSource(Compilation inputCompilation, ISourceGenerator generator, string hintName, string expectedSource, AssertEqualGeneratedSourceOptions options = default)
+        private static Exception AssertEqualAndCatch(string expectedSource, string generatedSource, AssertEqualGeneratedSourceOptions options)
         {
-            var generatedSource = GetGeneratedSource(inputCompilation, generator, hintName);
-            Exception throwException = null;
+            Exception thrownException = null;
             try
             {
                 // although https://github.com/xunit/xunit/issues/2133 https://github.com/xunit/xunit/issues/1931
@@ -45,27 +43,34 @@ namespace MoqProtectedSourceGenerator.Tests
             }
             catch (Exception exc)
             {
-                throwException = exc;
+                thrownException = exc;
             }
-
-            if (throwException != null)
+            return thrownException;
+        }
+        public static void AssertEqualGeneratedSource(Compilation inputCompilation, ISourceGenerator generator, string hintName, string expectedSource, AssertEqualGeneratedSourceOptions options = default)
+        {
+            var generatedSource = GetGeneratedSource(inputCompilation, generator, hintName);
+            Exception assertEqualException = AssertEqualAndCatch(expectedSource, generatedSource, options);
+            if (assertEqualException != null)
             {
                 if (!string.IsNullOrWhiteSpace(options.WriteToFileIfFails))
                 {
                     File.WriteAllText(options.WriteToFileIfFails, generatedSource);
                 }
 
-                throw throwException;
+                throw assertEqualException;
             }
             else
             {
-                if (!string.IsNullOrWhiteSpace(options.WriteToFileIfFails))
-                {
-                    if (File.Exists(options.WriteToFileIfFails))
-                    {
-                        File.Delete(options.WriteToFileIfFails);
-                    }
-                }
+                DeleteWriteToFileIfFails(options.WriteToFileIfFails);
+            }
+        }
+
+        private static void DeleteWriteToFileIfFails(string file)
+        {
+            if (!string.IsNullOrWhiteSpace(file) && File.Exists(file))
+            {
+                File.Delete(file);
             }
         }
 

@@ -4,17 +4,22 @@ namespace EndToEndTests
 {
     public static class DirectoryHelper
     {
+        private static void ThrowIfDoesNotExist(DirectoryInfo dir)
+        {
+            if (!dir.Exists)
+            {
+                throw new DirectoryNotFoundException(
+                    "Source directory does not exist or could not be found: "
+                    + dir.FullName);
+            }
+
+        }
         public static void DirectoryCopy(string sourceDirName, string destDirName, bool copySubDirs)
         {
             // Get the subdirectories for the specified directory.
             DirectoryInfo dir = new DirectoryInfo(sourceDirName);
 
-            if (!dir.Exists)
-            {
-                throw new DirectoryNotFoundException(
-                    "Source directory does not exist or could not be found: "
-                    + sourceDirName);
-            }
+            ThrowIfDoesNotExist(dir);
 
             DirectoryInfo[] dirs = dir.GetDirectories();
 

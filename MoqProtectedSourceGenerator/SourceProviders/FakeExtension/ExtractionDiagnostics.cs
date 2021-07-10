@@ -17,13 +17,13 @@ namespace MoqProtectedSourceGenerator
         {
             return Diagnostic.Create(
              new DiagnosticDescriptor(
-                 $"{IdPrefix}1", 
-                 BuildHasArgsMessage, 
-                 BuildHasArgsMessage, 
-                 Category, 
-                 DiagnosticSeverity.Error, 
-                 true, 
-                 BuildHasArgsMessage), 
+                 $"{IdPrefix}1",
+                 BuildHasArgsMessage,
+                 BuildHasArgsMessage,
+                 Category,
+                 DiagnosticSeverity.Error,
+                 true,
+                 BuildHasArgsMessage),
              buildLocation
             );
         }
@@ -32,13 +32,13 @@ namespace MoqProtectedSourceGenerator
         {
             return Diagnostic.Create(
                 new DiagnosticDescriptor(
-                    $"{IdPrefix}2", 
+                    $"{IdPrefix}2",
                     FluentNotCompletedMessage,
-                    FluentNotCompletedMessage, 
-                    Category, 
-                    DiagnosticSeverity.Error, 
+                    FluentNotCompletedMessage,
+                    Category,
+                    DiagnosticSeverity.Error,
                     true,
-                    FluentNotCompletedMessage), 
+                    FluentNotCompletedMessage),
                 buildLocation
             );
         }

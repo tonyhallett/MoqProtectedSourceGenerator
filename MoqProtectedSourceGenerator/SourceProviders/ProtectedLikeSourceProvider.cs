@@ -63,7 +63,7 @@ namespace MoqProtectedSourceGenerator
                 var protectedLike = kvp.Value;
                 var likeTypeName = protectedLike.MinimallyUniqueLikeTypeName();
                 var source = SourceHelper.Create(
-                        SourceHelper.CreateUsingsFromNamespaces(GetUniqueNamespaces(protectedLike)),
+                        SourceHelper.CreateDistinctUsingsFromNamespaces(GetUniqueNamespaces(protectedLike)),
                         SourceHelper.CreateInternalInterface(
                             likeTypeName,
                             SourceHelper.CreateMembers(protectedLike.Properties.Select(p => p.Declaration), protectedLike.Methods.Select(m => m.Declaration))

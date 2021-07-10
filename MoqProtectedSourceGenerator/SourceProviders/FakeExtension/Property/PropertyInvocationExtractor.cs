@@ -10,74 +10,90 @@ namespace MoqProtectedSourceGenerator
     {
         private static readonly List<string> SetupOrVerifyMethodNames = new() { "Setup", "SetupSequence", "Verify" };
         private readonly IExtractionDiagnostics extractionDiagnostics;
+        private PropertyInvocationExtraction propertyInvocationExtraction;
+        private SeparatedSyntaxList<ArgumentSyntax> getSetArgs = default;
+        private Location buildLocation = null;
 
         [ImportingConstructor]
         public PropertyInvocationExtractor(IExtractionDiagnostics extractionDiagnostics)
         {
             this.extractionDiagnostics = extractionDiagnostics;
         }
-        public PropertyInvocationExtraction Extract(InvocationExpressionSyntax invocationExpression)
+
+        private void GetSetOrSetPropertyMemberAccess(MemberAccessExpressionSyntax memberAccess)
         {
-            FileLocation fileLocation = null;
-            var parent = invocationExpression.Parent;
-            bool getOrSetMemberEncountered = false;
-            bool getOrSetInvocationEncountered = false;
-            SeparatedSyntaxList<ArgumentSyntax> getSetArgs = default;
-            if(parent is MemberAccessExpressionSyntax memberAccess)
+            var name = memberAccess.Name.ToString();
+            switch (name)
             {
-                var name = memberAccess.Name.ToString();
-                switch (name)
-                {
-                    case "Get":
-                    case "Set":
-                        getOrSetMemberEncountered = true;
-                        break;
-                    case "SetProperty":
-                        return new PropertyInvocationExtraction { Success = true };
-                    default:
-                        return new PropertyInvocationExtraction { Success = false };
-                }
+                case "Get":
+                case "Set":
+                    PossibleGetSetInvocation(memberAccess.Parent);
+                    break;
+                case "SetProperty":
+                    propertyInvocationExtraction = new PropertyInvocationExtraction { Success = true };
+                    break;
+                default:
+                    propertyInvocationExtraction = new PropertyInvocationExtraction { Success = false };
+                    break;
             }
-            if(!getOrSetMemberEncountered)
+        }
+        private void PossibleGetSetOrSetPropertyMemberAccess(SyntaxNode possibleMemberAccess)
+        {
+            if (possibleMemberAccess is MemberAccessExpressionSyntax memberAccess)
             {
-                return new PropertyInvocationExtraction { Success = false };
+                GetSetOrSetPropertyMemberAccess(memberAccess);
             }
-            parent = parent.Parent;
-            if(parent is InvocationExpressionSyntax getSetInvocation)
+
+            propertyInvocationExtraction = new PropertyInvocationExtraction { Success = false };
+
+        }
+
+        private void PossibleGetSetInvocation(SyntaxNode possibleInvocation)
+        {
+            if (possibleInvocation is InvocationExpressionSyntax getSetInvocation)
             {
-                getOrSetInvocationEncountered = true;
                 getSetArgs = getSetInvocation.ArgumentList.Arguments;
+                PossibleBuildMemberAccess(getSetInvocation.Parent);
             }
-            if (!getOrSetInvocationEncountered)
+            else
             {
-                return new PropertyInvocationExtraction { Success = false };
+                propertyInvocationExtraction = new PropertyInvocationExtraction { Success = false };
             }
-            parent = parent.Parent;
+        }
+
+        private void PossibleBuildMemberAccess(SyntaxNode possibleBuildMemberAccess)
+        {
             bool buildEncountered = false;
-            if(parent is MemberAccessExpressionSyntax buildMemberAccess)
+            if (possibleBuildMemberAccess is MemberAccessExpressionSyntax buildMemberAccess)
             {
                 var buildName = buildMemberAccess.Name.ToString();
-                if(buildName == "Build")
+                if (buildName == "Build")
                 {
                     buildEncountered = true;
                 }
             }
             if (!buildEncountered)
             {
-                return new PropertyInvocationExtraction { Success = false };
+                propertyInvocationExtraction = new PropertyInvocationExtraction { Success = false };
             }
-            parent = parent.Parent;
-            Location buildLocation = null;
-            if(parent is InvocationExpressionSyntax buildInvocation)
+            PossibleBuildInvocation(possibleBuildMemberAccess.Parent);
+        }
+
+        private void PossibleBuildInvocation(SyntaxNode possibleBuildInvocation)
+        {
+            FileLocation fileLocation = null;
+            if (possibleBuildInvocation is InvocationExpressionSyntax buildInvocation)
             {
                 buildLocation = buildInvocation.GetLocation();
                 var numArguments = buildInvocation.ArgumentList.Arguments.Count;
                 if (numArguments != 0)
                 {
-                    return new PropertyInvocationExtraction { 
+                    propertyInvocationExtraction = new PropertyInvocationExtraction
+                    {
                         Success = false,
                         Diagnostic = extractionDiagnostics.BuildHasArguments(buildLocation)
                     };
+                    return;
 
                 }
                 var textSpan = buildInvocation.ArgumentList.FullSpan;
@@ -88,25 +104,46 @@ namespace MoqProtectedSourceGenerator
                     FilePath = fileLinePositionSpan.Path
                 };
             }
-            if(fileLocation == null)
+            if (fileLocation == null)
             {
-                return new PropertyInvocationExtraction { Success = false };
+                propertyInvocationExtraction = new PropertyInvocationExtraction { Success = false };
             }
-            parent = parent.Parent;
-            if(parent is MemberAccessExpressionSyntax setUpOrVerify && SetupOrVerifyMethodNames.Contains(setUpOrVerify.Name.ToString()) && setUpOrVerify.Parent is InvocationExpressionSyntax)
+            else
             {
-                return new PropertyInvocationExtraction
+                PossibleSetupOrVerifyMemberAccess(possibleBuildInvocation.Parent, fileLocation);
+            }
+
+        }
+
+        private void PossibleSetupOrVerifyMemberAccess(SyntaxNode possibleSetupOrVerifyMemberAccess, FileLocation fileLocation)
+        {
+            if (
+                possibleSetupOrVerifyMemberAccess is MemberAccessExpressionSyntax setUpOrVerify &&
+                SetupOrVerifyMethodNames.Contains(setUpOrVerify.Name.ToString()) &&
+                setUpOrVerify.Parent is InvocationExpressionSyntax)
+            {
+                propertyInvocationExtraction = new PropertyInvocationExtraction
                 {
                     Success = true,
                     FileLocation = fileLocation,
                     ArgumentInfoArguments = getSetArgs
                 };
             }
-            return new PropertyInvocationExtraction
+            else
             {
-                Success = false,
-                Diagnostic = extractionDiagnostics.FluentNotCompleted(buildLocation)
-            };
+                propertyInvocationExtraction = new PropertyInvocationExtraction
+                {
+                    Success = false,
+                    Diagnostic = extractionDiagnostics.FluentNotCompleted(buildLocation)
+                };
+            }
+
+        }
+
+        public PropertyInvocationExtraction Extract(InvocationExpressionSyntax invocationExpression)
+        {
+            PossibleGetSetOrSetPropertyMemberAccess(invocationExpression.Parent);
+            return propertyInvocationExtraction;
         }
     }
 }

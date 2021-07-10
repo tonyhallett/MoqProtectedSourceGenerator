@@ -11,38 +11,76 @@ namespace MoqProtectedSourceGenerator
 
         public static void GetOption<T>(this AnalyzerConfigOptions analyzerConfigOptions, Option<T> option, OptionSearch optionSearch = OptionSearch.Both)
         {
+            analyzerConfigOptions = OverrideOptionsWithMockOptions(analyzerConfigOptions);
+            if (option.IsObject)
+            {
+                FindObjectOption(analyzerConfigOptions, option, optionSearch);
+            }
+            else
+            {
+                FindOption(analyzerConfigOptions, option, optionSearch);
+            }
+        }
+
+        private static AnalyzerConfigOptions OverrideOptionsWithMockOptions(AnalyzerConfigOptions analyzerConfigOptions)
+        {
             if (MockAnalyzerConfigOptions != null)
             {
                 analyzerConfigOptions = MockAnalyzerConfigOptions;
             }
-            if (option.IsObject)
-            {
-                T instance = Activator.CreateInstance<T>();
-                option.Value = instance;
-                var properties = typeof(T).GetProperties();
-                foreach (var property in properties)
-                {
-                    var propertyFinding = GetFinding(analyzerConfigOptions, option.Key + "_" + property.Name, property.PropertyType, optionSearch);
-                    option.Findings.Add(propertyFinding);
-                    if (propertyFinding.Converted)
-                    {
-                        property.SetValue(instance, propertyFinding.Value);
-                    }
-                }
+            return analyzerConfigOptions;
+        }
 
-            }
-            else
+        private static void FindObjectOption<T>(AnalyzerConfigOptions analyzerConfigOptions, Option<T> option, OptionSearch optionSearch)
+        {
+            T instance = Activator.CreateInstance<T>();
+            option.Value = instance;
+            var properties = typeof(T).GetProperties();
+            foreach (var property in properties)
             {
-                var finding = GetFinding(analyzerConfigOptions, option.Key, typeof(T), optionSearch);
-                option.Findings.Add(finding);
-                if (finding.Converted)
+                var propertyFinding = GetFinding(analyzerConfigOptions, option.Key + "_" + property.Name, property.PropertyType, optionSearch);
+                option.Findings.Add(propertyFinding);
+                if (propertyFinding.Converted)
                 {
-                    option.Value = (T)finding.Value;
+                    property.SetValue(instance, propertyFinding.Value);
                 }
+            }
+
+        }
+
+        private static void FindOption<T>(AnalyzerConfigOptions analyzerConfigOptions, Option<T> option, OptionSearch optionSearch)
+        {
+            var finding = GetFinding(analyzerConfigOptions, option.Key, typeof(T), optionSearch);
+            option.Findings.Add(finding);
+            if (finding.Converted)
+            {
+                option.Value = (T)finding.Value;
+            }
+        }
+
+        private static void ConvertFinding(Finding finding, Type toType)
+        {
+            var (converted, convertedValue) = ConvertValue(finding.Found, toType);
+            if (converted)
+            {
+                finding.Converted = true;
+                finding.Value = convertedValue;
             }
         }
 
         private static Finding GetFinding(AnalyzerConfigOptions analyzerConfigOptions, string key, Type toType, OptionSearch optionSearch)
+        {
+            var (found, value) = Find(analyzerConfigOptions, key, optionSearch);
+
+            var finding = new Finding { Found = value, Key = key };
+            if (found)
+            {
+                ConvertFinding(finding, toType);
+            }
+            return finding;
+        }
+
+        private static (bool found, string value) Find(AnalyzerConfigOptions analyzerConfigOptions, string key, OptionSearch optionSearch)
         {
             var msbuildKey = $"build_property.{key}";
             var firstSearchKey = optionSearch == OptionSearch.MSBuild ? msbuildKey : key;
@@ -51,17 +89,7 @@ namespace MoqProtectedSourceGenerator
             {
                 found = analyzerConfigOptions.TryGetValue(msbuildKey, out value);
             }
-            var finding = new Finding { Found = value, Key = key };
-            if (found)
-            {
-                var (converted, convertedValue) = ConvertValue(value, toType);
-                if (converted)
-                {
-                    finding.Converted = true;
-                    finding.Value = convertedValue;
-                }
-            }
-            return finding;
+            return (found, value);
         }
 
         private static (bool converted, object value) ConvertValue(string value, Type toType)

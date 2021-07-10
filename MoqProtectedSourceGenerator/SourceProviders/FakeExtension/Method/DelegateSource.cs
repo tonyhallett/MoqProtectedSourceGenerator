@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MoqProtectedSourceGenerator
 {
-    public enum RefOutNone { None, Ref, Out};
+    public enum RefOutNone { None, Ref, Out };
 
     [Export(typeof(IDelegateProvider))]
     [Export(typeof(IExecutingVisitingSourceProvider))]
@@ -19,7 +19,7 @@ namespace MoqProtectedSourceGenerator
         private const string Func = "Func";
         private const string Action = "Action";
         private GeneratorExecutionContext context;
-        
+
         public string GetDelegates(MethodDeclarationSyntax methodDeclaration)
         {
             if (methodDeclaration.ReturnTypeIsVoid())
@@ -37,11 +37,11 @@ namespace MoqProtectedSourceGenerator
             var parameters = methodDeclaration.ParameterList.Parameters;
             if (!AnyOutRefParameters(parameters))
             {
-                return GetActionAndFuncDelegates(parameters,methodDeclaration.ReturnType);
+                return GetActionAndFuncDelegates(parameters, methodDeclaration.ReturnType);
             }
             return GetRefOutCallbackAndReturnDelegates(parameters, methodDeclaration.ReturnType);
         }
-        
+
         private string GetCallbackDelegate(MethodDeclarationSyntax methodDeclaration)
         {
             var parameters = methodDeclaration.ParameterList.Parameters;
@@ -59,6 +59,43 @@ namespace MoqProtectedSourceGenerator
             return $"{callback},{returns}";
         }
 
+        private void CommaDelimit(bool isFirst, params StringBuilder[] stringBuilders)
+        {
+            if (!isFirst)
+            {
+                foreach (var stringBuilder in stringBuilders)
+                {
+                    stringBuilder.Append(",");
+                }
+            }
+        }
+
+        private void BuildFromParameters(
+            SeparatedSyntaxList<ParameterSyntax> parameters,
+            StringBuilder prefixBuilder,
+            StringBuilder genericDelegateTypeArgsBuilder,
+            StringBuilder closedDelegateTypeArgsBuilder,
+            StringBuilder genericDelegateSignatureBuilder)
+        {
+            var numParameters = parameters.Count;
+            for (var i = 0; i < numParameters; i++)
+            {
+                var parameter = parameters[i];
+                var refOutNone = GetRefOutNone(parameter);
+                DelegateName(prefixBuilder, i, refOutNone);
+                CommaDelimit(i == 0, genericDelegateSignatureBuilder, genericDelegateTypeArgsBuilder, closedDelegateTypeArgsBuilder);
+
+                genericDelegateTypeArgsBuilder.Append(GetTypeParameter(i));
+                closedDelegateTypeArgsBuilder.Append(parameter.Type.ToString());
+                genericDelegateSignatureBuilder.Append(GetParameter(i, refOutNone));
+            }
+        }
+
+        private string DelegateReturnType(bool isReturn)
+        {
+            return isReturn ? TResult : "void";
+        }
+
         private string GetRefOutCallbackOrReturn(SeparatedSyntaxList<ParameterSyntax> parameters, TypeSyntax returnType = null)
         {
             var isReturn = returnType != null;
@@ -67,39 +104,31 @@ namespace MoqProtectedSourceGenerator
             var genericDelegateTypeArgsBuilder = new StringBuilder("<");
             var closedDelegateTypeArgsBuilder = new StringBuilder("<");
             var genericDelegateSignatureBuilder = new StringBuilder("(");
-            var numParameters = parameters.Count;
-            for (var i = 0; i < numParameters; i++)
-            {
-                var parameter = parameters[i];
-                var refOutNone = GetRefOutNone(parameter);
-                DelegateName(prefixBuilder, i, refOutNone);
-                if (i != 0)
-                {
-                    genericDelegateTypeArgsBuilder.Append(",");
-                    closedDelegateTypeArgsBuilder.Append(",");
-                    genericDelegateSignatureBuilder.Append(",");
-                }
-                genericDelegateTypeArgsBuilder.Append(GetTypeParameter(i));
-                closedDelegateTypeArgsBuilder.Append(parameter.Type.ToString());
-                genericDelegateSignatureBuilder.Append(GetParameter(i, refOutNone));
-            }
+
+            BuildFromParameters(parameters, prefixBuilder, genericDelegateTypeArgsBuilder, closedDelegateTypeArgsBuilder, genericDelegateSignatureBuilder);
+
             var typeSuffix = isReturn ? $",{TResult}" : "";
             genericDelegateTypeArgsBuilder.Append($"{typeSuffix}>");
-            
+
             var closedTypeSuffix = isReturn ? $",{returnType}" : "";
             closedDelegateTypeArgsBuilder.Append($"{closedTypeSuffix}>");
-            
+
             genericDelegateSignatureBuilder.Append(");");
 
             var prefix = prefixBuilder.ToString();
-            var delegateReturnType = isReturn ? TResult : "void";
+            var delegateReturnType = DelegateReturnType(isReturn);
             var delegateType = $"    public delegate {delegateReturnType} {prefix}{genericDelegateTypeArgsBuilder}{genericDelegateSignatureBuilder}";
+            AddDelegateType(delegateType);
+            var closedGeneric = $"{prefix}{closedDelegateTypeArgsBuilder}";
+            return closedGeneric;
+        }
+
+        private void AddDelegateType(string delegateType)
+        {
             if (!delegates.Contains(delegateType))
             {
                 delegates.Add(delegateType);
             }
-            var closedGeneric = $"{prefix}{closedDelegateTypeArgsBuilder}";
-            return closedGeneric;
         }
 
         private string GetTypeParameter(int index)
@@ -155,11 +184,11 @@ namespace MoqProtectedSourceGenerator
             return refOutNone;
         }
 
-        private string GetActionAndFuncDelegates(SeparatedSyntaxList<ParameterSyntax> parameters,TypeSyntax returnType)
+        private string GetActionAndFuncDelegates(SeparatedSyntaxList<ParameterSyntax> parameters, TypeSyntax returnType)
         {
             var returnTypeString = returnType.ToString();
             var action = GetActionDelegate(parameters);
-            var func = GetFunc(parameters,returnTypeString);
+            var func = GetFunc(parameters, returnTypeString);
             var actionAndFuncDelegates = $"{action},{func}";
             if (returnTypeString.StartsWith("ValueTask<") || returnTypeString.StartsWith("Task<"))
             {
@@ -177,8 +206,8 @@ namespace MoqProtectedSourceGenerator
             }
             return func;
         }
-        
-        private string GetFuncOrActionWithParameters(SeparatedSyntaxList<ParameterSyntax> parameters,string delegateName, string beforeClosingBracket = "")
+
+        private string GetFuncOrActionWithParameters(SeparatedSyntaxList<ParameterSyntax> parameters, string delegateName, string beforeClosingBracket = "")
         {
             var actionBuilder = new StringBuilder($"{delegateName}<");
             for (var i = 0; i < parameters.Count; i++)
@@ -223,7 +252,7 @@ namespace MoqProtectedSourceGenerator
         public void AddSource()
         {
             var delegatesSourceBuilder = new StringBuilder();
-            foreach(var @delegate in delegates)
+            foreach (var @delegate in delegates)
             {
                 delegatesSourceBuilder.AppendLine(@delegate);
             }
@@ -232,10 +261,12 @@ namespace MoqProtectedSourceGenerator
 
         public void OnVisitTree(SyntaxTree syntaxTree)
         {
+            // Method intentionally left empty.
         }
 
         public void OnVisitSyntaxNode(SyntaxNode node)
         {
+            // Method intentionally left empty.
         }
     }
 

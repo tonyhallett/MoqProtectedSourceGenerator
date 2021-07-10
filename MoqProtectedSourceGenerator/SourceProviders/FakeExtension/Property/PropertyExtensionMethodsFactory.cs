@@ -22,7 +22,7 @@ namespace MoqProtectedSourceGenerator
         }
         public IPropertyExtensionMethods Create()
         {
-            return new PropertyExtensionMethods(propertyInvocationExtractor,argumentInfoExtractor,optionsProvider);
+            return new PropertyExtensionMethods(propertyInvocationExtractor, argumentInfoExtractor, optionsProvider);
         }
     }
 }

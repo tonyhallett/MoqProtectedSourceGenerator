@@ -49,7 +49,7 @@ namespace MoqProtectedSourceGenerator
             this.methods = methods;
         }
 
-        public string GetExtensionMethods(string mockedTypeName, string likeTypeName, AnalyzerConfigOptionsProvider _)
+        public string GetExtensionMethods(string mockedTypeName, string likeTypeName, AnalyzerConfigOptionsProvider analyzerConfigOptions)
         {
             var stringBuilder = new StringBuilder();
             var numMethods = methods.Count;
@@ -62,17 +62,12 @@ namespace MoqProtectedSourceGenerator
             return stringBuilder.ToString();
         }
 
-        private string GetExtensionMethod(string mockedTypeName, string likeTypeName, ProtectedLikeMethodDetail methodDetail, bool isLast)
+        private string ExpressionCallGenericTypes(IMethodSymbol methodSymbol)
         {
-            var expressionDelegate = ExpressionDelegate(likeTypeName, methodDetail.Declaration);
-            
-            var (methodBuilderClass,setupType) = GetSetupAndBuilderTypes(mockedTypeName, methodDetail.Declaration);
-            
-            var methodName = methodDetail.Declaration.Identifier.Text;
-            var genericTypeParameters = "";
-            if (methodDetail.Symbol.IsGenericMethod)
+            var expressionCallGenericTypesStringBuilder = new StringBuilder();
+            if (methodSymbol.IsGenericMethod)
             {
-                var typeParameters = methodDetail.Symbol.TypeParameters;
+                var typeParameters = methodSymbol.TypeParameters;
 
                 var count = 0;
                 var numGenericTypes = typeParameters.Length;
@@ -80,20 +75,31 @@ namespace MoqProtectedSourceGenerator
                 foreach (var parameter in typeParameters)
                 {
                     var typeName = parameter.Name;
-                    genericTypeParameters += $"typeof({typeName})";
+                    expressionCallGenericTypesStringBuilder.Append($"typeof({typeName})");
                     if (count != numGenericTypes - 1)
                     {
-                        genericTypeParameters += ", ";
+                        expressionCallGenericTypesStringBuilder.Append(", ");
                     }
                     count++;
                 }
             }
+            return expressionCallGenericTypesStringBuilder.ToString();
+        }
 
+        private string GetExtensionMethod(string mockedTypeName, string likeTypeName, ProtectedLikeMethodDetail methodDetail, bool isLast)
+        {
+            var expressionDelegate = ExpressionDelegate(likeTypeName, methodDetail.Declaration);
+
+            var (methodBuilderClass, setupType) = GetSetupAndBuilderTypes(mockedTypeName, methodDetail.Declaration);
+
+            var methodName = methodDetail.Declaration.Identifier.Text;
+
+            var expressionCallGenericTypes = ExpressionCallGenericTypes(methodDetail.Symbol);
 
             var (statements, expressionArrayVariable) = GetExpressionConstants(methodDetail.Symbol.Parameters);
 
             var extensionMethod =
-            $@"    {ExtensionMethodSignature(mockedTypeName, methodDetail.Declaration,methodBuilderClass)}
+            $@"    {ExtensionMethodSignature(mockedTypeName, methodDetail.Declaration, methodBuilderClass)}
     {{
         var mock = protectedMock.Mock;
         var protectedLike = mock.Protected().As<{likeTypeName}>();
@@ -106,7 +112,7 @@ namespace MoqProtectedSourceGenerator
         {{
             var argumentInfos = Setups[GetKey(sourceFileInfo, sourceLineNumber)];
 {statements}
-            var call = Expression.Call(likeParameter, ""{methodName}"", new Type[] {{ {genericTypeParameters} }}, {expressionArrayVariable});
+            var call = Expression.Call(likeParameter, ""{methodName}"", new Type[] {{ {expressionCallGenericTypes} }}, {expressionArrayVariable});
             return Expression.Lambda<{expressionDelegate}>(call, likeParameter);
         }}
 
@@ -124,12 +130,28 @@ namespace MoqProtectedSourceGenerator
             return extensionMethod;
         }
 
-        private (string statements, string expressionArrayVariable) GetExpressionConstants(ImmutableArray<IParameterSymbol> parameters)
+        private void AddExpressionArray(List<string> lines, int numParameters)
         {
-            var setupExpressionVariableName = "setupExpression";
-            var stringBuilder = new StringBuilder();
-            var lines = new List<string> { };
-            var count = 0;
+            if (numParameters == 0)
+            {
+                lines.Add("var expressionArgs = new Expression[]{};");
+            }
+            else
+            {
+                lines.Add("var expressionArgs = new Expression[]{");
+                for (var i = 0; i < numParameters; i++)
+                {
+                    var comma = i == numParameters - 1 ? "" : ",";
+                    lines.Add($"    expressionArg{i}{comma}");
+
+                }
+                lines.Add("};");
+            }
+        }
+
+        private bool AddExpressionsFromParameters(ImmutableArray<IParameterSymbol> parameters, List<string> lines, string setupExpressionVariableName)
+        {
+            var parameterIndex = 0;
             var addSetupExpressionStatement = false;
 
             foreach (var parameter in parameters)
@@ -138,47 +160,51 @@ namespace MoqProtectedSourceGenerator
                 var isRef = parameter.RefKind == RefKind.Ref;
                 if (isRef)
                 {
-                    lines.Add($"var expressionArg{count} = argumentInfos[{count}].RefAny;");
+                    lines.Add($"var expressionArg{parameterIndex} = argumentInfos[{parameterIndex}].RefAny;");
                 }
                 else
                 {
                     addSetupExpressionStatement = true;
                     var isOut = parameter.RefKind == RefKind.Out;
                     var value = isOut ? $"{parameterName} == null ? ({parameter.Type})default({parameter.Type}) : {parameterName}.Value" : $"({parameter.Type}){parameterName}";
-                    lines.Add($"var expressionArg{count} = {setupExpressionVariableName}.{setupExpressionArgument.MethodName}({value},argumentInfos[{count}]);");
+                    lines.Add($"var expressionArg{parameterIndex} = {setupExpressionVariableName}.{setupExpressionArgument.MethodName}({value},argumentInfos[{parameterIndex}]);");
                 }
 
-                count++;
+                parameterIndex++;
             }
-            if (count == 0)
-            {
-                lines.Add("var expressionArgs = new Expression[]{};");
-            }
-            else
-            {
-                lines.Add("var expressionArgs = new Expression[]{");
-                for (var i = 0; i < count; i++)
-                {
-                    var comma = i == count - 1 ? "" : ",";
-                    lines.Add($"    expressionArg{i}{comma}");
+            return addSetupExpressionStatement;
+        }
 
-                }
-                lines.Add("};");
-            }
+        private (string statements, string expressionArrayVariable) GetExpressionConstants(ImmutableArray<IParameterSymbol> parameters)
+        {
+            var setupExpressionVariableName = "setupExpression";
+
+            var lines = new List<string> { };
+            var addSetupExpressionStatement = AddExpressionsFromParameters(parameters, lines, setupExpressionVariableName);
+
+            
+            AddExpressionArray(lines, parameters.Length);
 
 
             var setupExpressionStatement = addSetupExpressionStatement ? $"var {setupExpressionVariableName} = new {setupExpressionArgument.ClassName}(matches);{Environment.NewLine}" : "";
             lines.Insert(0, setupExpressionStatement);
+
+
+            return (ExpressionStatementsToString(lines), "expressionArgs");
+        }
+
+        private string ExpressionStatementsToString(List<string> lines)
+        {
+            var stringBuilder = new StringBuilder();
             foreach (var line in lines)
             {
                 stringBuilder.Append("            ");
                 stringBuilder.AppendLine(line);
             }
-
-            return (stringBuilder.ToString(), "expressionArgs");
+            return stringBuilder.ToString();
         }
 
-        private string ExtensionMethodSignature(string mockedTypeName, MethodDeclarationSyntax methodDeclaration,string methodBuilderClass)
+        private string ExtensionMethodSignature(string mockedTypeName, MethodDeclarationSyntax methodDeclaration, string methodBuilderClass)
         {
             var extensionMethod = methodDeclaration.MakeExtension(protectedMock.GetClosedTypeName(mockedTypeName), "protectedMock")
                 .WithReturnType(SyntaxFactory.ParseTypeName($"I{methodBuilderClass}"))
@@ -235,19 +261,19 @@ namespace MoqProtectedSourceGenerator
             return (builderType, setupType);
         }
 
-        public void ExtensionInvocation(InvocationExpressionSyntax invocationExpression, string extensionName, SemanticModel semanticModel, AnalyzerConfigOptionsProvider _)
+        private (bool success, FileLocation fileLocation) Extract(InvocationExpressionSyntax invocationExpression)
         {
             var extraction = methodInvocationExtractor.Extract(invocationExpression);
             if (extraction.Diagnostic != null)
             {
                 Diagnostics.Add(extraction.Diagnostic);
             }
-            if (!extraction.Success)
-            {
-                return;
-            }
+            return (extraction.Success, extraction.FileLocation);
+        }
 
-            var arguments = invocationExpression.ArgumentList.Arguments;
+        private List<ArgumentInfo> ExtractArgumentInfos(SeparatedSyntaxList<ArgumentSyntax> arguments, SemanticModel semanticModel)
+        {
+            List<ArgumentInfo> argumentInfos = null;
             var argumentExtraction = argumentInfoExtractor.Extract(arguments, semanticModel);
             if (argumentExtraction.Diagnostics.Count > 0)
             {
@@ -255,21 +281,36 @@ namespace MoqProtectedSourceGenerator
             }
             else
             {
-                var argumentInfos = argumentExtraction.ArgumentInfos;
-                var extensionSyntaxTree = invocationExpression.SyntaxTree;
-                var hasRefParameters = methods.Where(m => m.Symbol.Name == extensionName).Any(m => m.Symbol.Parameters.Any((p => p.RefKind == RefKind.Ref)));
-                if (hasRefParameters)
+                argumentInfos = argumentExtraction.ArgumentInfos;
+            }
+            return argumentInfos;
+        }
+
+        public void ExtensionInvocation(InvocationExpressionSyntax invocationExpression, string extensionName, SemanticModel semanticModel, AnalyzerConfigOptionsProvider analyzerConfigOptions)
+        {
+            var (success, fileLocation) = Extract(invocationExpression);
+
+            if (success)
+            {
+                var argumentInfos = ExtractArgumentInfos(invocationExpression.ArgumentList.Arguments, semanticModel);
+                if (argumentInfos != null)
                 {
-                    if (!ExtensionsUsingsByFilePath.ContainsKey(extensionSyntaxTree.FilePath))
-                    {
-                        ExtensionsUsingsByFilePath.Add(extensionSyntaxTree.FilePath, extensionSyntaxTree.GetCompilationUnitRoot().Usings);
-                    }
+                    AddFileUsingsIfNecessary(invocationExpression, extensionName);
+
+                    Setups.Add((argumentInfos, fileLocation));
                 }
-
-                Setups.Add((argumentInfos, extraction.FileLocation));
-
             }
 
+        }
+
+        private void AddFileUsingsIfNecessary(InvocationExpressionSyntax invocationExpression, string extensionName)
+        {
+            var extensionSyntaxTree = invocationExpression.SyntaxTree;
+            var hasRefParameters = methods.Where(m => m.Symbol.Name == extensionName).Any(m => m.Symbol.Parameters.Any((p => p.RefKind == RefKind.Ref)));
+            if (hasRefParameters && !ExtensionsUsingsByFilePath.ContainsKey(extensionSyntaxTree.FilePath))
+            {
+                ExtensionsUsingsByFilePath.Add(extensionSyntaxTree.FilePath, extensionSyntaxTree.GetCompilationUnitRoot().Usings);
+            }
         }
     }
 }

@@ -21,12 +21,12 @@ namespace MoqProtectedSourceGenerator
             return GetOption<T>(optionsProvider.GlobalOptions, optionName, defaultValue);
         }
 
-        private T GetOption<T>(AnalyzerConfigOptions options,string optionName, T defaultValue)
+        private T GetOption<T>(AnalyzerConfigOptions options, string optionName, T defaultValue)
         {
-            var option= new Option<T> { Key = $"{nameof(MoqProtectedSourceGenerator)}_{optionName}", Value = defaultValue };
+            var option = new Option<T> { Key = $"{nameof(MoqProtectedSourceGenerator)}_{optionName}", Value = defaultValue };
             options.GetOption(option);
             return option.Value;
         }
-        
+
     }
 }

@@ -9,7 +9,6 @@ namespace MoqProtectedSourceGenerator
     [Generator]
     public class MoqProtectedSourceGenerator : ISourceGenerator
     {
-        private readonly CompositionContainer container;
         [Import]
         internal IMoqBlockingSyntaxTreesVisitors moqBlockingSyntaxTreesVisitors;
         [ImportMany]
@@ -20,7 +19,7 @@ namespace MoqProtectedSourceGenerator
         public MoqProtectedSourceGenerator()
         {
             AssemblyCatalog assemblyCatalog = new AssemblyCatalog(Assembly.GetExecutingAssembly());
-            container = new CompositionContainer(assemblyCatalog);
+            var container = new CompositionContainer(assemblyCatalog);
             container.SatisfyImportsOnce(this);
         }
 
@@ -48,13 +47,19 @@ namespace MoqProtectedSourceGenerator
 
         public void Initialize(GeneratorInitializationContext context)
         {
-            //#if DEBUG
-            //            if (!Debugger.IsAttached)
-            //            {
-            //                Debugger.Launch();
-            //            }
-            //#endif
+
+#pragma warning disable S125 // Sections of code should not be commented out
+            /*
+                            #if DEBUG
+                            if (!Debugger.IsAttached)
+                            {
+                                Debugger.Launch();
+                            }
+                            #endif
+                        */
+#pragma warning restore S125 // Sections of code should not be commented out
         }
+
 
     }
 }

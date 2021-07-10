@@ -8,13 +8,13 @@ namespace MoqProtectedSourceGenerator
 {
     public static class SourceHelper
     {
-        public static string CreateUsingsFromNamespaces(IEnumerable<INamespaceSymbol> namespaceSymbols)
+        public static string CreateDistinctUsingsFromNamespaces(IEnumerable<INamespaceSymbol> namespaceSymbols)
         {
-            var namespaces = namespaceSymbols.Select(ns => ns.FullNamespace()).OrderBy(s => s).Distinct();
-            return CreateUsingsFromNamespaces(namespaces);
+            var namespaces = namespaceSymbols.Select(ns => ns.FullNamespace()).OrderBy(s => s);
+            return CreateDistinctUsingsFromNamespaces(namespaces);
         }
 
-        public static string CreateUsingsFromNamespaces(IEnumerable<string> namespaces)
+        public static string CreateDistinctUsingsFromNamespaces(IEnumerable<string> namespaces)
         {
             namespaces = namespaces.OrderBy(s => s).Distinct();
             var usingsStringBuilder = new StringBuilder();

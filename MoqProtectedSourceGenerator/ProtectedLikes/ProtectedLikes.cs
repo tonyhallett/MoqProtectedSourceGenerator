@@ -59,6 +59,20 @@ namespace MoqProtectedSourceGenerator
             return null;
         }
 
+        private Accessors AccessorsForSingleAccessor(IMethodSymbol accessor)
+        {
+            return accessor.MethodKind == MethodKind.PropertyGet ? Accessors.Get : Accessors.Set;
+        }
+       
+        private ProtectedLikePropertyDetail GetProperty(IGrouping<ISymbol, IMethodSymbol> propertyGrouping)
+        {
+            var accessorMethods = propertyGrouping.ToList();
+            Accessors accessors = accessorMethods.Count == 2 ? Accessors.GetSet : AccessorsForSingleAccessor(accessorMethods[0]);
+
+            var propertySymbol = propertyGrouping.Key as IPropertySymbol;
+            return new ProtectedLikePropertyDetail(propertySymbol, accessors);
+        }
+
         private ProtectedLike Generate(ITypeSymbol mockedType, List<IMethodSymbol> applicableMockedTypeMethods)
         {
             var protectedLike = new ProtectedLike(this)
@@ -67,7 +81,6 @@ namespace MoqProtectedSourceGenerator
             };
 
             var grouped = applicableMockedTypeMethods.GroupBy(m => m.AssociatedSymbol, SymbolEqualityComparer.Default).ToList();
-            var types = new List<ITypeSymbol>();
             foreach (var group in grouped)
             {
                 if (group.Key == null)
@@ -76,11 +89,7 @@ namespace MoqProtectedSourceGenerator
                 }
                 else
                 {
-                    var accessorMethods = group.ToList();
-                    Accessors accessors = accessorMethods.Count == 2 ? Accessors.GetSet : accessorMethods[0].MethodKind == MethodKind.PropertyGet ? Accessors.Get : Accessors.Set;
-
-                    var propertySymbol = group.Key as IPropertySymbol;
-                    protectedLike.Properties.Add(new ProtectedLikePropertyDetail(propertySymbol, accessors));
+                    protectedLike.Properties.Add(GetProperty(group));
                 }
             }
             return protectedLike;

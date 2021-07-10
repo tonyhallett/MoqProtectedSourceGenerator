@@ -12,33 +12,58 @@ namespace MoqProtectedSourceGenerator
         private readonly IExtractionDiagnostics extractionDiagnostics;
         //todo - common code
         private static readonly List<string> SetupOrVerifyMethodNames = new() { "Setup", "SetupSequence", "Verify" };
+        private bool successfulBuild;
+        private Location buildLocation;
+        private readonly IStep<MethodStepContext>[] steps;
 
         [ImportingConstructor]
         public MethodInvocationExtractor(IExtractionDiagnostics extractionDiagnostics)
         {
             this.extractionDiagnostics = extractionDiagnostics;
+
+            var buildMemberAccessStep = new Step<MethodStepContext, MemberAccessExpressionSyntax>(BuildMemberAccessStep);
+
+            var buildInvocationAccessStep = new Step<MethodStepContext, InvocationExpressionSyntax>(BuildInvocationAccessStep);
+
+            var setupOrVerifyMemberAccessStep = new Step<MethodStepContext, MemberAccessExpressionSyntax>(SetupOrVerifyMemberAccessStep);
+
+            var setupOrVerifyInvocationAccessStep = new Step<MethodStepContext, InvocationExpressionSyntax>((context, invocation) => { });
+
+            steps = new IStep<MethodStepContext>[] { buildMemberAccessStep, buildInvocationAccessStep, setupOrVerifyMemberAccessStep, setupOrVerifyInvocationAccessStep };
+        }
+        private void Reset()
+        {
+            successfulBuild = false;
+            buildLocation = null;
         }
 
-        public MethodInvocationExtraction Extract(InvocationExpressionSyntax invocationExpression)
+        private void SetupOrVerifyMemberAccessStep(MethodStepContext context, MemberAccessExpressionSyntax memberAccess)
         {
-            var buildMemberAccessStep = new Step<MethodStepContext, MemberAccessExpressionSyntax>((context, memberAccess) =>
+            var invocationName = memberAccess.Name.ToFullString();
+            if (!SetupOrVerifyMethodNames.Contains(invocationName))
             {
-                if (memberAccess.Name.ToFullString() != "Build")
-                {
-                    context.State = StepContextState.Failed;
-                }
-            });
-            var successfulBuild = false;
-            Location buildLocation = null;
-            var buildInvocationAccessStep = new Step<MethodStepContext, InvocationExpressionSyntax>((context, invocation) =>
+                context.State = StepContextState.Failed;
+            }
+        }
+
+        private void BuildMemberAccessStep(MethodStepContext context, MemberAccessExpressionSyntax memberAccess)
+        {
+            if (memberAccess.Name.ToFullString() != "Build")
             {
-                buildLocation = invocation.GetLocation();
-                var numArguments = invocation.ArgumentList.Arguments.Count;
-                if (numArguments != 0)
-                {
-                    context.Diagnostic = extractionDiagnostics.BuildHasArguments(buildLocation);
-                    return;
-                }
+                context.State = StepContextState.Failed;
+            }
+        }
+
+        private void BuildInvocationAccessStep(MethodStepContext context, InvocationExpressionSyntax invocation)
+        {
+            buildLocation = invocation.GetLocation();
+            var numArguments = invocation.ArgumentList.Arguments.Count;
+            if (numArguments != 0)
+            {
+                context.Diagnostic = extractionDiagnostics.BuildHasArguments(buildLocation);
+            }
+            else
+            {
                 successfulBuild = true;
                 var textSpan = invocation.ArgumentList.FullSpan;
                 var fileLinePositionSpan = invocation.SyntaxTree.GetLineSpan(textSpan);
@@ -47,23 +72,16 @@ namespace MoqProtectedSourceGenerator
                     Line = fileLinePositionSpan.StartLinePosition.Line,
                     FilePath = fileLinePositionSpan.Path
                 };
-            });
+            }
 
-            var setUpOrVerifyMemberAccessStep = new Step<MethodStepContext, MemberAccessExpressionSyntax>((context, memberAccess) =>
-            {
-                var invocationName = memberAccess.Name.ToFullString();
-                if (!SetupOrVerifyMethodNames.Contains(invocationName))
-                {
-                    context.State = StepContextState.Failed;
-                }
-            });
+        }
 
-            var setUpOrVerifyInvocationAccessStep = new Step<MethodStepContext, InvocationExpressionSyntax>((context, invocation) =>
-            {
+        public MethodInvocationExtraction Extract(InvocationExpressionSyntax invocation)
+        {
+            Reset();
 
-            });
+            var methodStepContext = SyntaxNodeStepAscender.Execute(invocation, new MethodStepContext(), steps);
 
-            var methodStepContext = SyntaxNodeAscender.Execute(invocationExpression, new MethodStepContext(), buildMemberAccessStep, buildInvocationAccessStep, setUpOrVerifyMemberAccessStep, setUpOrVerifyInvocationAccessStep);
             if (successfulBuild && methodStepContext.State == StepContextState.Failed)
             {
                 methodStepContext.Diagnostic = extractionDiagnostics.FluentNotCompleted(buildLocation);

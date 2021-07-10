@@ -75,7 +75,7 @@ namespace MoqProtectedSourceGenerator
             var propertyExtensionMethodsSource = propertyExtensionMethods.GetExtensionMethods(mockedTypeName, likeTypeName, analyzerConfigOptions);
             var propertySetups = propertyExtensionMethods.Setups;
 
-            string usings = GetUsings(methodExtensionMethods.ExtensionsUsingsByFilePath,propertyExtensionMethods.Namespaces);
+            string usings = GetUsings(methodExtensionMethods.ExtensionsUsingsByFilePath, propertyExtensionMethods.Namespaces);
             var extensionClass = GetExtensionClass(className, methodSetups.Concat(propertySetups).ToList(), methodExtensionMethodsSource, propertyExtensionMethodsSource);
             var source = globalClassFromOptions.Get(usings, extensionClass, analyzerConfigOptions);
 
@@ -131,27 +131,40 @@ $@"public static class {className}
 {propertyExtensionMethods}}}";
         }
 
-        private string GetUsings(Dictionary<string, SyntaxList<UsingDirectiveSyntax>> extensionsUsingsByFilePath, List<string> propertyNamespaces)
+        private void AddExtensionUsingOrAlias(UsingDirectiveSyntax @using, List<string> aliases, List<string> usings)
+        {
+            var usingName = @using.Name.ToString();
+            var usingString = @using.ToString();
+            if (@using.Alias != null && !aliases.Contains(usingString))
+            {
+                aliases.Add(usingString);
+            }
+            else
+            {
+                usings.Add(usingName);
+            }
+        }
+
+        private (List<string> aliases, List<string> usings) ExtensionsUsingsAndAliases(Dictionary<string, SyntaxList<UsingDirectiveSyntax>> extensionsUsingsByFilePath)
         {
             List<string> aliases = new List<string>();
+            List<string> usings = new List<string>();
+
             foreach (var kvp in extensionsUsingsByFilePath)
             {
                 foreach (var @using in kvp.Value)
                 {
-                    var usingName = @using.Name.ToString();
-                    var alias = @using.Alias;
-                    if (alias != null)
-                    {
-                        aliases.Add(@using.ToString());
-                    }
-                    else
-                    {
-                        usings.Add(usingName);
-                    }
+                    AddExtensionUsingOrAlias(@using, aliases, usings);
                 }
             }
+            return (aliases, usings);
+        }
 
-            var regularUsings = SourceHelper.CreateUsingsFromNamespaces(usings.Concat(propertyNamespaces));
+        private string GetUsings(Dictionary<string, SyntaxList<UsingDirectiveSyntax>> extensionsUsingsByFilePath, List<string> propertyNamespaces)
+        {
+            var (aliases, extensionsUsings) = ExtensionsUsingsAndAliases(extensionsUsingsByFilePath);
+
+            var regularUsings = SourceHelper.CreateDistinctUsingsFromNamespaces(usings.Concat(propertyNamespaces).Concat(extensionsUsings));
 
             if (aliases.Count == 0)
             {

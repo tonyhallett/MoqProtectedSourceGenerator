@@ -500,7 +500,7 @@ namespace ClassLibrary1
             var mockedTaskResult = taskResultMock.Object;
 
             var invocationCount = 0;
-            Func<int> returner = () => invocationCount++;
+            int returner() => invocationCount++;
             taskResultMock.TaskInt().Build().Setup().ReturnsAsync(returner);
             Assert.AreEqual(0, await mockedTaskResult.InvokeTaskInt());
             Assert.AreEqual(1, await mockedTaskResult.InvokeTaskInt());

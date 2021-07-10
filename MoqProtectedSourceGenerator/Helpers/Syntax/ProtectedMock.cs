@@ -34,30 +34,53 @@ namespace MoqProtectedSourceGenerator
             return mockedType;
         }
 
+        private string GetExtensionName(MemberAccessExpressionSyntax extensionMemberAccess)
+        {
+            var extensionNamePossiblyWithTypes = extensionMemberAccess.Name.ToString();
+            var extensionName = extensionNamePossiblyWithTypes;
+            var leftIndex = extensionNamePossiblyWithTypes.IndexOf("<");
+            if (leftIndex != -1)
+            {
+                extensionName = extensionNamePossiblyWithTypes.Substring(0, leftIndex);
+            }
+            return extensionName;
+        }
+
+        private bool IsProtectedMock(ITypeSymbol possibleProtectedMock)
+        {
+            return possibleProtectedMock != null && possibleProtectedMock.Name == ProtectedMockTypeName;
+        }
+
+        private ITypeSymbol GetMockedType(MemberAccessExpressionSyntax extensionMemberAccess, SemanticModel semanticModel)
+        {
+            ITypeSymbol mockedType = null;
+            var mockType = semanticModel.GetTypeInfo(extensionMemberAccess.Expression).Type;
+            if (IsProtectedMock(mockType) && mockType is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsGenericType)
+            {
+                mockedType = namedTypeSymbol.TypeArguments[0];
+            }
+            return mockedType;
+        }
+
+        private IProtectedMockExtension FromExtensionMemberAccess(MemberAccessExpressionSyntax extensionMemberAccess, SemanticModel semanticModel)
+        {
+            var mockedType = GetMockedType(extensionMemberAccess, semanticModel);
+            if (mockedType != null)
+            {
+                return new ProtectedMockExtension
+                {
+                    MockedType = mockedType,
+                    ExtensionName = GetExtensionName(extensionMemberAccess)
+                };
+            }
+
+            return null;
+        }
         public IProtectedMockExtension ProtectedMockExtensionInvocation(InvocationExpressionSyntax invocationExpression, SemanticModel semanticModel)
         {
             if (invocationExpression.Expression is MemberAccessExpressionSyntax extensionMemberAccess)
             {
-                var mockType = semanticModel.GetTypeInfo(extensionMemberAccess.Expression).Type;
-                if (mockType != null && mockType.Name == ProtectedMockTypeName)
-                {
-                    if (mockType is INamedTypeSymbol namedTypeSymbol && namedTypeSymbol.IsGenericType)
-                    {
-                        var extensionNamePossiblyWithTypes = extensionMemberAccess.Name.ToString();
-                        var extensionName = extensionNamePossiblyWithTypes;
-                        var leftIndex = extensionNamePossiblyWithTypes.IndexOf("<");
-                        if (leftIndex != -1)
-                        {
-                            extensionName = extensionNamePossiblyWithTypes.Substring(0, leftIndex);
-                        }
-                        return new ProtectedMockExtension
-                        {
-                            MockedType = namedTypeSymbol.TypeArguments[0],
-                            ExtensionName = extensionName
-                        };
-
-                    }
-                }
+                return FromExtensionMemberAccess(extensionMemberAccess, semanticModel);
             }
             return null;
         }

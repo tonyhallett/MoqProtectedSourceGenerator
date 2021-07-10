@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text;
-
-namespace MoqProtectedSourceGenerator
+﻿namespace MoqProtectedSourceGenerator
 {
     public class VoidReturnTypeDetails : IReturnTypeDetails
     {
@@ -12,7 +9,7 @@ namespace MoqProtectedSourceGenerator
 
         public string MethodBuilderType(string mockedTypeName, string returnType, string delegates)
         {
-            return GetType("VoidBuilder",mockedTypeName,delegates);
+            return GetType("VoidBuilder", mockedTypeName, delegates);
         }
 
         public string SetupTyped(string mockedTypeName, string returnType, string delegates)
@@ -20,7 +17,7 @@ namespace MoqProtectedSourceGenerator
             return GetType("SetupTyped", mockedTypeName, delegates);
         }
 
-        private string GetType(string type,string mockedTypeName, string delegates)
+        private string GetType(string type, string mockedTypeName, string delegates)
         {
             return $"{type}<{mockedTypeName}, {delegates}>";
         }
