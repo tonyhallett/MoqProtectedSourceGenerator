@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -20,7 +19,7 @@
 
   <ItemGroup>
     <Reference Include="ProtectedDll">
-      <HintPath>..\ProtectedDll\bin\Debug\netstandard2.1\ProtectedDll.dll</HintPath>
+      <HintPath>..\ProtectedDll\bin\$(Configuration)\netstandard2.1\ProtectedDll.dll</HintPath>
     </Reference>
   </ItemGroup>
 

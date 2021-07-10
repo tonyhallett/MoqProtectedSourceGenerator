@@ -24,7 +24,7 @@
     <ResourceFile>$(MSBuildProjectDirectory)\builderTypes.resources</ResourceFile>
   </PropertyGroup>
   
-  <UsingTask TaskName="CreateResourceTask" AssemblyFile="$(MSBuildProjectDirectory)\..\BuilderTypesResourceTask\bin\Debug\netstandard2.0\BuilderTypesResourceTask.dll" />
+  <UsingTask TaskName="CreateResourceTask" AssemblyFile="$(MSBuildProjectDirectory)\..\BuilderTypesResourceTask\bin\$(Configuration)\netstandard2.0\BuilderTypesResourceTask.dll" />
   <Target Name="InvokeCustomTask" BeforeTargets="CoreCompile ">
     <Message Text="Creating resource file" />
     <CreateResourceTask ResourceFile="$(ResourceFile)" />
