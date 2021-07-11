@@ -13,7 +13,7 @@ namespace MoqProtectedSourceGenerator
 
         public bool IsGlobalExtensionClass(AnalyzerConfigOptionsProvider configOptionProvider)
         {
-            return GetGlobalOption(configOptionProvider, "_GlobalExtensions", true);
+            return GetGlobalOption(configOptionProvider, "GlobalExtensions", true);
         }
 
         private T GetGlobalOption<T>(AnalyzerConfigOptionsProvider optionsProvider, string optionName, T defaultValue)
