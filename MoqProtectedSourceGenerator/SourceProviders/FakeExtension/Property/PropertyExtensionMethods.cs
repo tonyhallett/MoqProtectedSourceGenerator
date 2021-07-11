@@ -223,7 +223,7 @@ namespace MoqProtectedSourceGenerator
             var statements = @$"        var likeParameter = Expression.Parameter(typeof({likeTypeName}));
         Expression<Action<{likeTypeName}>> GetSetUpOrVerifyExpression(string sourceFileInfo, int sourceLineNumber,List<Match> matches,{propertyType} propertyValue)
         {{
-            PropertyInfo property = typeof(MyProtectedLike).GetProperty(""{propertyName}"");
+            PropertyInfo property = typeof({likeTypeName}).GetProperty(""{propertyName}"");
             MethodInfo setMethod = property.GetSetMethod();
             var argumentInfos = Setups[GetKey(sourceFileInfo, sourceLineNumber)];
             var setupExpression = new SetupExpressionArgument(matches);
