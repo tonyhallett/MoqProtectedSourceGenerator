@@ -76,7 +76,7 @@ namespace MoqProtectedSourceGenerator
 
         private bool IsWrappedCustomMatcher(InvocationExpressionSyntax invocation)
         {
-            return invocation.ToFullString().StartsWith("CustomMatcher.Wrap");
+            return invocation.ToString().StartsWith("CustomMatcher.Wrap");
         }
 
         private bool IsItArgument(InvocationExpressionSyntax invocation)
@@ -84,7 +84,7 @@ namespace MoqProtectedSourceGenerator
             var isIt = false;
             if (invocation.Expression is MemberAccessExpressionSyntax memberAccess)
             {
-                isIt = memberAccess.Expression.ToFullString() == "It";
+                isIt = memberAccess.Expression.ToString() == "It";
             }
             return isIt;
         }

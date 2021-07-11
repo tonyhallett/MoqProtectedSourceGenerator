@@ -39,7 +39,7 @@ namespace MoqProtectedSourceGenerator
 
         private void SetupOrVerifyMemberAccessStep(MethodStepContext context, MemberAccessExpressionSyntax memberAccess)
         {
-            var invocationName = memberAccess.Name.ToFullString();
+            var invocationName = memberAccess.Name.ToString();
             if (!SetupOrVerifyMethodNames.Contains(invocationName))
             {
                 context.State = StepContextState.Failed;
@@ -48,7 +48,7 @@ namespace MoqProtectedSourceGenerator
 
         private void BuildMemberAccessStep(MethodStepContext context, MemberAccessExpressionSyntax memberAccess)
         {
-            if (memberAccess.Name.ToFullString() != "Build")
+            if (memberAccess.Name.ToString() != "Build")
             {
                 context.State = StepContextState.Failed;
             }
