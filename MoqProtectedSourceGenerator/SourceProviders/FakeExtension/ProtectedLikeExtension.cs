@@ -75,9 +75,9 @@ namespace MoqProtectedSourceGenerator
             var propertyExtensionMethodsSource = propertyExtensionMethods.GetExtensionMethods(mockedTypeName, likeTypeName, analyzerConfigOptions);
             var propertySetups = propertyExtensionMethods.Setups;
 
-            string usings = GetUsings(methodExtensionMethods.ExtensionsUsingsByFilePath, propertyExtensionMethods.Namespaces);
+            string combinedUsings = GetUsings(methodExtensionMethods.ExtensionsUsingsByFilePath, propertyExtensionMethods.Namespaces);
             var extensionClass = GetExtensionClass(className, methodSetups.Concat(propertySetups).ToList(), methodExtensionMethodsSource, propertyExtensionMethodsSource);
-            var source = globalClassFromOptions.Get(usings, extensionClass, analyzerConfigOptions);
+            var source = globalClassFromOptions.Get(combinedUsings, extensionClass, analyzerConfigOptions);
 
             return (source, className);
         }
@@ -148,16 +148,16 @@ $@"public static class {className}
         private (List<string> aliases, List<string> usings) ExtensionsUsingsAndAliases(Dictionary<string, SyntaxList<UsingDirectiveSyntax>> extensionsUsingsByFilePath)
         {
             List<string> aliases = new List<string>();
-            List<string> usings = new List<string>();
+            List<string> extensionUsings = new List<string>();
 
             foreach (var kvp in extensionsUsingsByFilePath)
             {
                 foreach (var @using in kvp.Value)
                 {
-                    AddExtensionUsingOrAlias(@using, aliases, usings);
+                    AddExtensionUsingOrAlias(@using, aliases, extensionUsings);
                 }
             }
-            return (aliases, usings);
+            return (aliases, extensionUsings);
         }
 
         private string GetUsings(Dictionary<string, SyntaxList<UsingDirectiveSyntax>> extensionsUsingsByFilePath, List<string> propertyNamespaces)
