@@ -43,9 +43,10 @@ namespace MoqProtectedSourceGenerator
             {
                 GetSetOrSetPropertyMemberAccess(memberAccess);
             }
-
-            propertyInvocationExtraction = new PropertyInvocationExtraction { Success = false };
-
+            else
+            {
+                propertyInvocationExtraction = new PropertyInvocationExtraction { Success = false };
+            }
         }
 
         private void PossibleGetSetInvocation(SyntaxNode possibleInvocation)
