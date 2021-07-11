@@ -33,7 +33,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoqProtectedTyped", "MoqPro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuilderTypesT4Generator", "BuilderTypesT4Generator\BuilderTypesT4Generator.csproj", "{E5FC6862-A1C6-4535-9EB6-BC69F6976FE6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuilderTypesT4GeneratorTests", "BuilderTypesT4GeneratorTests\BuilderTypesT4GeneratorTests.csproj", "{8E0527AE-B816-48F7-9486-6583489EF9E9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuilderTypesT4GeneratorTests", "BuilderTypesT4GeneratorTests\BuilderTypesT4GeneratorTests.csproj", "{8E0527AE-B816-48F7-9486-6583489EF9E9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BFDB1636-ACE2-4401-ACC3-54E6E43FB6BB}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
