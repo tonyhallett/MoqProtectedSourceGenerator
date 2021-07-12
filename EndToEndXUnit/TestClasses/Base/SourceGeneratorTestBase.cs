@@ -9,10 +9,12 @@ namespace EndToEndTests
     {
         protected bool debugOutputCompilation = false;
         protected abstract ISourceGenerator SourceGenerator { get; }
+        
         protected sealed override Compilation CreateCompilation()
         {
             return ExecuteGenerator();
         }
+        
         protected abstract Compilation CreateInputCompilation();
 
         private void DebugOutput(Compilation compilation)
@@ -28,6 +30,7 @@ namespace EndToEndTests
                 }
             }
         }
+        
         private Compilation ExecuteGenerator()
         {
             CreateDriver().RunGeneratorsAndUpdateCompilation(CreateInputCompilation(), out var outputCompilation, out var diagnostics);
