@@ -195,3 +195,134 @@ If you set the following option to false then you will need to add `using MoqPro
 <MoqProtectedSourceGenerator_GlobalExtensions>true</MoqProtectedSourceGenerator_GlobalExtensions>
 ```
 
+About this solution
+
+MoqProtectedTyped
+This contains the ProtectedMock class that is looked for in the syntax trees and that has extension methods created
+for the protected properties and methods.  It also contains the Out class for out parameters and the CustomMatcher class for wrapping custom matchers.
+The CustomMatcher is necessary for determination of arguments that are matchers.
+The MatcherObserver class is the core logic.  It is this class that facilitates working with Moq without expressions.
+It uses reflection ( and a knowledge of the internals of Moq ) to capture the Match objects created when using the `It` methods or custom matchers.
+The ProtectedMock constructor ensures that observation is in place before any of the extension methods are called.
+It is important that after `GetMatches()` is invoked a new Moq MatcherObserver is activated.  This is due to ThreadStatic.
+
+Some of the generated code has been prepared beforehand.
+The BuilderTypes project contains this code.  It also has a T4 template for generation of types with various numbers of generic parameters.
+String interpolation was not working and so the generation is performed in a separate assembly, BuilderTypesT4Generator.
+BuilderTypesT4GeneratorTests serve as a debugging mechanism for the T4 generator as visual studio is locking when debug the T4 template.  This project could be deleted now.
+
+The BuilderTypes are available to the source generator project, MoqProtectedSourceGenerator, through a custom msbuild task.
+```
+  <PropertyGroup>
+    <ResourceFile>$(MSBuildProjectDirectory)\builderTypes.resources</ResourceFile>
+  </PropertyGroup>
+
+  <UsingTask TaskName="CreateResourceTask" AssemblyFile="$(MSBuildProjectDirectory)\..\BuilderTypesResourceTask\bin\$(Configuration)\netstandard2.0\BuilderTypesResourceTask.dll" />
+  <Target Name="InvokeCustomTask" BeforeTargets="CoreCompile ">
+    <Message Text="Creating resource file" />
+    <CreateResourceTask ResourceFile="$(ResourceFile)" />
+  </Target>
+  <ItemGroup>
+    <EmbeddedResource Include="$(ResourceFile)">
+      <LogicalName>BuilderTypes</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+```
+The BuilderTypesResourceTask project's CreateResourceTask uses a `ResourceWriter`, adding a
+resource for each cs file containing the file contents.
+The BuilderTypesSource class from MoqProtectedSourceGenerator then reads the resources and adds them as source code.
+
+Tests
+
+The TestWithGenerator project is a "live" test project in that it uses the code generator.
+
+The project file has proprties for the two code generator options.
+```
+  <ItemGroup>
+    <ProjectReference Include="..\..\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <Import Project="..\..\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator\options.props" />
+  <PropertyGroup>
+    <MoqProtectedSourceGenerator_GlobalExtensions>true</MoqProtectedSourceGenerator_GlobalExtensions>
+    <MoqProtectedSourceGenerator_IndexerExtensionNameFromIndexerNameAttribute>false</MoqProtectedSourceGenerator_IndexerExtensionNameFromIndexerNameAttribute>
+  </PropertyGroup>
+
+```
+
+The ProtectedDll project is an assembly reference to demonstrate the code generator works equally well for protected types
+that there is no source code available.  It also includes a protected class with the same name to test that this is handled correct;y by the code generator.
+You can see the generated code by expanding Dependencies / Analyzers / MoqProtectedSourceGenerator / MoqProtectedSourceGenerator.
+
+EndToEndXUnit
+
+Although MoqProtectedSourceGenerator.Tests are perfect for testing that the code generator generates expected source code and diagnostics
+it does not mean that the generated extensions actually work.
+The TestWithGenerator project is one way of checking this, EndToEndXUnit is the other.
+EndToEndXUnit programmatically runs NUnit tests.  For this to work all test projects in the solution have to be XUnit.
+
+The following inheritance hierarchy is used for testing
+
+NUnitCompilationTestBase
+    SourceGeneratorTestBase
+        MoqProtectedSourceGeneratorTestBase
+            ... concrete test classes
+
+NUnitCompilationTestBase
+  
+Provides the `Test` method which does two things.
+Emits a compilation that should contain a single test method ( will fail test if there are any error diagnostics ) and copies dll to the emit folder.
+Runs the test and asserts that the test passed.
+( NUnitTestRunner sets up NUnit for dynamic tests deserializing the xml results to classes.)
+The following are abstract
+```
+protected abstract string EmitFolder { get; set; } 
+protected abstract void CopyDlls(string emitFolder);
+protected abstract Compilation CreateCompilation();
+```
+
+SourceGeneratorTestBase
+
+Overrides CreateCompilation to be applicable to source generators.
+The following are abstract
+```
+protected abstract ISourceGenerator SourceGenerator { get; }
+protected abstract Compilation CreateInputCompilation();
+```
+
+MoqProtectedSourceGeneratorTestBase
+
+Provides the source generator.
+Sets the EmitFolder to DynamicTests/*derivation-name* 
+Provides a base implementation of `CopyDlls(string emitFolder)`
+The project contains a dlls folder containing Moq and NUnit dlls.  These are copied to the emit folder.
+It provides the following for derivations
+`protected virtual void CopyAdditionalDlls(string emitFolder){}`
+
+Provides base implementation of `CreateInputCompilation`.
+This provides the necessary minimum MetadataReference objects allowing derivations to add more with
+`protected virtual IEnumerable<MetadataReference> AdditionalMetadataReferences()`
+
+**Most importantly derivations provide the test code with**
+
+`protected abstract string Source { get; }`
+
+Running Tests
+
+Derive from MoqProtectedSourceGeneratorTestBase
+Override source containing a single NUnit test.
+Create test method that calls `Test()`
+```
+
+        [Fact]
+        public void Execute()
+        {
+            Test();
+        }
+
+```
+If necessary override `AdditionalMetadataReferences` and `protected override void CopyAdditionalDlls(string emitFolder`
+
+
+
+    
+    
