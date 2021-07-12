@@ -8,21 +8,21 @@ namespace MoqProtectedTyped
 {
     public class MatcherObserver
     {
-        private static readonly Type matcherObserverType;
-        private static readonly MethodInfo activateMethod;
-        private static readonly MethodInfo getMatchesBetweenMethod;
-        private static readonly MethodInfo disposeMethod;
+        private static readonly Type matcherObserverType = typeof(Mock).Assembly.GetType("Moq.MatcherObserver");
+        private static readonly MethodInfo activateMethod = matcherObserverType.GetMethod("Activate", BindingFlags.Public | BindingFlags.Static);
+        private static readonly MethodInfo getMatchesBetweenMethod = matcherObserverType.GetMethod("GetMatchesBetween");
+        private static readonly MethodInfo disposeMethod = disposeMethod = matcherObserverType.GetMethod("Dispose");
         private readonly object matcherObserver;
 
         public static MatcherObserver Instance { get; private set; }
         
-        static MatcherObserver()
-        {
-            matcherObserverType = typeof(Mock).Assembly.GetType("Moq.MatcherObserver");
-            activateMethod = matcherObserverType.GetMethod("Activate", BindingFlags.Public | BindingFlags.Static);
-            getMatchesBetweenMethod = matcherObserverType.GetMethod("GetMatchesBetween");
-            disposeMethod = matcherObserverType.GetMethod("Dispose");
-        }
+        //static MatcherObserver()
+        //{
+        //    //matcherObserverType = typeof(Mock).Assembly.GetType("Moq.MatcherObserver");
+        //    //activateMethod = matcherObserverType.GetMethod("Activate", BindingFlags.Public | BindingFlags.Static);
+        //    //getMatchesBetweenMethod = matcherObserverType.GetMethod("GetMatchesBetween");
+        //   // disposeMethod = matcherObserverType.GetMethod("Dispose");
+        //}
 
         public MatcherObserver(object matcherObserver)
         {
@@ -48,7 +48,9 @@ namespace MoqProtectedTyped
             {
                 disposeMethod.Invoke(Instance.matcherObserver, new object[] { });
             }
-            catch { }
+            catch { 
+                // ignore exceptions
+            }
 
             Instance = Activate();
             return matches;

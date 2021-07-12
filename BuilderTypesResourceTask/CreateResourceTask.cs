@@ -15,7 +15,6 @@ namespace BuilderTypes
         public string ResourceFile { get; set; }
         public override bool Execute()
         {
-            //System.Diagnostics.Debugger.Launch();
             var solutionDirectory = new FileInfo(Assembly.GetExecutingAssembly().Location).Directory.Parent.Parent.Parent.Parent;
             var builderTypesFolder = Path.Combine(solutionDirectory.FullName, "BuilderTypes", "Builder types");
             var csFiles = Directory.GetFiles(builderTypesFolder,"*.cs",SearchOption.AllDirectories);

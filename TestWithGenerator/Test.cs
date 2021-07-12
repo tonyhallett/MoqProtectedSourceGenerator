@@ -110,7 +110,9 @@ namespace ClassLibrary1
             return GetOnly;
         }
 
+#pragma warning disable S2376 // Write-only properties should not be used
         protected abstract string SetOnly { set; }
+#pragma warning restore S2376 // Write-only properties should not be used
         public void SetSetOnly(string value)
         {
             SetOnly = value;
@@ -500,10 +502,10 @@ namespace ClassLibrary1
             var mockedTaskResult = taskResultMock.Object;
 
             var invocationCount = 0;
-            int returner() => invocationCount++;
+            int returner() => ++invocationCount;
             taskResultMock.TaskInt().Build().Setup().ReturnsAsync(returner);
-            Assert.AreEqual(0, await mockedTaskResult.InvokeTaskInt());
             Assert.AreEqual(1, await mockedTaskResult.InvokeTaskInt());
+            Assert.AreEqual(2, await mockedTaskResult.InvokeTaskInt());
 
             taskResultMock.TaskStringWithParameters(1, It.IsAny<string>()).Build().Setup().ReturnsAsync((i, s) => s + i.ToString(), TimeSpan.FromSeconds(1));
             var taskResult = mockedTaskResult.InvokeTaskStringWithParameters(1, "Hello");
