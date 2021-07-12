@@ -1,6 +1,6 @@
 ﻿<#@ template debug="false" hostspecific="false" language="C#" compilerOptions="/langversion:6" #>
 <#@ assembly name="System.Core" #>
-<#@ assembly name="$(SolutionDir)\BuilderTypesT4Generator\bin\Debug\netstandard2.0\BuilderTypesT4Generator.dll" #>
+<#@ assembly name="$(SolutionDir)\BuilderTypesT4Generator\bin\$(Configuration)\netstandard2.0\BuilderTypesT4Generator.dll" #>
 <#@ assembly name="netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
