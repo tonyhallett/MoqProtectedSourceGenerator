@@ -8,12 +8,13 @@ namespace EndToEndTests
 {
     public abstract class MoqProtectedSourceGeneratorTestBase : SourceGeneratorTestBase
     {
+        private readonly string outputDirectory;
         private const string MoqDll = "Moq.dll";
         protected abstract string Source { get; }
         protected sealed override string EmitFolder { get; set; }
-        protected override ISourceGenerator SourceGenerator => new MoqProtectedSourceGenerator.MoqProtectedSourceGenerator();
+        protected sealed override ISourceGenerator SourceGenerator => new MoqProtectedSourceGenerator.MoqProtectedSourceGenerator();
         
-        public MoqProtectedSourceGeneratorTestBase()
+        protected MoqProtectedSourceGeneratorTestBase()
         {
             var testName = this.GetType().Name;
 
@@ -29,12 +30,15 @@ namespace EndToEndTests
                 Directory.Delete(EmitFolder, true);
             }
 
+            outputDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            
         }
 
         protected sealed override void CopyDlls(string emitFolder)
         {
             NUnitCompilationHelper.CopyNunitFramework(emitFolder);
             CopyMoq(emitFolder);
+            CopyMoqProtectedTyped(emitFolder);
             CopyAdditionalDlls(emitFolder);
         }
 
@@ -44,16 +48,24 @@ namespace EndToEndTests
             DllsDirectory.CopyDllToDirectory(emitFolder, "Castle.Core.dll");
         }
 
+        private void CopyMoqProtectedTyped(string emitFolder)
+        {
+            FileHelper.CopyFileToDirectory(outputDirectory, emitFolder, "MoqProtectedTyped.dll");
+        }
+
         protected virtual void CopyAdditionalDlls(string emitFolder)
         {
 
         }
 
-        protected override Compilation CreateInputCompilation()
+        protected sealed override Compilation CreateInputCompilation()
         {
             var moqMetadataReference = MetadataReference.CreateFromFile(DllsDirectory.GetDllPath(MoqDll));
+            var moqProtectedTypedMetadataReference = MetadataReference.CreateFromFile(Path.Combine(outputDirectory, "MoqProtectedTyped.dll"));
             var linqExpressionsReference = MetadataReferenceHelper.CreateFromAssemblyLoad("System.Linq.Expressions, Version=4.2.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
-            var metadataReferences = new MetadataReference[] { moqMetadataReference, linqExpressionsReference }.Concat(AdditionalMetadataReferences()).ToArray();
+            var linqReference = MetadataReferenceHelper.CreateFromAssemblyLoad("System.Linq, Version=4.2.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+            var systemCollectionsReference = MetadataReferenceHelper.CreateFromAssemblyLoad("System.Collections, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+            var metadataReferences = new MetadataReference[] { moqMetadataReference, moqProtectedTypedMetadataReference, systemCollectionsReference,linqReference, linqExpressionsReference }.Concat(AdditionalMetadataReferences()).ToArray();
             return NUnitCompilationHelper.CreateCompilation(Source, metadataReferences);
         }
 

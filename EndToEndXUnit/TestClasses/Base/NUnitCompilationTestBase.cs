@@ -25,7 +25,7 @@ namespace EndToEndTests
         }
 
         // Cannot delete UnauthorizedAccessException - testhost.exe
-        protected abstract string EmitFolder { get; set; } 
+        protected abstract string EmitFolder { get; set; }
 
         public void Test()
         {
@@ -43,6 +43,11 @@ namespace EndToEndTests
             CopyDlls(EmitFolder);
         }
 
+        protected virtual void Log(string message)
+        {
+            Debug.WriteLine(message);
+        }
+
         private void Emit()
         {
             Compilation compilation = CreateCompilation();
@@ -50,27 +55,28 @@ namespace EndToEndTests
             var diagnostics = compilation.GetDiagnostics();
             if (diagnostics.Length > 0)
             {
-                GroupedDiagnosticLogger.LogDiagnostics("compilation", diagnostics);
+                GroupedDiagnosticLogger.LogDiagnostics("compilation", diagnostics,Log);
             }
 
             
-            AssertionHelpers.NoDiagnosticErrors(diagnostics);
+            AssertionHelpers.NoDiagnosticErrors(diagnostics, "Compilation has diagnostic errors");
 
             var emitResult = compilation.Emit(EmitDllPath);
             if (!emitResult.Success)
             {
-                GroupedDiagnosticLogger.LogDiagnostics("emit failure", emitResult.Diagnostics);
+                GroupedDiagnosticLogger.LogDiagnostics("emit failure", emitResult.Diagnostics, Log);
             }
 
             Assert.True(emitResult.Success, "Unsuccessful emit");
 
         }
 
-        private void LogTestReports(IEnumerable<string> reports)
+        private void LogTestReportsWhenTestSuiteNotPassed(IEnumerable<string> reports)
         {
+            Log("Test suite not passed.  Reports :");
             foreach (var report in reports)
             {
-                Debug.WriteLine(report);
+                Log(report);
             }
         }
 
@@ -85,7 +91,7 @@ namespace EndToEndTests
             Assert.True(testSuite.Total == 1, "Expected single test");
             if (testSuite.Passed != 1)
             {
-                LogTestReports(nunitTestRunner.Reports);
+                LogTestReportsWhenTestSuiteNotPassed(nunitTestRunner.Reports);
             }
             Assert.True(testSuite.Passed == 1, "Test failed");
         }

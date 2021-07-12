@@ -3,26 +3,36 @@ using System.IO;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace EndToEndTests
 {
-    public class MoqProtectedSourceGeneratorTest_No_Source : MoqProtectedSourceGeneratorTestBase
+    public class Should_Work_When_No_Source : MoqProtectedSourceGeneratorTestBase
     {
-        private readonly string projectDllDll;
+        private readonly string protectedDllPath;
         private readonly string outputFolder;
-        private const string ProjectDllDllName = "ProtectedDll.dll";
-        public MoqProtectedSourceGeneratorTest_No_Source()
+        private readonly ITestOutputHelper testOutputHelper;
+        private const string ProtectedDllDllName = "ProtectedDll.dll";
+        public Should_Work_When_No_Source(ITestOutputHelper testOutputHelper)
         {
             outputFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            projectDllDll = Path.Combine(outputFolder, ProjectDllDllName);
-            Assert.True(File.Exists(projectDllDll));
+            protectedDllPath = Path.Combine(outputFolder, ProtectedDllDllName);
+            Assert.True(File.Exists(protectedDllPath));
+            this.testOutputHelper = testOutputHelper;
         }
+
+        protected override void Log(string message)
+        {
+            testOutputHelper.WriteLine(message);
+        }
+        
         protected override string Source => @"
 using System;
 using IFace;
 using Moq;
 using NUnit.Framework;
 using OtherNamespace;
+using MoqProtectedTyped;
 
 namespace ClassLibrary1
 {
@@ -34,7 +44,7 @@ namespace ClassLibrary1
         [Test]
         public void Generate()
         {
-            var mockDll = new Mock<ProtectedDll.DllProtected>();
+            var mockDll = new ProtectedMock<ProtectedDll.DllProtected>();
             mockDll.ProtectedMethod(It.IsAny<Other>(), ""match"").Build().Setup().Throws(new ExpectedException());
 
             mockDll.Object.CallProtectedMethod(new Other(), ""not a match"");
@@ -49,13 +59,13 @@ namespace ClassLibrary1
 
         protected override IEnumerable<MetadataReference> AdditionalMetadataReferences()
         {
-            return new MetadataReference[] { MetadataReference.CreateFromFile(projectDllDll) };
+            return new MetadataReference[] { MetadataReference.CreateFromFile(protectedDllPath) };
 
         }
 
         protected override void CopyAdditionalDlls(string emitFolder)
         {
-            FileHelper.CopyFileToDirectory(outputFolder, emitFolder, ProjectDllDllName);
+            FileHelper.CopyFileToDirectory(outputFolder, emitFolder, ProtectedDllDllName);
         }
 
         [Fact]

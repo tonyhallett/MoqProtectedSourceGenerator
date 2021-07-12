@@ -7,7 +7,7 @@ namespace EndToEndTests
 {
     public abstract class SourceGeneratorTestBase : NUnitCompilationTestBase
     {
-        protected bool debugOutputCompilation = false;
+        protected bool logOutputCompilation = false;
         protected abstract ISourceGenerator SourceGenerator { get; }
         
         protected sealed override Compilation CreateCompilation()
@@ -17,16 +17,16 @@ namespace EndToEndTests
         
         protected abstract Compilation CreateInputCompilation();
 
-        private void DebugOutput(Compilation compilation)
+        private void LogOutputCompilation(Compilation compilation)
         {
-            if (debugOutputCompilation)
+            if (logOutputCompilation)
             {
                 foreach (var syntaxTree in compilation.SyntaxTrees)
                 {
-                    Debug.WriteLine(syntaxTree.FilePath);
-                    Debug.WriteLine("----------------------------");
-                    Debug.Write(syntaxTree.GetText().ToString());
-                    Debug.WriteLine("****************************");
+                    Log(syntaxTree.FilePath);
+                    Log("----------------------------");
+                    Log(syntaxTree.GetText().ToString());
+                    Log("****************************");
                 }
             }
         }
@@ -37,7 +37,7 @@ namespace EndToEndTests
 
             Assert.True(diagnostics.IsEmpty, "Generator has diagnostics");
 
-            DebugOutput(outputCompilation);
+            LogOutputCompilation(outputCompilation);
 
             return outputCompilation;
         }

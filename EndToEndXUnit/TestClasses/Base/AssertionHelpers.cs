@@ -6,9 +6,9 @@ namespace EndToEndTests
 {
     public static class AssertionHelpers
     {
-        public static void NoDiagnosticErrors(ImmutableArray<Diagnostic> diagnostics)
+        public static void NoDiagnosticErrors(ImmutableArray<Diagnostic> diagnostics,string message)
         {
-            Assert.True(diagnostics.NoErrors(), "Compilation has diagnostic errors");
+            Assert.True(diagnostics.NoErrors(), message);
         }
     }
 }
