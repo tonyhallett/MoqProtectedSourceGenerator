@@ -4,7 +4,7 @@ namespace BuilderTypesT4GeneratorTests
 {
     public class DebugGenerator
     {
-        [Fact]
+        //[Fact]
         public void Debug()
         {
             // just for debugging as vs locks when - Debug T4 Template
