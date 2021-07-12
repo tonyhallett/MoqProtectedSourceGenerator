@@ -5,7 +5,6 @@ using Moq.Language;
 namespace MoqProtectedGenerated
 {
     public interface ISetupTypedResultTaskNoReturn<TMock,TTask, TCallbackDelegate, TReturnsDelegate> :
-        IFluentInterface,
         IVerifies,
         IReturnsThrowsTypedTaskNoResult<TMock,TTask, TCallbackDelegate, TReturnsDelegate>,
         ISetupTypedCallback<

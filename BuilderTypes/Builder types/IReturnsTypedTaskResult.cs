@@ -4,7 +4,6 @@ using Moq;
 namespace MoqProtectedGenerated
 {
     public interface IReturnsTypedTaskResult<TMock, TResult, TTaskResult, TCallbackDelegate, TReturnsDelegate, TReturnsAsyncDelegate> :
-        IFluentInterface,
         IReturnsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate>,
         IReturnsAsyncTypedTaskResult<TMock, TTaskResult, TCallbackDelegate, TReturnsAsyncDelegate>
             where TMock : class

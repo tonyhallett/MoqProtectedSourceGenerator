@@ -4,7 +4,6 @@ using Moq;
 namespace MoqProtectedGenerated
 {
     public interface IReturnsThrowsTypedAsync<TMock, TResult, TCallbackDelegate, TReturnsDelegate> :
-        IFluentInterface,
         // removing IThrows
         IThrowsAsync<TMock, TCallbackDelegate>,
         IReturnsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate>

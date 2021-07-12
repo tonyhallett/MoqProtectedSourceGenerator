@@ -5,7 +5,7 @@ using Moq.Language;
 namespace MoqProtectedGenerated
 {
     public interface IReturnsResultTyped<TMock, TCallbackDelegate> :
-        ICallbackDelegate<TCallbackDelegate>, IFluentInterface, IOccurrence, IRaise<TMock>, IVerifies 
+        ICallbackDelegate<TCallbackDelegate>, IOccurrence, IRaise<TMock>, IVerifies 
         where TMock : class
         where TCallbackDelegate : Delegate
     { }

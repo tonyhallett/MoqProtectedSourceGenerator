@@ -5,7 +5,6 @@ using Moq.Language;
 namespace MoqProtectedGenerated
 {
     public interface IReturnsThrowsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate> : 
-        IFluentInterface, 
         IThrows, 
         IReturnsTyped<TMock, TResult, TCallbackDelegate, TReturnsDelegate>
         where TMock : class

@@ -10,7 +10,7 @@ namespace MoqProtectedGenerated
         where TCallbackDelegate : Delegate
         where TReturnsDelegate : Delegate
     {
-        public SetupTypedResultTaskNoResult(ISetup<TMock, TTask> actual) : base(actual) { }
+        protected SetupTypedResultTaskNoResult(ISetup<TMock, TTask> actual) : base(actual) { }
         
         public IReturnsResultTyped<TMock, TCallbackDelegate> ReturnsAsync(TimeSpan delay)
         {

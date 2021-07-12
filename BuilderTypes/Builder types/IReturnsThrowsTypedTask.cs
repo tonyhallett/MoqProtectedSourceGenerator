@@ -12,7 +12,6 @@ namespace MoqProtectedGenerated
     { }
 
     public interface IReturnsThrowsTypedTaskNoResult<TMock,TTask, TCallbackDelegate, TReturnsDelegate> :
-       IFluentInterface,
        IThrowsAsync<TMock, TCallbackDelegate>,
        IReturnsTypedTaskNoResult<TMock,TTask, TCallbackDelegate, TReturnsDelegate>
        where TMock : class

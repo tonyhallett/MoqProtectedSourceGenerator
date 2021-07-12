@@ -21,10 +21,10 @@ namespace MoqProtectedGenerated
             where TCallbackDelegate : Delegate
             where TReturnsDelegate : Delegate
     {
-        protected static readonly Random random = new Random();
+        protected readonly Random random = new Random();
         protected readonly ISetup<TMock, TResult> actual;
 
-        public SetupTypedResultAsync(
+        protected SetupTypedResultAsync(
             ISetup<TMock, TResult> actual 
         )
         {

@@ -18,14 +18,14 @@ namespace MoqProtectedGenerated
         }
 
         #region IOccurrence
-        [Obsolete]
+        [Obsolete("Obsolete in Moq")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public IVerifies AtMost(int callCount)
         {
             return actual.AtMost(callCount);
         }
 
-        [Obsolete]
+        [Obsolete("Obsolete in Moq")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public IVerifies AtMostOnce()
         {

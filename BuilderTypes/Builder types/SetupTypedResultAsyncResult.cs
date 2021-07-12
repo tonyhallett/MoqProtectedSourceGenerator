@@ -13,7 +13,7 @@ namespace MoqProtectedGenerated
         where TReturnsDelegate : Delegate
         where TReturnsAsyncDelegate : Delegate
     {
-        public SetupTypedResultAsyncResult(
+        protected SetupTypedResultAsyncResult(
             ISetup<TMock, TResult> actual
         ) : base(actual) { }
 
