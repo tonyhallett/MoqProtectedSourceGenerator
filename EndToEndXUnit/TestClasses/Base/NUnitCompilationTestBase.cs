@@ -66,7 +66,7 @@ namespace EndToEndTests
 
         }
 
-        private void LogTestReports(List<string> reports)
+        private void LogTestReports(IEnumerable<string> reports)
         {
             foreach (var report in reports)
             {
