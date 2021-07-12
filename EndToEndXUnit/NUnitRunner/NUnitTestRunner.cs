@@ -9,7 +9,7 @@ namespace EndToEndTests
         private string testAssemblyDirectory;
         private string testAssembly;
         private ReportCollector reportCollector;
-        public List<string> Reports { get; private set; }
+        public IEnumerable<string> Reports { get; private set; }
 
         public TestRun Run(string testAssembly)
         {

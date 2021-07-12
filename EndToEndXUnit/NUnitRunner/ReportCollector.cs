@@ -5,14 +5,15 @@ namespace EndToEndTests
 {
     public class ReportCollector : ITestEventListener
     {
-        public readonly List<string> Reports = new List<string>();
+        private readonly List<string> reports = new List<string>();
+        public IEnumerable<string> Reports => reports;
         /// <summary>
         /// Implementation of ITestEventListener.OnTestEvent method.
         /// </summary>
         /// <param name="report">The test event report.</param>
         public void OnTestEvent(string report)
         {
-            Reports.Add(report);
+            reports.Add(report);
         }
     }
 }
