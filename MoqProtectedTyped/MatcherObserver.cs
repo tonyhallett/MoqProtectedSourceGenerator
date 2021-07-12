@@ -16,14 +16,6 @@ namespace MoqProtectedTyped
 
         public static MatcherObserver Instance { get; private set; }
         
-        //static MatcherObserver()
-        //{
-        //    //matcherObserverType = typeof(Mock).Assembly.GetType("Moq.MatcherObserver");
-        //    //activateMethod = matcherObserverType.GetMethod("Activate", BindingFlags.Public | BindingFlags.Static);
-        //    //getMatchesBetweenMethod = matcherObserverType.GetMethod("GetMatchesBetween");
-        //   // disposeMethod = matcherObserverType.GetMethod("Dispose");
-        //}
-
         public MatcherObserver(object matcherObserver)
         {
             this.matcherObserver = matcherObserver;
