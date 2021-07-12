@@ -27,11 +27,13 @@ namespace MoqProtectedSourceGenerator.Tests
             Exception thrownException = null;
             try
             {
+#pragma warning disable S125 // Sections of code should not be commented out
                 // although https://github.com/xunit/xunit/issues/2133 https://github.com/xunit/xunit/issues/1931
                 // Assert.Equal(expectedSource, generatedSource, options.IgnoreLineEndingDifferences, options.IgnoreWhiteSpaceDifferences);
-
                 // for now
+#pragma warning restore S125 // Sections of code should not be commented out
                 if (options.IgnoreWhiteSpaceDifferences)
+
                 {
                     Assert.Equal(RemoveWhitespace(expectedSource), RemoveWhitespace(generatedSource));
                 }
