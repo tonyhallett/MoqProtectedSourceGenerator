@@ -13,8 +13,18 @@ using System.Linq;
 
 namespace ClassLibrary1
 {
+    public abstract class JustGeneric
+    {
+        protected abstract T GenericReturn<T>(T t);
+        public T InvokeGenericReturn<T>(T t)
+        {
+            return GenericReturn(t);
+        }
+    }
+    
     public abstract class MyProtected
     {
+        
         protected abstract void OutMethod(out int outInt);
         protected abstract void AbstractMethod();
 
@@ -163,6 +173,33 @@ namespace ClassLibrary1
             return TaskStringWithParameters(p1, p2);
         }
 
+        //protected abstract Task Task();
+        //public Task InvokeTask()
+        //{
+        //    return Task();
+        //}
+        //protected abstract ValueTask<int> ValueTaskResult();
+        //public ValueTask<int> InvokeValueTaskResult()
+        //{
+        //    return ValueTaskResult();
+        //}
+
+        //protected abstract ValueTask ValueTask();
+        //public ValueTask InvokeValueTask()
+        //{
+        //    return ValueTask();
+        //}
+    }
+
+    public abstract class AsyncProtected
+    {
+        protected abstract Task<int> TaskInt();
+        public Task<int> InvokeTaskInt()
+        {
+            return TaskInt();
+        }
+
+
         protected abstract Task Task();
         public Task InvokeTask()
         {
@@ -229,8 +266,12 @@ namespace ClassLibrary1
         [Test]
         public async Task Generate()
         {
-            var mock = new ProtectedMock<MyProtected>();
+            var mockJustGeneric = new ProtectedMock<JustGeneric>();
+            mockJustGeneric.GenericReturn(1).Build().Setup().Returns(v => v + 1);
+            Assert.AreEqual(2, mockJustGeneric.Object.InvokeGenericReturn(1));
 
+            var mock = new ProtectedMock<MyProtected>();
+            
             mock.Overloaded(999).Build().Setup().Returns("999");
             Assert.AreEqual("999", mock.Object.InvokeOverloaded(999));
 
@@ -466,7 +507,7 @@ namespace ClassLibrary1
             Assert.AreEqual("0", mockedReturn.GetIndex(0));
             Assert.AreEqual("1", mockedReturn.GetIndex(1));
 
-            var asyncMock = new ProtectedMock<MyProtected>();
+            var asyncMock = new ProtectedMock<AsyncProtected>();
             var asyncMocked = asyncMock.Object;
             //taskResultMock.TaskInt().Build().Setup().Throws() - no Throws !
             asyncMock.TaskInt().Build().Setup().ThrowsAsync<ExpectedException>();
@@ -481,7 +522,7 @@ namespace ClassLibrary1
             Assert.ThrowsAsync<ExpectedException>(async () => await asyncMocked.InvokeValueTask());
 
 
-            var taskMock = new ProtectedMock<MyProtected>();
+            var taskMock = new ProtectedMock<AsyncProtected>();
             var taskMocked = taskMock.Object;
             // new delays for Task
             taskMock.Task().Build().Setup().ReturnsAsync(TimeSpan.FromMilliseconds(10));
@@ -490,12 +531,12 @@ namespace ClassLibrary1
             taskMock.ValueTask().Build().Setup().ReturnsAsync(TimeSpan.FromMilliseconds(10), TimeSpan.FromMilliseconds(100));
             await taskMocked.InvokeValueTask();
 
-            var propertyGetInvoked = false;
-            taskMock.TaskProperty().Get().Build().Setup().ReturnsAsync(TimeSpan.FromMilliseconds(100)).Callback(() => propertyGetInvoked = true);
-            await taskMocked.GetTaskProperty();
-            Assert.True(propertyGetInvoked);
-            taskMock.TaskResultProperty().Get().Build().Setup().ThrowsAsync(new ExpectedException(), TimeSpan.FromMilliseconds(100));
-            Assert.ThrowsAsync<ExpectedException>(async () => await taskMocked.GetTaskResultProperty());
+            //var propertyGetInvoked = false;
+            //taskMock.TaskProperty().Get().Build().Setup().ReturnsAsync(TimeSpan.FromMilliseconds(100)).Callback(() => propertyGetInvoked = true);
+            //await taskMocked.GetTaskProperty();
+            //Assert.True(propertyGetInvoked);
+            //taskMock.TaskResultProperty().Get().Build().Setup().ThrowsAsync(new ExpectedException(), TimeSpan.FromMilliseconds(100));
+            //Assert.ThrowsAsync<ExpectedException>(async () => await taskMocked.GetTaskResultProperty());
 
 
             var taskResultMock = new ProtectedMock<MyProtected>();

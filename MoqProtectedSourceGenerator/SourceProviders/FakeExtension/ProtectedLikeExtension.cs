@@ -12,6 +12,7 @@ namespace MoqProtectedSourceGenerator
         private readonly List<Diagnostic> diagnostics = new();
         private static readonly List<string> defaultUsings = new()
         {
+            "System",
             "System.Collections.Generic",
             "System.Linq.Expressions",
             "Moq",

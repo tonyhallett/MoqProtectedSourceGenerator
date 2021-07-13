@@ -76,7 +76,7 @@ namespace MoqProtectedSourceGenerator
 
         private bool IsWrappedCustomMatcher(InvocationExpressionSyntax invocation)
         {
-            return invocation.ToString().StartsWith("CustomMatcher.Wrap");
+            return invocation.NormalizeWhitespace().ToString().StartsWith("CustomMatcher.Wrap");
         }
 
         private bool IsItArgument(InvocationExpressionSyntax invocation)

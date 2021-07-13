@@ -279,7 +279,9 @@ protected abstract string EmitFolder { get; set; }
 protected abstract void CopyDlls(string emitFolder);
 protected abstract Compilation CreateCompilation();
 ```
-
+It also provides the virtual Log method.  The default logs `Debug.WriteLine`.  The individual test classes can override to use XUnit's `ITestOutputHelper` to receive logging information 
+in the Test Detail Summary window.
+Unfortunately ITestOutputHelper is only available as a constructor argument currently.
 SourceGeneratorTestBase
 
 Overrides CreateCompilation to be applicable to source generators.
