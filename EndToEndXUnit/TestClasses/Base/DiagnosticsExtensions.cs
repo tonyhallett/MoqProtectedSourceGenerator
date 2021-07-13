@@ -6,10 +6,9 @@ namespace EndToEndTests
 {
     public static class DiagnosticsExtensions
     {
-
         public static bool NoErrors(this ImmutableArray<Diagnostic> diagnostics)
         {
-            return diagnostics.Count(d => d.Severity == DiagnosticSeverity.Error) == 0;
+            return diagnostics.All(d => d.Severity != DiagnosticSeverity.Error);
         }
     }
 }

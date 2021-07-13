@@ -35,9 +35,16 @@ namespace EndToEndTests
         {
             CreateDriver().RunGeneratorsAndUpdateCompilation(CreateInputCompilation(), out var outputCompilation, out var diagnostics);
 
+            LogOutputCompilation(outputCompilation);
+
+            if (diagnostics.Length > 0)
+            {
+                GroupedDiagnosticLogger.LogDiagnostics("generator diagnostics", diagnostics, Log);
+            }
+
             Assert.True(diagnostics.IsEmpty, "Generator has diagnostics");
 
-            LogOutputCompilation(outputCompilation);
+            
 
             return outputCompilation;
         }

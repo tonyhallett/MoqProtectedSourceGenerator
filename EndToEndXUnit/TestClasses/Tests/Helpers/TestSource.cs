@@ -28,7 +28,10 @@ namespace ClassLibrary1
 {myProtectedMembers}
     }}
 
-    public class ExpectedException : Exception {{ }}
+    public class ExpectedException : Exception {{ 
+        public ExpectedException(){{}}
+        public ExpectedException(string message):base(message){{}}
+    }}
 
     public class Test
     {{
