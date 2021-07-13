@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Moq;
 
 namespace MoqProtectedGenerated
 {
@@ -9,13 +8,5 @@ namespace MoqProtectedGenerated
         where TMock : class
         where TCallbackDelegate : Delegate
         where TReturnsDelegate : Delegate
-    { }
-
-    public interface IReturnsThrowsTypedTaskNoResult<TMock,TTask, TCallbackDelegate, TReturnsDelegate> :
-       IThrowsAsync<TMock, TCallbackDelegate>,
-       IReturnsTypedTaskNoResult<TMock,TTask, TCallbackDelegate, TReturnsDelegate>
-       where TMock : class
-       where TCallbackDelegate : Delegate
-       where TReturnsDelegate : Delegate
     { }
 }

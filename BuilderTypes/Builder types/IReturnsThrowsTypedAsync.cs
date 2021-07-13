@@ -1,5 +1,4 @@
 ﻿using System;
-using Moq;
 
 namespace MoqProtectedGenerated
 {

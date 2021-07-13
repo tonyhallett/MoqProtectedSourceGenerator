@@ -1,5 +1,4 @@
-﻿using Moq;
-using Moq.Language;
+﻿using Moq.Language;
 
 namespace MoqProtectedGenerated
 {

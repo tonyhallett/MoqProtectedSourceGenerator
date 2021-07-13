@@ -1,5 +1,4 @@
 ﻿using System;
-using Moq;
 using Moq.Language;
 
 namespace MoqProtectedGenerated
