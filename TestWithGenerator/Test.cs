@@ -560,6 +560,8 @@ namespace ClassLibrary1
             taskResultMock.Item().Get(1.1m).Build().Setup().ReturnsAsync(123);
             var taskIndexResult = await mockedTaskResult.GetTaskIndex(1.1m);
             Assert.AreEqual(123, taskIndexResult);
+            
+            
         }
         
     }

@@ -83,7 +83,7 @@ namespace EndToEndTests
 
         protected override IEnumerable<MetadataReference> AdditionalMetadataReferences()
         {
-            return new MetadataReference[] { MetadataReferenceHelper.CreateFromAssemblyLoad("Microsoft.CSharp") };
+            return DynamicKeywordMetadataReference.Single;
         }
 
         [Fact]
