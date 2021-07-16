@@ -9,7 +9,8 @@ namespace EndToEndTests
 
         protected override string Source => TestSource.ProtectedInSource(
             @"
-    public event EventHandler AnEvent;
+    // has to be virtual !
+    public virtual event EventHandler AnEvent;
     protected abstract int GetSet {get;set;}
     public void SetGetSet(int value){
         GetSet = value;
@@ -48,6 +49,14 @@ namespace EndToEndTests
     IInvocation invocation = null;
     InvocationAction invocationAction = new InvocationAction(_invocation => invocation = _invocation);
     mock.GetSet().Set(1).Build().Setup().Callback(invocationAction);
+    mocked.SetGetSet(1);
+    Assert.AreEqual(""set_GetSet"", invocation.Method.Name);
+
+    var eventRaised = false;
+    mock.GetSet().Set(2).Build().Setup().Raises(m => m.AnEvent += null, EventArgs.Empty);
+    mock.Object.AnEvent += (object sender, EventArgs args) => eventRaised = true;
+    mocked.SetGetSet(2);
+    Assert.True(eventRaised);
 ");
 
         public Setup_Should_Support_Properties(ITestOutputHelper testOutputHelper)
