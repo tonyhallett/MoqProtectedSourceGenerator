@@ -15,15 +15,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\ProtectedDll\ProtectedDll.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="ProtectedDll">
-      <HintPath>..\ProtectedDll\bin\Debug\netstandard2.1\ProtectedDll.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+  
 
-  <Import Project="..\..\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator\options.props"/>
+  <Import Project="..\..\MoqProtectedSourceGenerator\MoqProtectedSourceGenerator\options.props" />
   <PropertyGroup>
     <MoqProtectedSourceGenerator_GlobalExtensions>true</MoqProtectedSourceGenerator_GlobalExtensions>
   </PropertyGroup>

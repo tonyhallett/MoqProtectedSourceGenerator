@@ -6,10 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="ISetupVerify.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis" Version="3.9.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2">
       <PrivateAssets>all</PrivateAssets>
@@ -27,7 +23,7 @@
     <ResourceFile>$(MSBuildProjectDirectory)\builderTypes.resources</ResourceFile>
   </PropertyGroup>
   
-  <UsingTask TaskName="CreateResourceTask" AssemblyFile="C:\Users\tonyh\Source\Repos\MoqProtectedSourceGenerator\BuilderTypesResourceTask\bin\Debug\netstandard2.0\BuilderTypesResourceTask.dll"/>
+  <UsingTask TaskName="CreateResourceTask" AssemblyFile="$(SolutionDir)BuilderTypesResourceTask\bin\$(Configuration)\netstandard2.0\BuilderTypesResourceTask.dll"/>
   <Target Name="InvokeCustomTask" BeforeTargets="CoreCompile ">
     <Message Text="Creating resource file"/>
     <CreateResourceTask ResourceFile="$(ResourceFile)"/>

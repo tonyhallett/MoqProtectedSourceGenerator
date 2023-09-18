@@ -13,6 +13,11 @@ namespace ClassLibrary1
         {
             AbstractMethod();
         }
+        protected abstract string AbstractMethodReturning(int value);
+        public string InvokeAbstractMethodReturning(int value)
+        {
+            return AbstractMethodReturning(value);
+        }
         protected abstract void AbstractMethodArgs(int value);
         public void InvokeAbstractMethodArgs(int value)
         {
@@ -32,8 +37,6 @@ namespace ClassLibrary1
             mock.AbstractMethod().Build().Setup().Throws(new ExpectedException());
             Assert.Throws<ExpectedException>(() => mock.Object.InvokeAbstractMethod());
 
-            mock.AbstractMethodArgs(999).Build().Setup();
-            mock.AbstractMethodArgs(123).Build().Setup();
             void Verify()
             {
                 mock.AbstractMethodArgs(It.IsInRange(1, 10, Moq.Range.Inclusive)).Build().Verify();
@@ -44,6 +47,11 @@ namespace ClassLibrary1
 
             mock.Object.InvokeAbstractMethodArgs(1);
             Verify();
+
+            mock.AbstractMethodReturning(1).Build().Setup().Returns("One");
+            mock.AbstractMethodReturning(2).Build().Setup().Returns("Two");
+            Assert.That(mock.Object.InvokeAbstractMethodReturning(1), Is.EqualTo("One"));
+            Assert.That(mock.Object.InvokeAbstractMethodReturning(2), Is.EqualTo("Two"));
 
             var mockDll = new Mock<ProtectedDll.DllProtected>();
             mockDll.ProtectedMethod(It.IsAny<Other>(), "match").Build().Setup().Throws(new ExpectedException());

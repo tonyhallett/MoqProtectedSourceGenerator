@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31105.61
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoqProtectedSourceGenerator", "MoqProtectedSourceGenerator\MoqProtectedSourceGenerator.csproj", "{AFADFD37-C6C9-4A0B-9BA6-A751E2187C0F}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -19,11 +19,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestWithGenerator", "TestWi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoqProtectedSourceGenerator.Tests", "MoqProtectedSourceGenerator.Tests\MoqProtectedSourceGenerator.Tests.csproj", "{CEEC627B-D29B-46D1-9B78-DF4E7B730886}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuilderTypes", "BuilderTypes\BuilderTypes.csproj", "{4284FC61-ED0A-4047-9E36-E50CBC786711}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuilderTypes", "BuilderTypes\BuilderTypes.csproj", "{4284FC61-ED0A-4047-9E36-E50CBC786711}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuilderTypesResourceTask", "BuilderTypesResourceTask\BuilderTypesResourceTask.csproj", "{85AC39D2-77B1-481C-9C73-88D53F8512F1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuilderTypesResourceTask", "BuilderTypesResourceTask\BuilderTypesResourceTask.csproj", "{85AC39D2-77B1-481C-9C73-88D53F8512F1}"
 	ProjectSection(ProjectDependencies) = postProject
 		{4284FC61-ED0A-4047-9E36-E50CBC786711} = {4284FC61-ED0A-4047-9E36-E50CBC786711}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6877AB43-2552-4668-A2FA-26163A5E4C79}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
 	EndProjectSection
 EndProject
 Global
